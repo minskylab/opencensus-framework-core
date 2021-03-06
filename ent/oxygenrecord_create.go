@@ -6,8 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"opencensus/core/ent/organization"
 	"opencensus/core/ent/oxygenrecord"
+	"opencensus/core/ent/place"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -18,6 +19,18 @@ type OxygenRecordCreate struct {
 	config
 	mutation *OxygenRecordMutation
 	hooks    []Hook
+}
+
+// SetReportedDate sets the "reportedDate" field.
+func (orc *OxygenRecordCreate) SetReportedDate(t time.Time) *OxygenRecordCreate {
+	orc.mutation.SetReportedDate(t)
+	return orc
+}
+
+// SetCollectedDate sets the "collectedDate" field.
+func (orc *OxygenRecordCreate) SetCollectedDate(t time.Time) *OxygenRecordCreate {
+	orc.mutation.SetCollectedDate(t)
+	return orc
 }
 
 // SetTotalCylinders sets the "totalCylinders" field.
@@ -32,19 +45,43 @@ func (orc *OxygenRecordCreate) SetTotalOwnCylinders(i int) *OxygenRecordCreate {
 	return orc
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by IDs.
-func (orc *OxygenRecordCreate) AddOrganizationIDs(ids ...int) *OxygenRecordCreate {
-	orc.mutation.AddOrganizationIDs(ids...)
+// SetDailyProduction sets the "dailyProduction" field.
+func (orc *OxygenRecordCreate) SetDailyProduction(i int) *OxygenRecordCreate {
+	orc.mutation.SetDailyProduction(i)
 	return orc
 }
 
-// AddOrganization adds the "organization" edges to the Organization entity.
-func (orc *OxygenRecordCreate) AddOrganization(o ...*Organization) *OxygenRecordCreate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// SetMaxDailyProduction sets the "maxDailyProduction" field.
+func (orc *OxygenRecordCreate) SetMaxDailyProduction(i int) *OxygenRecordCreate {
+	orc.mutation.SetMaxDailyProduction(i)
+	return orc
+}
+
+// SetDailyConsumption sets the "dailyConsumption" field.
+func (orc *OxygenRecordCreate) SetDailyConsumption(i int) *OxygenRecordCreate {
+	orc.mutation.SetDailyConsumption(i)
+	return orc
+}
+
+// SetMainSourceKind sets the "mainSourceKind" field.
+func (orc *OxygenRecordCreate) SetMainSourceKind(s string) *OxygenRecordCreate {
+	orc.mutation.SetMainSourceKind(s)
+	return orc
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by IDs.
+func (orc *OxygenRecordCreate) AddPlaceIDs(ids ...int) *OxygenRecordCreate {
+	orc.mutation.AddPlaceIDs(ids...)
+	return orc
+}
+
+// AddPlaces adds the "places" edges to the Place entity.
+func (orc *OxygenRecordCreate) AddPlaces(p ...*Place) *OxygenRecordCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return orc.AddOrganizationIDs(ids...)
+	return orc.AddPlaceIDs(ids...)
 }
 
 // Mutation returns the OxygenRecordMutation object of the builder.
@@ -98,11 +135,29 @@ func (orc *OxygenRecordCreate) SaveX(ctx context.Context) *OxygenRecord {
 
 // check runs all checks and user-defined validators on the builder.
 func (orc *OxygenRecordCreate) check() error {
+	if _, ok := orc.mutation.ReportedDate(); !ok {
+		return &ValidationError{Name: "reportedDate", err: errors.New("ent: missing required field \"reportedDate\"")}
+	}
+	if _, ok := orc.mutation.CollectedDate(); !ok {
+		return &ValidationError{Name: "collectedDate", err: errors.New("ent: missing required field \"collectedDate\"")}
+	}
 	if _, ok := orc.mutation.TotalCylinders(); !ok {
 		return &ValidationError{Name: "totalCylinders", err: errors.New("ent: missing required field \"totalCylinders\"")}
 	}
 	if _, ok := orc.mutation.TotalOwnCylinders(); !ok {
 		return &ValidationError{Name: "totalOwnCylinders", err: errors.New("ent: missing required field \"totalOwnCylinders\"")}
+	}
+	if _, ok := orc.mutation.DailyProduction(); !ok {
+		return &ValidationError{Name: "dailyProduction", err: errors.New("ent: missing required field \"dailyProduction\"")}
+	}
+	if _, ok := orc.mutation.MaxDailyProduction(); !ok {
+		return &ValidationError{Name: "maxDailyProduction", err: errors.New("ent: missing required field \"maxDailyProduction\"")}
+	}
+	if _, ok := orc.mutation.DailyConsumption(); !ok {
+		return &ValidationError{Name: "dailyConsumption", err: errors.New("ent: missing required field \"dailyConsumption\"")}
+	}
+	if _, ok := orc.mutation.MainSourceKind(); !ok {
+		return &ValidationError{Name: "mainSourceKind", err: errors.New("ent: missing required field \"mainSourceKind\"")}
 	}
 	return nil
 }
@@ -131,6 +186,22 @@ func (orc *OxygenRecordCreate) createSpec() (*OxygenRecord, *sqlgraph.CreateSpec
 			},
 		}
 	)
+	if value, ok := orc.mutation.ReportedDate(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: oxygenrecord.FieldReportedDate,
+		})
+		_node.ReportedDate = value
+	}
+	if value, ok := orc.mutation.CollectedDate(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: oxygenrecord.FieldCollectedDate,
+		})
+		_node.CollectedDate = value
+	}
 	if value, ok := orc.mutation.TotalCylinders(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
@@ -147,17 +218,49 @@ func (orc *OxygenRecordCreate) createSpec() (*OxygenRecord, *sqlgraph.CreateSpec
 		})
 		_node.TotalOwnCylinders = value
 	}
-	if nodes := orc.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if value, ok := orc.mutation.DailyProduction(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyProduction,
+		})
+		_node.DailyProduction = value
+	}
+	if value, ok := orc.mutation.MaxDailyProduction(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldMaxDailyProduction,
+		})
+		_node.MaxDailyProduction = value
+	}
+	if value, ok := orc.mutation.DailyConsumption(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyConsumption,
+		})
+		_node.DailyConsumption = value
+	}
+	if value, ok := orc.mutation.MainSourceKind(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: oxygenrecord.FieldMainSourceKind,
+		})
+		_node.MainSourceKind = value
+	}
+	if nodes := orc.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   oxygenrecord.OrganizationTable,
-			Columns: oxygenrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   oxygenrecord.PlacesTable,
+			Columns: oxygenrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}

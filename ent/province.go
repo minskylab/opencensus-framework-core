@@ -24,42 +24,42 @@ type Province struct {
 
 // ProvinceEdges holds the relations/edges for other nodes in the graph.
 type ProvinceEdges struct {
-	// Organization holds the value of the organization edge.
-	Organization []*Organization `json:"organization,omitempty"`
-	// Region holds the value of the region edge.
-	Region []*Region `json:"region,omitempty"`
-	// District holds the value of the district edge.
-	District []*District `json:"district,omitempty"`
+	// Places holds the value of the places edge.
+	Places []*Place `json:"places,omitempty"`
+	// Regions holds the value of the regions edge.
+	Regions []*Region `json:"regions,omitempty"`
+	// Districts holds the value of the districts edge.
+	Districts []*District `json:"districts,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
 }
 
-// OrganizationOrErr returns the Organization value or an error if the edge
+// PlacesOrErr returns the Places value or an error if the edge
 // was not loaded in eager-loading.
-func (e ProvinceEdges) OrganizationOrErr() ([]*Organization, error) {
+func (e ProvinceEdges) PlacesOrErr() ([]*Place, error) {
 	if e.loadedTypes[0] {
-		return e.Organization, nil
+		return e.Places, nil
 	}
-	return nil, &NotLoadedError{edge: "organization"}
+	return nil, &NotLoadedError{edge: "places"}
 }
 
-// RegionOrErr returns the Region value or an error if the edge
+// RegionsOrErr returns the Regions value or an error if the edge
 // was not loaded in eager-loading.
-func (e ProvinceEdges) RegionOrErr() ([]*Region, error) {
+func (e ProvinceEdges) RegionsOrErr() ([]*Region, error) {
 	if e.loadedTypes[1] {
-		return e.Region, nil
+		return e.Regions, nil
 	}
-	return nil, &NotLoadedError{edge: "region"}
+	return nil, &NotLoadedError{edge: "regions"}
 }
 
-// DistrictOrErr returns the District value or an error if the edge
+// DistrictsOrErr returns the Districts value or an error if the edge
 // was not loaded in eager-loading.
-func (e ProvinceEdges) DistrictOrErr() ([]*District, error) {
+func (e ProvinceEdges) DistrictsOrErr() ([]*District, error) {
 	if e.loadedTypes[2] {
-		return e.District, nil
+		return e.Districts, nil
 	}
-	return nil, &NotLoadedError{edge: "district"}
+	return nil, &NotLoadedError{edge: "districts"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -103,19 +103,19 @@ func (pr *Province) assignValues(columns []string, values []interface{}) error {
 	return nil
 }
 
-// QueryOrganization queries the "organization" edge of the Province entity.
-func (pr *Province) QueryOrganization() *OrganizationQuery {
-	return (&ProvinceClient{config: pr.config}).QueryOrganization(pr)
+// QueryPlaces queries the "places" edge of the Province entity.
+func (pr *Province) QueryPlaces() *PlaceQuery {
+	return (&ProvinceClient{config: pr.config}).QueryPlaces(pr)
 }
 
-// QueryRegion queries the "region" edge of the Province entity.
-func (pr *Province) QueryRegion() *RegionQuery {
-	return (&ProvinceClient{config: pr.config}).QueryRegion(pr)
+// QueryRegions queries the "regions" edge of the Province entity.
+func (pr *Province) QueryRegions() *RegionQuery {
+	return (&ProvinceClient{config: pr.config}).QueryRegions(pr)
 }
 
-// QueryDistrict queries the "district" edge of the Province entity.
-func (pr *Province) QueryDistrict() *DistrictQuery {
-	return (&ProvinceClient{config: pr.config}).QueryDistrict(pr)
+// QueryDistricts queries the "districts" edge of the Province entity.
+func (pr *Province) QueryDistricts() *DistrictQuery {
+	return (&ProvinceClient{config: pr.config}).QueryDistricts(pr)
 }
 
 // Update returns a builder for updating this Province.

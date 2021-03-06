@@ -10,9 +10,11 @@ import (
 	"opencensus/core/ent/migrate"
 
 	"opencensus/core/ent/bedrecord"
+	"opencensus/core/ent/deathrecord"
 	"opencensus/core/ent/district"
-	"opencensus/core/ent/organization"
+	"opencensus/core/ent/infectedrecord"
 	"opencensus/core/ent/oxygenrecord"
+	"opencensus/core/ent/place"
 	"opencensus/core/ent/province"
 	"opencensus/core/ent/region"
 
@@ -28,12 +30,16 @@ type Client struct {
 	Schema *migrate.Schema
 	// BedRecord is the client for interacting with the BedRecord builders.
 	BedRecord *BedRecordClient
+	// DeathRecord is the client for interacting with the DeathRecord builders.
+	DeathRecord *DeathRecordClient
 	// District is the client for interacting with the District builders.
 	District *DistrictClient
-	// Organization is the client for interacting with the Organization builders.
-	Organization *OrganizationClient
+	// InfectedRecord is the client for interacting with the InfectedRecord builders.
+	InfectedRecord *InfectedRecordClient
 	// OxygenRecord is the client for interacting with the OxygenRecord builders.
 	OxygenRecord *OxygenRecordClient
+	// Place is the client for interacting with the Place builders.
+	Place *PlaceClient
 	// Province is the client for interacting with the Province builders.
 	Province *ProvinceClient
 	// Region is the client for interacting with the Region builders.
@@ -52,9 +58,11 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.BedRecord = NewBedRecordClient(c.config)
+	c.DeathRecord = NewDeathRecordClient(c.config)
 	c.District = NewDistrictClient(c.config)
-	c.Organization = NewOrganizationClient(c.config)
+	c.InfectedRecord = NewInfectedRecordClient(c.config)
 	c.OxygenRecord = NewOxygenRecordClient(c.config)
+	c.Place = NewPlaceClient(c.config)
 	c.Province = NewProvinceClient(c.config)
 	c.Region = NewRegionClient(c.config)
 }
@@ -88,14 +96,16 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		BedRecord:    NewBedRecordClient(cfg),
-		District:     NewDistrictClient(cfg),
-		Organization: NewOrganizationClient(cfg),
-		OxygenRecord: NewOxygenRecordClient(cfg),
-		Province:     NewProvinceClient(cfg),
-		Region:       NewRegionClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		BedRecord:      NewBedRecordClient(cfg),
+		DeathRecord:    NewDeathRecordClient(cfg),
+		District:       NewDistrictClient(cfg),
+		InfectedRecord: NewInfectedRecordClient(cfg),
+		OxygenRecord:   NewOxygenRecordClient(cfg),
+		Place:          NewPlaceClient(cfg),
+		Province:       NewProvinceClient(cfg),
+		Region:         NewRegionClient(cfg),
 	}, nil
 }
 
@@ -113,13 +123,15 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		config:       cfg,
-		BedRecord:    NewBedRecordClient(cfg),
-		District:     NewDistrictClient(cfg),
-		Organization: NewOrganizationClient(cfg),
-		OxygenRecord: NewOxygenRecordClient(cfg),
-		Province:     NewProvinceClient(cfg),
-		Region:       NewRegionClient(cfg),
+		config:         cfg,
+		BedRecord:      NewBedRecordClient(cfg),
+		DeathRecord:    NewDeathRecordClient(cfg),
+		District:       NewDistrictClient(cfg),
+		InfectedRecord: NewInfectedRecordClient(cfg),
+		OxygenRecord:   NewOxygenRecordClient(cfg),
+		Place:          NewPlaceClient(cfg),
+		Province:       NewProvinceClient(cfg),
+		Region:         NewRegionClient(cfg),
 	}, nil
 }
 
@@ -150,9 +162,11 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.BedRecord.Use(hooks...)
+	c.DeathRecord.Use(hooks...)
 	c.District.Use(hooks...)
-	c.Organization.Use(hooks...)
+	c.InfectedRecord.Use(hooks...)
 	c.OxygenRecord.Use(hooks...)
+	c.Place.Use(hooks...)
 	c.Province.Use(hooks...)
 	c.Region.Use(hooks...)
 }
@@ -240,15 +254,15 @@ func (c *BedRecordClient) GetX(ctx context.Context, id int) *BedRecord {
 	return obj
 }
 
-// QueryOrganization queries the organization edge of a BedRecord.
-func (c *BedRecordClient) QueryOrganization(br *BedRecord) *OrganizationQuery {
-	query := &OrganizationQuery{config: c.config}
+// QueryPlaces queries the places edge of a BedRecord.
+func (c *BedRecordClient) QueryPlaces(br *BedRecord) *PlaceQuery {
+	query := &PlaceQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := br.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bedrecord.Table, bedrecord.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, bedrecord.OrganizationTable, bedrecord.OrganizationPrimaryKey...),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, bedrecord.PlacesTable, bedrecord.PlacesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(br.driver.Dialect(), step)
 		return fromV, nil
@@ -259,6 +273,110 @@ func (c *BedRecordClient) QueryOrganization(br *BedRecord) *OrganizationQuery {
 // Hooks returns the client hooks.
 func (c *BedRecordClient) Hooks() []Hook {
 	return c.hooks.BedRecord
+}
+
+// DeathRecordClient is a client for the DeathRecord schema.
+type DeathRecordClient struct {
+	config
+}
+
+// NewDeathRecordClient returns a client for the DeathRecord from the given config.
+func NewDeathRecordClient(c config) *DeathRecordClient {
+	return &DeathRecordClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `deathrecord.Hooks(f(g(h())))`.
+func (c *DeathRecordClient) Use(hooks ...Hook) {
+	c.hooks.DeathRecord = append(c.hooks.DeathRecord, hooks...)
+}
+
+// Create returns a create builder for DeathRecord.
+func (c *DeathRecordClient) Create() *DeathRecordCreate {
+	mutation := newDeathRecordMutation(c.config, OpCreate)
+	return &DeathRecordCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of DeathRecord entities.
+func (c *DeathRecordClient) CreateBulk(builders ...*DeathRecordCreate) *DeathRecordCreateBulk {
+	return &DeathRecordCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for DeathRecord.
+func (c *DeathRecordClient) Update() *DeathRecordUpdate {
+	mutation := newDeathRecordMutation(c.config, OpUpdate)
+	return &DeathRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DeathRecordClient) UpdateOne(dr *DeathRecord) *DeathRecordUpdateOne {
+	mutation := newDeathRecordMutation(c.config, OpUpdateOne, withDeathRecord(dr))
+	return &DeathRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DeathRecordClient) UpdateOneID(id int) *DeathRecordUpdateOne {
+	mutation := newDeathRecordMutation(c.config, OpUpdateOne, withDeathRecordID(id))
+	return &DeathRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for DeathRecord.
+func (c *DeathRecordClient) Delete() *DeathRecordDelete {
+	mutation := newDeathRecordMutation(c.config, OpDelete)
+	return &DeathRecordDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *DeathRecordClient) DeleteOne(dr *DeathRecord) *DeathRecordDeleteOne {
+	return c.DeleteOneID(dr.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *DeathRecordClient) DeleteOneID(id int) *DeathRecordDeleteOne {
+	builder := c.Delete().Where(deathrecord.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DeathRecordDeleteOne{builder}
+}
+
+// Query returns a query builder for DeathRecord.
+func (c *DeathRecordClient) Query() *DeathRecordQuery {
+	return &DeathRecordQuery{config: c.config}
+}
+
+// Get returns a DeathRecord entity by its id.
+func (c *DeathRecordClient) Get(ctx context.Context, id int) (*DeathRecord, error) {
+	return c.Query().Where(deathrecord.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DeathRecordClient) GetX(ctx context.Context, id int) *DeathRecord {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPlaces queries the places edge of a DeathRecord.
+func (c *DeathRecordClient) QueryPlaces(dr *DeathRecord) *PlaceQuery {
+	query := &PlaceQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := dr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(deathrecord.Table, deathrecord.FieldID, id),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, deathrecord.PlacesTable, deathrecord.PlacesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(dr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *DeathRecordClient) Hooks() []Hook {
+	return c.hooks.DeathRecord
 }
 
 // DistrictClient is a client for the District schema.
@@ -344,15 +462,15 @@ func (c *DistrictClient) GetX(ctx context.Context, id int) *District {
 	return obj
 }
 
-// QueryOrganization queries the organization edge of a District.
-func (c *DistrictClient) QueryOrganization(d *District) *OrganizationQuery {
-	query := &OrganizationQuery{config: c.config}
+// QueryPlaces queries the places edge of a District.
+func (c *DistrictClient) QueryPlaces(d *District) *PlaceQuery {
+	query := &PlaceQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := d.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(district.Table, district.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, district.OrganizationTable, district.OrganizationPrimaryKey...),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, district.PlacesTable, district.PlacesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
 		return fromV, nil
@@ -360,15 +478,15 @@ func (c *DistrictClient) QueryOrganization(d *District) *OrganizationQuery {
 	return query
 }
 
-// QueryProvince queries the province edge of a District.
-func (c *DistrictClient) QueryProvince(d *District) *ProvinceQuery {
+// QueryProvinces queries the provinces edge of a District.
+func (c *DistrictClient) QueryProvinces(d *District) *ProvinceQuery {
 	query := &ProvinceQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := d.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(district.Table, district.FieldID, id),
 			sqlgraph.To(province.Table, province.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, district.ProvinceTable, district.ProvincePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, district.ProvincesTable, district.ProvincesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
 		return fromV, nil
@@ -381,82 +499,82 @@ func (c *DistrictClient) Hooks() []Hook {
 	return c.hooks.District
 }
 
-// OrganizationClient is a client for the Organization schema.
-type OrganizationClient struct {
+// InfectedRecordClient is a client for the InfectedRecord schema.
+type InfectedRecordClient struct {
 	config
 }
 
-// NewOrganizationClient returns a client for the Organization from the given config.
-func NewOrganizationClient(c config) *OrganizationClient {
-	return &OrganizationClient{config: c}
+// NewInfectedRecordClient returns a client for the InfectedRecord from the given config.
+func NewInfectedRecordClient(c config) *InfectedRecordClient {
+	return &InfectedRecordClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `organization.Hooks(f(g(h())))`.
-func (c *OrganizationClient) Use(hooks ...Hook) {
-	c.hooks.Organization = append(c.hooks.Organization, hooks...)
+// A call to `Use(f, g, h)` equals to `infectedrecord.Hooks(f(g(h())))`.
+func (c *InfectedRecordClient) Use(hooks ...Hook) {
+	c.hooks.InfectedRecord = append(c.hooks.InfectedRecord, hooks...)
 }
 
-// Create returns a create builder for Organization.
-func (c *OrganizationClient) Create() *OrganizationCreate {
-	mutation := newOrganizationMutation(c.config, OpCreate)
-	return &OrganizationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a create builder for InfectedRecord.
+func (c *InfectedRecordClient) Create() *InfectedRecordCreate {
+	mutation := newInfectedRecordMutation(c.config, OpCreate)
+	return &InfectedRecordCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Organization entities.
-func (c *OrganizationClient) CreateBulk(builders ...*OrganizationCreate) *OrganizationCreateBulk {
-	return &OrganizationCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of InfectedRecord entities.
+func (c *InfectedRecordClient) CreateBulk(builders ...*InfectedRecordCreate) *InfectedRecordCreateBulk {
+	return &InfectedRecordCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Organization.
-func (c *OrganizationClient) Update() *OrganizationUpdate {
-	mutation := newOrganizationMutation(c.config, OpUpdate)
-	return &OrganizationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for InfectedRecord.
+func (c *InfectedRecordClient) Update() *InfectedRecordUpdate {
+	mutation := newInfectedRecordMutation(c.config, OpUpdate)
+	return &InfectedRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *OrganizationClient) UpdateOne(o *Organization) *OrganizationUpdateOne {
-	mutation := newOrganizationMutation(c.config, OpUpdateOne, withOrganization(o))
-	return &OrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *InfectedRecordClient) UpdateOne(ir *InfectedRecord) *InfectedRecordUpdateOne {
+	mutation := newInfectedRecordMutation(c.config, OpUpdateOne, withInfectedRecord(ir))
+	return &InfectedRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *OrganizationClient) UpdateOneID(id int) *OrganizationUpdateOne {
-	mutation := newOrganizationMutation(c.config, OpUpdateOne, withOrganizationID(id))
-	return &OrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *InfectedRecordClient) UpdateOneID(id int) *InfectedRecordUpdateOne {
+	mutation := newInfectedRecordMutation(c.config, OpUpdateOne, withInfectedRecordID(id))
+	return &InfectedRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Organization.
-func (c *OrganizationClient) Delete() *OrganizationDelete {
-	mutation := newOrganizationMutation(c.config, OpDelete)
-	return &OrganizationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for InfectedRecord.
+func (c *InfectedRecordClient) Delete() *InfectedRecordDelete {
+	mutation := newInfectedRecordMutation(c.config, OpDelete)
+	return &InfectedRecordDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a delete builder for the given entity.
-func (c *OrganizationClient) DeleteOne(o *Organization) *OrganizationDeleteOne {
-	return c.DeleteOneID(o.ID)
+func (c *InfectedRecordClient) DeleteOne(ir *InfectedRecord) *InfectedRecordDeleteOne {
+	return c.DeleteOneID(ir.ID)
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *OrganizationClient) DeleteOneID(id int) *OrganizationDeleteOne {
-	builder := c.Delete().Where(organization.ID(id))
+func (c *InfectedRecordClient) DeleteOneID(id int) *InfectedRecordDeleteOne {
+	builder := c.Delete().Where(infectedrecord.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &OrganizationDeleteOne{builder}
+	return &InfectedRecordDeleteOne{builder}
 }
 
-// Query returns a query builder for Organization.
-func (c *OrganizationClient) Query() *OrganizationQuery {
-	return &OrganizationQuery{config: c.config}
+// Query returns a query builder for InfectedRecord.
+func (c *InfectedRecordClient) Query() *InfectedRecordQuery {
+	return &InfectedRecordQuery{config: c.config}
 }
 
-// Get returns a Organization entity by its id.
-func (c *OrganizationClient) Get(ctx context.Context, id int) (*Organization, error) {
-	return c.Query().Where(organization.ID(id)).Only(ctx)
+// Get returns a InfectedRecord entity by its id.
+func (c *InfectedRecordClient) Get(ctx context.Context, id int) (*InfectedRecord, error) {
+	return c.Query().Where(infectedrecord.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *OrganizationClient) GetX(ctx context.Context, id int) *Organization {
+func (c *InfectedRecordClient) GetX(ctx context.Context, id int) *InfectedRecord {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -464,89 +582,25 @@ func (c *OrganizationClient) GetX(ctx context.Context, id int) *Organization {
 	return obj
 }
 
-// QueryRegion queries the region edge of a Organization.
-func (c *OrganizationClient) QueryRegion(o *Organization) *RegionQuery {
-	query := &RegionQuery{config: c.config}
+// QueryPlaces queries the places edge of a InfectedRecord.
+func (c *InfectedRecordClient) QueryPlaces(ir *InfectedRecord) *PlaceQuery {
+	query := &PlaceQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := o.ID
+		id := ir.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(region.Table, region.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, organization.RegionTable, organization.RegionPrimaryKey...),
+			sqlgraph.From(infectedrecord.Table, infectedrecord.FieldID, id),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, infectedrecord.PlacesTable, infectedrecord.PlacesPrimaryKey...),
 		)
-		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryProvince queries the province edge of a Organization.
-func (c *OrganizationClient) QueryProvince(o *Organization) *ProvinceQuery {
-	query := &ProvinceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := o.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(province.Table, province.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, organization.ProvinceTable, organization.ProvincePrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryDistrict queries the district edge of a Organization.
-func (c *OrganizationClient) QueryDistrict(o *Organization) *DistrictQuery {
-	query := &DistrictQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := o.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(district.Table, district.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, organization.DistrictTable, organization.DistrictPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryOxygenRecords queries the oxygenRecords edge of a Organization.
-func (c *OrganizationClient) QueryOxygenRecords(o *Organization) *OxygenRecordQuery {
-	query := &OxygenRecordQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := o.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(oxygenrecord.Table, oxygenrecord.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, organization.OxygenRecordsTable, organization.OxygenRecordsPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryBedRecords queries the bedRecords edge of a Organization.
-func (c *OrganizationClient) QueryBedRecords(o *Organization) *BedRecordQuery {
-	query := &BedRecordQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := o.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(bedrecord.Table, bedrecord.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, organization.BedRecordsTable, organization.BedRecordsPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(ir.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *OrganizationClient) Hooks() []Hook {
-	return c.hooks.Organization
+func (c *InfectedRecordClient) Hooks() []Hook {
+	return c.hooks.InfectedRecord
 }
 
 // OxygenRecordClient is a client for the OxygenRecord schema.
@@ -632,15 +686,15 @@ func (c *OxygenRecordClient) GetX(ctx context.Context, id int) *OxygenRecord {
 	return obj
 }
 
-// QueryOrganization queries the organization edge of a OxygenRecord.
-func (c *OxygenRecordClient) QueryOrganization(or *OxygenRecord) *OrganizationQuery {
-	query := &OrganizationQuery{config: c.config}
+// QueryPlaces queries the places edge of a OxygenRecord.
+func (c *OxygenRecordClient) QueryPlaces(or *OxygenRecord) *PlaceQuery {
+	query := &PlaceQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := or.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(oxygenrecord.Table, oxygenrecord.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, oxygenrecord.OrganizationTable, oxygenrecord.OrganizationPrimaryKey...),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, oxygenrecord.PlacesTable, oxygenrecord.PlacesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(or.driver.Dialect(), step)
 		return fromV, nil
@@ -651,6 +705,206 @@ func (c *OxygenRecordClient) QueryOrganization(or *OxygenRecord) *OrganizationQu
 // Hooks returns the client hooks.
 func (c *OxygenRecordClient) Hooks() []Hook {
 	return c.hooks.OxygenRecord
+}
+
+// PlaceClient is a client for the Place schema.
+type PlaceClient struct {
+	config
+}
+
+// NewPlaceClient returns a client for the Place from the given config.
+func NewPlaceClient(c config) *PlaceClient {
+	return &PlaceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `place.Hooks(f(g(h())))`.
+func (c *PlaceClient) Use(hooks ...Hook) {
+	c.hooks.Place = append(c.hooks.Place, hooks...)
+}
+
+// Create returns a create builder for Place.
+func (c *PlaceClient) Create() *PlaceCreate {
+	mutation := newPlaceMutation(c.config, OpCreate)
+	return &PlaceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Place entities.
+func (c *PlaceClient) CreateBulk(builders ...*PlaceCreate) *PlaceCreateBulk {
+	return &PlaceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Place.
+func (c *PlaceClient) Update() *PlaceUpdate {
+	mutation := newPlaceMutation(c.config, OpUpdate)
+	return &PlaceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PlaceClient) UpdateOne(pl *Place) *PlaceUpdateOne {
+	mutation := newPlaceMutation(c.config, OpUpdateOne, withPlace(pl))
+	return &PlaceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PlaceClient) UpdateOneID(id int) *PlaceUpdateOne {
+	mutation := newPlaceMutation(c.config, OpUpdateOne, withPlaceID(id))
+	return &PlaceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Place.
+func (c *PlaceClient) Delete() *PlaceDelete {
+	mutation := newPlaceMutation(c.config, OpDelete)
+	return &PlaceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *PlaceClient) DeleteOne(pl *Place) *PlaceDeleteOne {
+	return c.DeleteOneID(pl.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *PlaceClient) DeleteOneID(id int) *PlaceDeleteOne {
+	builder := c.Delete().Where(place.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PlaceDeleteOne{builder}
+}
+
+// Query returns a query builder for Place.
+func (c *PlaceClient) Query() *PlaceQuery {
+	return &PlaceQuery{config: c.config}
+}
+
+// Get returns a Place entity by its id.
+func (c *PlaceClient) Get(ctx context.Context, id int) (*Place, error) {
+	return c.Query().Where(place.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PlaceClient) GetX(ctx context.Context, id int) *Place {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOxygenrecords queries the oxygenrecords edge of a Place.
+func (c *PlaceClient) QueryOxygenrecords(pl *Place) *OxygenRecordQuery {
+	query := &OxygenRecordQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(place.Table, place.FieldID, id),
+			sqlgraph.To(oxygenrecord.Table, oxygenrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, place.OxygenrecordsTable, place.OxygenrecordsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBedRecords queries the bedRecords edge of a Place.
+func (c *PlaceClient) QueryBedRecords(pl *Place) *BedRecordQuery {
+	query := &BedRecordQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(place.Table, place.FieldID, id),
+			sqlgraph.To(bedrecord.Table, bedrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, place.BedRecordsTable, place.BedRecordsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDeathRecords queries the deathRecords edge of a Place.
+func (c *PlaceClient) QueryDeathRecords(pl *Place) *DeathRecordQuery {
+	query := &DeathRecordQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(place.Table, place.FieldID, id),
+			sqlgraph.To(deathrecord.Table, deathrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, place.DeathRecordsTable, place.DeathRecordsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInfectedRecords queries the infectedRecords edge of a Place.
+func (c *PlaceClient) QueryInfectedRecords(pl *Place) *InfectedRecordQuery {
+	query := &InfectedRecordQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(place.Table, place.FieldID, id),
+			sqlgraph.To(infectedrecord.Table, infectedrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, place.InfectedRecordsTable, place.InfectedRecordsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRegions queries the regions edge of a Place.
+func (c *PlaceClient) QueryRegions(pl *Place) *RegionQuery {
+	query := &RegionQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(place.Table, place.FieldID, id),
+			sqlgraph.To(region.Table, region.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, place.RegionsTable, place.RegionsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryProvinces queries the provinces edge of a Place.
+func (c *PlaceClient) QueryProvinces(pl *Place) *ProvinceQuery {
+	query := &ProvinceQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(place.Table, place.FieldID, id),
+			sqlgraph.To(province.Table, province.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, place.ProvincesTable, place.ProvincesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDistricts queries the districts edge of a Place.
+func (c *PlaceClient) QueryDistricts(pl *Place) *DistrictQuery {
+	query := &DistrictQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(place.Table, place.FieldID, id),
+			sqlgraph.To(district.Table, district.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, place.DistrictsTable, place.DistrictsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PlaceClient) Hooks() []Hook {
+	return c.hooks.Place
 }
 
 // ProvinceClient is a client for the Province schema.
@@ -736,15 +990,15 @@ func (c *ProvinceClient) GetX(ctx context.Context, id int) *Province {
 	return obj
 }
 
-// QueryOrganization queries the organization edge of a Province.
-func (c *ProvinceClient) QueryOrganization(pr *Province) *OrganizationQuery {
-	query := &OrganizationQuery{config: c.config}
+// QueryPlaces queries the places edge of a Province.
+func (c *ProvinceClient) QueryPlaces(pr *Province) *PlaceQuery {
+	query := &PlaceQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := pr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(province.Table, province.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, province.OrganizationTable, province.OrganizationPrimaryKey...),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, province.PlacesTable, province.PlacesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
 		return fromV, nil
@@ -752,15 +1006,15 @@ func (c *ProvinceClient) QueryOrganization(pr *Province) *OrganizationQuery {
 	return query
 }
 
-// QueryRegion queries the region edge of a Province.
-func (c *ProvinceClient) QueryRegion(pr *Province) *RegionQuery {
+// QueryRegions queries the regions edge of a Province.
+func (c *ProvinceClient) QueryRegions(pr *Province) *RegionQuery {
 	query := &RegionQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := pr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(province.Table, province.FieldID, id),
 			sqlgraph.To(region.Table, region.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, province.RegionTable, province.RegionPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, province.RegionsTable, province.RegionsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
 		return fromV, nil
@@ -768,15 +1022,15 @@ func (c *ProvinceClient) QueryRegion(pr *Province) *RegionQuery {
 	return query
 }
 
-// QueryDistrict queries the district edge of a Province.
-func (c *ProvinceClient) QueryDistrict(pr *Province) *DistrictQuery {
+// QueryDistricts queries the districts edge of a Province.
+func (c *ProvinceClient) QueryDistricts(pr *Province) *DistrictQuery {
 	query := &DistrictQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := pr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(province.Table, province.FieldID, id),
 			sqlgraph.To(district.Table, district.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, province.DistrictTable, province.DistrictPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, province.DistrictsTable, province.DistrictsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
 		return fromV, nil
@@ -872,15 +1126,15 @@ func (c *RegionClient) GetX(ctx context.Context, id int) *Region {
 	return obj
 }
 
-// QueryOrganization queries the organization edge of a Region.
-func (c *RegionClient) QueryOrganization(r *Region) *OrganizationQuery {
-	query := &OrganizationQuery{config: c.config}
+// QueryPlaces queries the places edge of a Region.
+func (c *RegionClient) QueryPlaces(r *Region) *PlaceQuery {
+	query := &PlaceQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(region.Table, region.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, region.OrganizationTable, region.OrganizationPrimaryKey...),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, region.PlacesTable, region.PlacesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -888,15 +1142,15 @@ func (c *RegionClient) QueryOrganization(r *Region) *OrganizationQuery {
 	return query
 }
 
-// QueryProvince queries the province edge of a Region.
-func (c *RegionClient) QueryProvince(r *Region) *ProvinceQuery {
+// QueryProvinces queries the provinces edge of a Region.
+func (c *RegionClient) QueryProvinces(r *Region) *ProvinceQuery {
 	query := &ProvinceQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(region.Table, region.FieldID, id),
 			sqlgraph.To(province.Table, province.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, region.ProvinceTable, region.ProvincePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, region.ProvincesTable, region.ProvincesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil

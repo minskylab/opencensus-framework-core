@@ -7,34 +7,52 @@ const (
 	Label = "oxygen_record"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldReportedDate holds the string denoting the reporteddate field in the database.
+	FieldReportedDate = "reported_date"
+	// FieldCollectedDate holds the string denoting the collecteddate field in the database.
+	FieldCollectedDate = "collected_date"
 	// FieldTotalCylinders holds the string denoting the totalcylinders field in the database.
 	FieldTotalCylinders = "total_cylinders"
 	// FieldTotalOwnCylinders holds the string denoting the totalowncylinders field in the database.
 	FieldTotalOwnCylinders = "total_own_cylinders"
+	// FieldDailyProduction holds the string denoting the dailyproduction field in the database.
+	FieldDailyProduction = "daily_production"
+	// FieldMaxDailyProduction holds the string denoting the maxdailyproduction field in the database.
+	FieldMaxDailyProduction = "max_daily_production"
+	// FieldDailyConsumption holds the string denoting the dailyconsumption field in the database.
+	FieldDailyConsumption = "daily_consumption"
+	// FieldMainSourceKind holds the string denoting the mainsourcekind field in the database.
+	FieldMainSourceKind = "main_source_kind"
 
-	// EdgeOrganization holds the string denoting the organization edge name in mutations.
-	EdgeOrganization = "organization"
+	// EdgePlaces holds the string denoting the places edge name in mutations.
+	EdgePlaces = "places"
 
 	// Table holds the table name of the oxygenrecord in the database.
 	Table = "oxygen_records"
-	// OrganizationTable is the table the holds the organization relation/edge. The primary key declared below.
-	OrganizationTable = "organization_oxygenRecords"
-	// OrganizationInverseTable is the table name for the Organization entity.
-	// It exists in this package in order to avoid circular dependency with the "organization" package.
-	OrganizationInverseTable = "organizations"
+	// PlacesTable is the table the holds the places relation/edge. The primary key declared below.
+	PlacesTable = "oxygen_record_places"
+	// PlacesInverseTable is the table name for the Place entity.
+	// It exists in this package in order to avoid circular dependency with the "place" package.
+	PlacesInverseTable = "places"
 )
 
 // Columns holds all SQL columns for oxygenrecord fields.
 var Columns = []string{
 	FieldID,
+	FieldReportedDate,
+	FieldCollectedDate,
 	FieldTotalCylinders,
 	FieldTotalOwnCylinders,
+	FieldDailyProduction,
+	FieldMaxDailyProduction,
+	FieldDailyConsumption,
+	FieldMainSourceKind,
 }
 
 var (
-	// OrganizationPrimaryKey and OrganizationColumn2 are the table columns denoting the
-	// primary key for the organization relation (M2M).
-	OrganizationPrimaryKey = []string{"organization_id", "oxygen_record_id"}
+	// PlacesPrimaryKey and PlacesColumn2 are the table columns denoting the
+	// primary key for the places relation (M2M).
+	PlacesPrimaryKey = []string{"oxygen_record_id", "place_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

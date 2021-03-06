@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"math"
 	"opencensus/core/ent/bedrecord"
-	"opencensus/core/ent/organization"
+	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
@@ -26,7 +26,7 @@ type BedRecordQuery struct {
 	fields     []string
 	predicates []predicate.BedRecord
 	// eager-loading edges.
-	withOrganization *OrganizationQuery
+	withPlaces *PlaceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,9 +56,9 @@ func (brq *BedRecordQuery) Order(o ...OrderFunc) *BedRecordQuery {
 	return brq
 }
 
-// QueryOrganization chains the current query on the "organization" edge.
-func (brq *BedRecordQuery) QueryOrganization() *OrganizationQuery {
-	query := &OrganizationQuery{config: brq.config}
+// QueryPlaces chains the current query on the "places" edge.
+func (brq *BedRecordQuery) QueryPlaces() *PlaceQuery {
+	query := &PlaceQuery{config: brq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := brq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -69,8 +69,8 @@ func (brq *BedRecordQuery) QueryOrganization() *OrganizationQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(bedrecord.Table, bedrecord.FieldID, selector),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, bedrecord.OrganizationTable, bedrecord.OrganizationPrimaryKey...),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, bedrecord.PlacesTable, bedrecord.PlacesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(brq.driver.Dialect(), step)
 		return fromU, nil
@@ -254,26 +254,26 @@ func (brq *BedRecordQuery) Clone() *BedRecordQuery {
 		return nil
 	}
 	return &BedRecordQuery{
-		config:           brq.config,
-		limit:            brq.limit,
-		offset:           brq.offset,
-		order:            append([]OrderFunc{}, brq.order...),
-		predicates:       append([]predicate.BedRecord{}, brq.predicates...),
-		withOrganization: brq.withOrganization.Clone(),
+		config:     brq.config,
+		limit:      brq.limit,
+		offset:     brq.offset,
+		order:      append([]OrderFunc{}, brq.order...),
+		predicates: append([]predicate.BedRecord{}, brq.predicates...),
+		withPlaces: brq.withPlaces.Clone(),
 		// clone intermediate query.
 		sql:  brq.sql.Clone(),
 		path: brq.path,
 	}
 }
 
-// WithOrganization tells the query-builder to eager-load the nodes that are connected to
-// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
-func (brq *BedRecordQuery) WithOrganization(opts ...func(*OrganizationQuery)) *BedRecordQuery {
-	query := &OrganizationQuery{config: brq.config}
+// WithPlaces tells the query-builder to eager-load the nodes that are connected to
+// the "places" edge. The optional arguments are used to configure the query builder of the edge.
+func (brq *BedRecordQuery) WithPlaces(opts ...func(*PlaceQuery)) *BedRecordQuery {
+	query := &PlaceQuery{config: brq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	brq.withOrganization = query
+	brq.withPlaces = query
 	return brq
 }
 
@@ -283,12 +283,12 @@ func (brq *BedRecordQuery) WithOrganization(opts ...func(*OrganizationQuery)) *B
 // Example:
 //
 //	var v []struct {
-//		BusyCovidBeds int `json:"busyCovidBeds,omitempty"`
+//		ReportedDate time.Time `json:"reportedDate,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.BedRecord.Query().
-//		GroupBy(bedrecord.FieldBusyCovidBeds).
+//		GroupBy(bedrecord.FieldReportedDate).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -310,11 +310,11 @@ func (brq *BedRecordQuery) GroupBy(field string, fields ...string) *BedRecordGro
 // Example:
 //
 //	var v []struct {
-//		BusyCovidBeds int `json:"busyCovidBeds,omitempty"`
+//		ReportedDate time.Time `json:"reportedDate,omitempty"`
 //	}
 //
 //	client.BedRecord.Query().
-//		Select(bedrecord.FieldBusyCovidBeds).
+//		Select(bedrecord.FieldReportedDate).
 //		Scan(ctx, &v)
 //
 func (brq *BedRecordQuery) Select(field string, fields ...string) *BedRecordSelect {
@@ -343,7 +343,7 @@ func (brq *BedRecordQuery) sqlAll(ctx context.Context) ([]*BedRecord, error) {
 		nodes       = []*BedRecord{}
 		_spec       = brq.querySpec()
 		loadedTypes = [1]bool{
-			brq.withOrganization != nil,
+			brq.withPlaces != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -366,13 +366,13 @@ func (brq *BedRecordQuery) sqlAll(ctx context.Context) ([]*BedRecord, error) {
 		return nodes, nil
 	}
 
-	if query := brq.withOrganization; query != nil {
+	if query := brq.withPlaces; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
 		ids := make(map[int]*BedRecord, len(nodes))
 		for _, node := range nodes {
 			ids[node.ID] = node
 			fks = append(fks, node.ID)
-			node.Edges.Organization = []*Organization{}
+			node.Edges.Places = []*Place{}
 		}
 		var (
 			edgeids []int
@@ -380,12 +380,12 @@ func (brq *BedRecordQuery) sqlAll(ctx context.Context) ([]*BedRecord, error) {
 		)
 		_spec := &sqlgraph.EdgeQuerySpec{
 			Edge: &sqlgraph.EdgeSpec{
-				Inverse: true,
-				Table:   bedrecord.OrganizationTable,
-				Columns: bedrecord.OrganizationPrimaryKey,
+				Inverse: false,
+				Table:   bedrecord.PlacesTable,
+				Columns: bedrecord.PlacesPrimaryKey,
 			},
 			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(bedrecord.OrganizationPrimaryKey[1], fks...))
+				s.Where(sql.InValues(bedrecord.PlacesPrimaryKey[0], fks...))
 			},
 
 			ScanValues: func() [2]interface{} {
@@ -412,9 +412,9 @@ func (brq *BedRecordQuery) sqlAll(ctx context.Context) ([]*BedRecord, error) {
 			},
 		}
 		if err := sqlgraph.QueryEdges(ctx, brq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "organization": %v`, err)
+			return nil, fmt.Errorf(`query edges "places": %v`, err)
 		}
-		query.Where(organization.IDIn(edgeids...))
+		query.Where(place.IDIn(edgeids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
@@ -422,10 +422,10 @@ func (brq *BedRecordQuery) sqlAll(ctx context.Context) ([]*BedRecord, error) {
 		for _, n := range neighbors {
 			nodes, ok := edges[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "organization" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected "places" node returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.Organization = append(nodes[i].Edges.Organization, n)
+				nodes[i].Edges.Places = append(nodes[i].Edges.Places, n)
 			}
 		}
 	}

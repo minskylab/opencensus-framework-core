@@ -9,14 +9,20 @@ import (
 // BedRecord is the predicate function for bedrecord builders.
 type BedRecord func(*sql.Selector)
 
+// DeathRecord is the predicate function for deathrecord builders.
+type DeathRecord func(*sql.Selector)
+
 // District is the predicate function for district builders.
 type District func(*sql.Selector)
 
-// Organization is the predicate function for organization builders.
-type Organization func(*sql.Selector)
+// InfectedRecord is the predicate function for infectedrecord builders.
+type InfectedRecord func(*sql.Selector)
 
 // OxygenRecord is the predicate function for oxygenrecord builders.
 type OxygenRecord func(*sql.Selector)
+
+// Place is the predicate function for place builders.
+type Place func(*sql.Selector)
 
 // Province is the predicate function for province builders.
 type Province func(*sql.Selector)

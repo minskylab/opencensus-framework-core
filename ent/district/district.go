@@ -10,23 +10,23 @@ const (
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 
-	// EdgeOrganization holds the string denoting the organization edge name in mutations.
-	EdgeOrganization = "organization"
-	// EdgeProvince holds the string denoting the province edge name in mutations.
-	EdgeProvince = "province"
+	// EdgePlaces holds the string denoting the places edge name in mutations.
+	EdgePlaces = "places"
+	// EdgeProvinces holds the string denoting the provinces edge name in mutations.
+	EdgeProvinces = "provinces"
 
 	// Table holds the table name of the district in the database.
 	Table = "districts"
-	// OrganizationTable is the table the holds the organization relation/edge. The primary key declared below.
-	OrganizationTable = "organization_district"
-	// OrganizationInverseTable is the table name for the Organization entity.
-	// It exists in this package in order to avoid circular dependency with the "organization" package.
-	OrganizationInverseTable = "organizations"
-	// ProvinceTable is the table the holds the province relation/edge. The primary key declared below.
-	ProvinceTable = "province_district"
-	// ProvinceInverseTable is the table name for the Province entity.
+	// PlacesTable is the table the holds the places relation/edge. The primary key declared below.
+	PlacesTable = "place_districts"
+	// PlacesInverseTable is the table name for the Place entity.
+	// It exists in this package in order to avoid circular dependency with the "place" package.
+	PlacesInverseTable = "places"
+	// ProvincesTable is the table the holds the provinces relation/edge. The primary key declared below.
+	ProvincesTable = "province_districts"
+	// ProvincesInverseTable is the table name for the Province entity.
 	// It exists in this package in order to avoid circular dependency with the "province" package.
-	ProvinceInverseTable = "provinces"
+	ProvincesInverseTable = "provinces"
 )
 
 // Columns holds all SQL columns for district fields.
@@ -36,12 +36,12 @@ var Columns = []string{
 }
 
 var (
-	// OrganizationPrimaryKey and OrganizationColumn2 are the table columns denoting the
-	// primary key for the organization relation (M2M).
-	OrganizationPrimaryKey = []string{"organization_id", "district_id"}
-	// ProvincePrimaryKey and ProvinceColumn2 are the table columns denoting the
-	// primary key for the province relation (M2M).
-	ProvincePrimaryKey = []string{"province_id", "district_id"}
+	// PlacesPrimaryKey and PlacesColumn2 are the table columns denoting the
+	// primary key for the places relation (M2M).
+	PlacesPrimaryKey = []string{"place_id", "district_id"}
+	// ProvincesPrimaryKey and ProvincesColumn2 are the table columns denoting the
+	// primary key for the provinces relation (M2M).
+	ProvincesPrimaryKey = []string{"province_id", "district_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

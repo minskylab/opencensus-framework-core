@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"opencensus/core/ent/organization"
+	"opencensus/core/ent/place"
 	"opencensus/core/ent/province"
 	"opencensus/core/ent/region"
 
@@ -27,29 +27,29 @@ func (rc *RegionCreate) SetName(s string) *RegionCreate {
 	return rc
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by IDs.
-func (rc *RegionCreate) AddOrganizationIDs(ids ...int) *RegionCreate {
-	rc.mutation.AddOrganizationIDs(ids...)
+// AddPlaceIDs adds the "places" edge to the Place entity by IDs.
+func (rc *RegionCreate) AddPlaceIDs(ids ...int) *RegionCreate {
+	rc.mutation.AddPlaceIDs(ids...)
 	return rc
 }
 
-// AddOrganization adds the "organization" edges to the Organization entity.
-func (rc *RegionCreate) AddOrganization(o ...*Organization) *RegionCreate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// AddPlaces adds the "places" edges to the Place entity.
+func (rc *RegionCreate) AddPlaces(p ...*Place) *RegionCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return rc.AddOrganizationIDs(ids...)
+	return rc.AddPlaceIDs(ids...)
 }
 
-// AddProvinceIDs adds the "province" edge to the Province entity by IDs.
+// AddProvinceIDs adds the "provinces" edge to the Province entity by IDs.
 func (rc *RegionCreate) AddProvinceIDs(ids ...int) *RegionCreate {
 	rc.mutation.AddProvinceIDs(ids...)
 	return rc
 }
 
-// AddProvince adds the "province" edges to the Province entity.
-func (rc *RegionCreate) AddProvince(p ...*Province) *RegionCreate {
+// AddProvinces adds the "provinces" edges to the Province entity.
+func (rc *RegionCreate) AddProvinces(p ...*Province) *RegionCreate {
 	ids := make([]int, len(p))
 	for i := range p {
 		ids[i] = p[i].ID
@@ -146,17 +146,17 @@ func (rc *RegionCreate) createSpec() (*Region, *sqlgraph.CreateSpec) {
 		})
 		_node.Name = value
 	}
-	if nodes := rc.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if nodes := rc.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   region.OrganizationTable,
-			Columns: region.OrganizationPrimaryKey,
+			Table:   region.PlacesTable,
+			Columns: region.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
@@ -165,12 +165,12 @@ func (rc *RegionCreate) createSpec() (*Region, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := rc.mutation.ProvinceIDs(); len(nodes) > 0 {
+	if nodes := rc.mutation.ProvincesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   region.ProvinceTable,
-			Columns: region.ProvincePrimaryKey,
+			Table:   region.ProvincesTable,
+			Columns: region.ProvincesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

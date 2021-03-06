@@ -4,6 +4,7 @@ package oxygenrecord
 
 import (
 	"opencensus/core/ent/predicate"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -92,6 +93,20 @@ func IDLTE(id int) predicate.OxygenRecord {
 	})
 }
 
+// ReportedDate applies equality check predicate on the "reportedDate" field. It's identical to ReportedDateEQ.
+func ReportedDate(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldReportedDate), v))
+	})
+}
+
+// CollectedDate applies equality check predicate on the "collectedDate" field. It's identical to CollectedDateEQ.
+func CollectedDate(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCollectedDate), v))
+	})
+}
+
 // TotalCylinders applies equality check predicate on the "totalCylinders" field. It's identical to TotalCylindersEQ.
 func TotalCylinders(v int) predicate.OxygenRecord {
 	return predicate.OxygenRecord(func(s *sql.Selector) {
@@ -103,6 +118,186 @@ func TotalCylinders(v int) predicate.OxygenRecord {
 func TotalOwnCylinders(v int) predicate.OxygenRecord {
 	return predicate.OxygenRecord(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldTotalOwnCylinders), v))
+	})
+}
+
+// DailyProduction applies equality check predicate on the "dailyProduction" field. It's identical to DailyProductionEQ.
+func DailyProduction(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDailyProduction), v))
+	})
+}
+
+// MaxDailyProduction applies equality check predicate on the "maxDailyProduction" field. It's identical to MaxDailyProductionEQ.
+func MaxDailyProduction(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldMaxDailyProduction), v))
+	})
+}
+
+// DailyConsumption applies equality check predicate on the "dailyConsumption" field. It's identical to DailyConsumptionEQ.
+func DailyConsumption(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDailyConsumption), v))
+	})
+}
+
+// MainSourceKind applies equality check predicate on the "mainSourceKind" field. It's identical to MainSourceKindEQ.
+func MainSourceKind(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// ReportedDateEQ applies the EQ predicate on the "reportedDate" field.
+func ReportedDateEQ(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldReportedDate), v))
+	})
+}
+
+// ReportedDateNEQ applies the NEQ predicate on the "reportedDate" field.
+func ReportedDateNEQ(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldReportedDate), v))
+	})
+}
+
+// ReportedDateIn applies the In predicate on the "reportedDate" field.
+func ReportedDateIn(vs ...time.Time) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldReportedDate), v...))
+	})
+}
+
+// ReportedDateNotIn applies the NotIn predicate on the "reportedDate" field.
+func ReportedDateNotIn(vs ...time.Time) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldReportedDate), v...))
+	})
+}
+
+// ReportedDateGT applies the GT predicate on the "reportedDate" field.
+func ReportedDateGT(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldReportedDate), v))
+	})
+}
+
+// ReportedDateGTE applies the GTE predicate on the "reportedDate" field.
+func ReportedDateGTE(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldReportedDate), v))
+	})
+}
+
+// ReportedDateLT applies the LT predicate on the "reportedDate" field.
+func ReportedDateLT(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldReportedDate), v))
+	})
+}
+
+// ReportedDateLTE applies the LTE predicate on the "reportedDate" field.
+func ReportedDateLTE(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldReportedDate), v))
+	})
+}
+
+// CollectedDateEQ applies the EQ predicate on the "collectedDate" field.
+func CollectedDateEQ(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCollectedDate), v))
+	})
+}
+
+// CollectedDateNEQ applies the NEQ predicate on the "collectedDate" field.
+func CollectedDateNEQ(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldCollectedDate), v))
+	})
+}
+
+// CollectedDateIn applies the In predicate on the "collectedDate" field.
+func CollectedDateIn(vs ...time.Time) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldCollectedDate), v...))
+	})
+}
+
+// CollectedDateNotIn applies the NotIn predicate on the "collectedDate" field.
+func CollectedDateNotIn(vs ...time.Time) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldCollectedDate), v...))
+	})
+}
+
+// CollectedDateGT applies the GT predicate on the "collectedDate" field.
+func CollectedDateGT(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldCollectedDate), v))
+	})
+}
+
+// CollectedDateGTE applies the GTE predicate on the "collectedDate" field.
+func CollectedDateGTE(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldCollectedDate), v))
+	})
+}
+
+// CollectedDateLT applies the LT predicate on the "collectedDate" field.
+func CollectedDateLT(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldCollectedDate), v))
+	})
+}
+
+// CollectedDateLTE applies the LTE predicate on the "collectedDate" field.
+func CollectedDateLTE(v time.Time) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldCollectedDate), v))
 	})
 }
 
@@ -258,25 +453,364 @@ func TotalOwnCylindersLTE(v int) predicate.OxygenRecord {
 	})
 }
 
-// HasOrganization applies the HasEdge predicate on the "organization" edge.
-func HasOrganization() predicate.OxygenRecord {
+// DailyProductionEQ applies the EQ predicate on the "dailyProduction" field.
+func DailyProductionEQ(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDailyProduction), v))
+	})
+}
+
+// DailyProductionNEQ applies the NEQ predicate on the "dailyProduction" field.
+func DailyProductionNEQ(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDailyProduction), v))
+	})
+}
+
+// DailyProductionIn applies the In predicate on the "dailyProduction" field.
+func DailyProductionIn(vs ...int) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldDailyProduction), v...))
+	})
+}
+
+// DailyProductionNotIn applies the NotIn predicate on the "dailyProduction" field.
+func DailyProductionNotIn(vs ...int) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldDailyProduction), v...))
+	})
+}
+
+// DailyProductionGT applies the GT predicate on the "dailyProduction" field.
+func DailyProductionGT(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldDailyProduction), v))
+	})
+}
+
+// DailyProductionGTE applies the GTE predicate on the "dailyProduction" field.
+func DailyProductionGTE(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldDailyProduction), v))
+	})
+}
+
+// DailyProductionLT applies the LT predicate on the "dailyProduction" field.
+func DailyProductionLT(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldDailyProduction), v))
+	})
+}
+
+// DailyProductionLTE applies the LTE predicate on the "dailyProduction" field.
+func DailyProductionLTE(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldDailyProduction), v))
+	})
+}
+
+// MaxDailyProductionEQ applies the EQ predicate on the "maxDailyProduction" field.
+func MaxDailyProductionEQ(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldMaxDailyProduction), v))
+	})
+}
+
+// MaxDailyProductionNEQ applies the NEQ predicate on the "maxDailyProduction" field.
+func MaxDailyProductionNEQ(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldMaxDailyProduction), v))
+	})
+}
+
+// MaxDailyProductionIn applies the In predicate on the "maxDailyProduction" field.
+func MaxDailyProductionIn(vs ...int) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldMaxDailyProduction), v...))
+	})
+}
+
+// MaxDailyProductionNotIn applies the NotIn predicate on the "maxDailyProduction" field.
+func MaxDailyProductionNotIn(vs ...int) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldMaxDailyProduction), v...))
+	})
+}
+
+// MaxDailyProductionGT applies the GT predicate on the "maxDailyProduction" field.
+func MaxDailyProductionGT(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldMaxDailyProduction), v))
+	})
+}
+
+// MaxDailyProductionGTE applies the GTE predicate on the "maxDailyProduction" field.
+func MaxDailyProductionGTE(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldMaxDailyProduction), v))
+	})
+}
+
+// MaxDailyProductionLT applies the LT predicate on the "maxDailyProduction" field.
+func MaxDailyProductionLT(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldMaxDailyProduction), v))
+	})
+}
+
+// MaxDailyProductionLTE applies the LTE predicate on the "maxDailyProduction" field.
+func MaxDailyProductionLTE(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldMaxDailyProduction), v))
+	})
+}
+
+// DailyConsumptionEQ applies the EQ predicate on the "dailyConsumption" field.
+func DailyConsumptionEQ(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDailyConsumption), v))
+	})
+}
+
+// DailyConsumptionNEQ applies the NEQ predicate on the "dailyConsumption" field.
+func DailyConsumptionNEQ(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDailyConsumption), v))
+	})
+}
+
+// DailyConsumptionIn applies the In predicate on the "dailyConsumption" field.
+func DailyConsumptionIn(vs ...int) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldDailyConsumption), v...))
+	})
+}
+
+// DailyConsumptionNotIn applies the NotIn predicate on the "dailyConsumption" field.
+func DailyConsumptionNotIn(vs ...int) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldDailyConsumption), v...))
+	})
+}
+
+// DailyConsumptionGT applies the GT predicate on the "dailyConsumption" field.
+func DailyConsumptionGT(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldDailyConsumption), v))
+	})
+}
+
+// DailyConsumptionGTE applies the GTE predicate on the "dailyConsumption" field.
+func DailyConsumptionGTE(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldDailyConsumption), v))
+	})
+}
+
+// DailyConsumptionLT applies the LT predicate on the "dailyConsumption" field.
+func DailyConsumptionLT(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldDailyConsumption), v))
+	})
+}
+
+// DailyConsumptionLTE applies the LTE predicate on the "dailyConsumption" field.
+func DailyConsumptionLTE(v int) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldDailyConsumption), v))
+	})
+}
+
+// MainSourceKindEQ applies the EQ predicate on the "mainSourceKind" field.
+func MainSourceKindEQ(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindNEQ applies the NEQ predicate on the "mainSourceKind" field.
+func MainSourceKindNEQ(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindIn applies the In predicate on the "mainSourceKind" field.
+func MainSourceKindIn(vs ...string) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldMainSourceKind), v...))
+	})
+}
+
+// MainSourceKindNotIn applies the NotIn predicate on the "mainSourceKind" field.
+func MainSourceKindNotIn(vs ...string) predicate.OxygenRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldMainSourceKind), v...))
+	})
+}
+
+// MainSourceKindGT applies the GT predicate on the "mainSourceKind" field.
+func MainSourceKindGT(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindGTE applies the GTE predicate on the "mainSourceKind" field.
+func MainSourceKindGTE(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindLT applies the LT predicate on the "mainSourceKind" field.
+func MainSourceKindLT(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindLTE applies the LTE predicate on the "mainSourceKind" field.
+func MainSourceKindLTE(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindContains applies the Contains predicate on the "mainSourceKind" field.
+func MainSourceKindContains(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindHasPrefix applies the HasPrefix predicate on the "mainSourceKind" field.
+func MainSourceKindHasPrefix(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindHasSuffix applies the HasSuffix predicate on the "mainSourceKind" field.
+func MainSourceKindHasSuffix(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindEqualFold applies the EqualFold predicate on the "mainSourceKind" field.
+func MainSourceKindEqualFold(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// MainSourceKindContainsFold applies the ContainsFold predicate on the "mainSourceKind" field.
+func MainSourceKindContainsFold(v string) predicate.OxygenRecord {
+	return predicate.OxygenRecord(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldMainSourceKind), v))
+	})
+}
+
+// HasPlaces applies the HasEdge predicate on the "places" edge.
+func HasPlaces() predicate.OxygenRecord {
 	return predicate.OxygenRecord(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(OrganizationTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, OrganizationTable, OrganizationPrimaryKey...),
+			sqlgraph.To(PlacesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, PlacesTable, PlacesPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasOrganizationWith applies the HasEdge predicate on the "organization" edge with a given conditions (other predicates).
-func HasOrganizationWith(preds ...predicate.Organization) predicate.OxygenRecord {
+// HasPlacesWith applies the HasEdge predicate on the "places" edge with a given conditions (other predicates).
+func HasPlacesWith(preds ...predicate.Place) predicate.OxygenRecord {
 	return predicate.OxygenRecord(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(OrganizationInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, OrganizationTable, OrganizationPrimaryKey...),
+			sqlgraph.To(PlacesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, PlacesTable, PlacesPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

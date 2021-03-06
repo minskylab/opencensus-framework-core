@@ -6,13 +6,16 @@ import (
 	"context"
 	"fmt"
 	"opencensus/core/ent/bedrecord"
+	"opencensus/core/ent/deathrecord"
 	"opencensus/core/ent/district"
-	"opencensus/core/ent/organization"
+	"opencensus/core/ent/infectedrecord"
 	"opencensus/core/ent/oxygenrecord"
+	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
 	"opencensus/core/ent/province"
 	"opencensus/core/ent/region"
 	"sync"
+	"time"
 
 	"entgo.io/ent"
 )
@@ -26,31 +29,39 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeBedRecord    = "BedRecord"
-	TypeDistrict     = "District"
-	TypeOrganization = "Organization"
-	TypeOxygenRecord = "OxygenRecord"
-	TypeProvince     = "Province"
-	TypeRegion       = "Region"
+	TypeBedRecord      = "BedRecord"
+	TypeDeathRecord    = "DeathRecord"
+	TypeDistrict       = "District"
+	TypeInfectedRecord = "InfectedRecord"
+	TypeOxygenRecord   = "OxygenRecord"
+	TypePlace          = "Place"
+	TypeProvince       = "Province"
+	TypeRegion         = "Region"
 )
 
 // BedRecordMutation represents an operation that mutates the BedRecord nodes in the graph.
 type BedRecordMutation struct {
 	config
-	op                    Op
-	typ                   string
-	id                    *int
-	busyCovidBeds         *int
-	addbusyCovidBeds      *int
-	availableCovidBeds    *int
-	addavailableCovidBeds *int
-	clearedFields         map[string]struct{}
-	organization          map[int]struct{}
-	removedorganization   map[int]struct{}
-	clearedorganization   bool
-	done                  bool
-	oldValue              func(context.Context) (*BedRecord, error)
-	predicates            []predicate.BedRecord
+	op               Op
+	typ              string
+	id               *int
+	reportedDate     *time.Time
+	collectedDate    *time.Time
+	busyBeds         *int
+	addbusyBeds      *int
+	availableBeds    *int
+	addavailableBeds *int
+	totalBeds        *int
+	addtotalBeds     *int
+	kindBed          *string
+	kindAge          *string
+	clearedFields    map[string]struct{}
+	places           map[int]struct{}
+	removedplaces    map[int]struct{}
+	clearedplaces    bool
+	done             bool
+	oldValue         func(context.Context) (*BedRecord, error)
+	predicates       []predicate.BedRecord
 }
 
 var _ ent.Mutation = (*BedRecordMutation)(nil)
@@ -132,169 +143,369 @@ func (m *BedRecordMutation) ID() (id int, exists bool) {
 	return *m.id, true
 }
 
-// SetBusyCovidBeds sets the "busyCovidBeds" field.
-func (m *BedRecordMutation) SetBusyCovidBeds(i int) {
-	m.busyCovidBeds = &i
-	m.addbusyCovidBeds = nil
+// SetReportedDate sets the "reportedDate" field.
+func (m *BedRecordMutation) SetReportedDate(t time.Time) {
+	m.reportedDate = &t
 }
 
-// BusyCovidBeds returns the value of the "busyCovidBeds" field in the mutation.
-func (m *BedRecordMutation) BusyCovidBeds() (r int, exists bool) {
-	v := m.busyCovidBeds
+// ReportedDate returns the value of the "reportedDate" field in the mutation.
+func (m *BedRecordMutation) ReportedDate() (r time.Time, exists bool) {
+	v := m.reportedDate
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldBusyCovidBeds returns the old "busyCovidBeds" field's value of the BedRecord entity.
+// OldReportedDate returns the old "reportedDate" field's value of the BedRecord entity.
 // If the BedRecord object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BedRecordMutation) OldBusyCovidBeds(ctx context.Context) (v int, err error) {
+func (m *BedRecordMutation) OldReportedDate(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldBusyCovidBeds is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldReportedDate is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldBusyCovidBeds requires an ID field in the mutation")
+		return v, fmt.Errorf("OldReportedDate requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldBusyCovidBeds: %w", err)
+		return v, fmt.Errorf("querying old value for OldReportedDate: %w", err)
 	}
-	return oldValue.BusyCovidBeds, nil
+	return oldValue.ReportedDate, nil
 }
 
-// AddBusyCovidBeds adds i to the "busyCovidBeds" field.
-func (m *BedRecordMutation) AddBusyCovidBeds(i int) {
-	if m.addbusyCovidBeds != nil {
-		*m.addbusyCovidBeds += i
-	} else {
-		m.addbusyCovidBeds = &i
-	}
+// ResetReportedDate resets all changes to the "reportedDate" field.
+func (m *BedRecordMutation) ResetReportedDate() {
+	m.reportedDate = nil
 }
 
-// AddedBusyCovidBeds returns the value that was added to the "busyCovidBeds" field in this mutation.
-func (m *BedRecordMutation) AddedBusyCovidBeds() (r int, exists bool) {
-	v := m.addbusyCovidBeds
+// SetCollectedDate sets the "collectedDate" field.
+func (m *BedRecordMutation) SetCollectedDate(t time.Time) {
+	m.collectedDate = &t
+}
+
+// CollectedDate returns the value of the "collectedDate" field in the mutation.
+func (m *BedRecordMutation) CollectedDate() (r time.Time, exists bool) {
+	v := m.collectedDate
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetBusyCovidBeds resets all changes to the "busyCovidBeds" field.
-func (m *BedRecordMutation) ResetBusyCovidBeds() {
-	m.busyCovidBeds = nil
-	m.addbusyCovidBeds = nil
-}
-
-// SetAvailableCovidBeds sets the "availableCovidBeds" field.
-func (m *BedRecordMutation) SetAvailableCovidBeds(i int) {
-	m.availableCovidBeds = &i
-	m.addavailableCovidBeds = nil
-}
-
-// AvailableCovidBeds returns the value of the "availableCovidBeds" field in the mutation.
-func (m *BedRecordMutation) AvailableCovidBeds() (r int, exists bool) {
-	v := m.availableCovidBeds
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAvailableCovidBeds returns the old "availableCovidBeds" field's value of the BedRecord entity.
+// OldCollectedDate returns the old "collectedDate" field's value of the BedRecord entity.
 // If the BedRecord object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BedRecordMutation) OldAvailableCovidBeds(ctx context.Context) (v int, err error) {
+func (m *BedRecordMutation) OldCollectedDate(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldAvailableCovidBeds is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldCollectedDate is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldAvailableCovidBeds requires an ID field in the mutation")
+		return v, fmt.Errorf("OldCollectedDate requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAvailableCovidBeds: %w", err)
+		return v, fmt.Errorf("querying old value for OldCollectedDate: %w", err)
 	}
-	return oldValue.AvailableCovidBeds, nil
+	return oldValue.CollectedDate, nil
 }
 
-// AddAvailableCovidBeds adds i to the "availableCovidBeds" field.
-func (m *BedRecordMutation) AddAvailableCovidBeds(i int) {
-	if m.addavailableCovidBeds != nil {
-		*m.addavailableCovidBeds += i
-	} else {
-		m.addavailableCovidBeds = &i
-	}
+// ResetCollectedDate resets all changes to the "collectedDate" field.
+func (m *BedRecordMutation) ResetCollectedDate() {
+	m.collectedDate = nil
 }
 
-// AddedAvailableCovidBeds returns the value that was added to the "availableCovidBeds" field in this mutation.
-func (m *BedRecordMutation) AddedAvailableCovidBeds() (r int, exists bool) {
-	v := m.addavailableCovidBeds
+// SetBusyBeds sets the "busyBeds" field.
+func (m *BedRecordMutation) SetBusyBeds(i int) {
+	m.busyBeds = &i
+	m.addbusyBeds = nil
+}
+
+// BusyBeds returns the value of the "busyBeds" field in the mutation.
+func (m *BedRecordMutation) BusyBeds() (r int, exists bool) {
+	v := m.busyBeds
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetAvailableCovidBeds resets all changes to the "availableCovidBeds" field.
-func (m *BedRecordMutation) ResetAvailableCovidBeds() {
-	m.availableCovidBeds = nil
-	m.addavailableCovidBeds = nil
+// OldBusyBeds returns the old "busyBeds" field's value of the BedRecord entity.
+// If the BedRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BedRecordMutation) OldBusyBeds(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldBusyBeds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldBusyBeds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBusyBeds: %w", err)
+	}
+	return oldValue.BusyBeds, nil
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by ids.
-func (m *BedRecordMutation) AddOrganizationIDs(ids ...int) {
-	if m.organization == nil {
-		m.organization = make(map[int]struct{})
+// AddBusyBeds adds i to the "busyBeds" field.
+func (m *BedRecordMutation) AddBusyBeds(i int) {
+	if m.addbusyBeds != nil {
+		*m.addbusyBeds += i
+	} else {
+		m.addbusyBeds = &i
+	}
+}
+
+// AddedBusyBeds returns the value that was added to the "busyBeds" field in this mutation.
+func (m *BedRecordMutation) AddedBusyBeds() (r int, exists bool) {
+	v := m.addbusyBeds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetBusyBeds resets all changes to the "busyBeds" field.
+func (m *BedRecordMutation) ResetBusyBeds() {
+	m.busyBeds = nil
+	m.addbusyBeds = nil
+}
+
+// SetAvailableBeds sets the "availableBeds" field.
+func (m *BedRecordMutation) SetAvailableBeds(i int) {
+	m.availableBeds = &i
+	m.addavailableBeds = nil
+}
+
+// AvailableBeds returns the value of the "availableBeds" field in the mutation.
+func (m *BedRecordMutation) AvailableBeds() (r int, exists bool) {
+	v := m.availableBeds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAvailableBeds returns the old "availableBeds" field's value of the BedRecord entity.
+// If the BedRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BedRecordMutation) OldAvailableBeds(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldAvailableBeds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldAvailableBeds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAvailableBeds: %w", err)
+	}
+	return oldValue.AvailableBeds, nil
+}
+
+// AddAvailableBeds adds i to the "availableBeds" field.
+func (m *BedRecordMutation) AddAvailableBeds(i int) {
+	if m.addavailableBeds != nil {
+		*m.addavailableBeds += i
+	} else {
+		m.addavailableBeds = &i
+	}
+}
+
+// AddedAvailableBeds returns the value that was added to the "availableBeds" field in this mutation.
+func (m *BedRecordMutation) AddedAvailableBeds() (r int, exists bool) {
+	v := m.addavailableBeds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAvailableBeds resets all changes to the "availableBeds" field.
+func (m *BedRecordMutation) ResetAvailableBeds() {
+	m.availableBeds = nil
+	m.addavailableBeds = nil
+}
+
+// SetTotalBeds sets the "totalBeds" field.
+func (m *BedRecordMutation) SetTotalBeds(i int) {
+	m.totalBeds = &i
+	m.addtotalBeds = nil
+}
+
+// TotalBeds returns the value of the "totalBeds" field in the mutation.
+func (m *BedRecordMutation) TotalBeds() (r int, exists bool) {
+	v := m.totalBeds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalBeds returns the old "totalBeds" field's value of the BedRecord entity.
+// If the BedRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BedRecordMutation) OldTotalBeds(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldTotalBeds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldTotalBeds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalBeds: %w", err)
+	}
+	return oldValue.TotalBeds, nil
+}
+
+// AddTotalBeds adds i to the "totalBeds" field.
+func (m *BedRecordMutation) AddTotalBeds(i int) {
+	if m.addtotalBeds != nil {
+		*m.addtotalBeds += i
+	} else {
+		m.addtotalBeds = &i
+	}
+}
+
+// AddedTotalBeds returns the value that was added to the "totalBeds" field in this mutation.
+func (m *BedRecordMutation) AddedTotalBeds() (r int, exists bool) {
+	v := m.addtotalBeds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalBeds resets all changes to the "totalBeds" field.
+func (m *BedRecordMutation) ResetTotalBeds() {
+	m.totalBeds = nil
+	m.addtotalBeds = nil
+}
+
+// SetKindBed sets the "kindBed" field.
+func (m *BedRecordMutation) SetKindBed(s string) {
+	m.kindBed = &s
+}
+
+// KindBed returns the value of the "kindBed" field in the mutation.
+func (m *BedRecordMutation) KindBed() (r string, exists bool) {
+	v := m.kindBed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKindBed returns the old "kindBed" field's value of the BedRecord entity.
+// If the BedRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BedRecordMutation) OldKindBed(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldKindBed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldKindBed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKindBed: %w", err)
+	}
+	return oldValue.KindBed, nil
+}
+
+// ResetKindBed resets all changes to the "kindBed" field.
+func (m *BedRecordMutation) ResetKindBed() {
+	m.kindBed = nil
+}
+
+// SetKindAge sets the "kindAge" field.
+func (m *BedRecordMutation) SetKindAge(s string) {
+	m.kindAge = &s
+}
+
+// KindAge returns the value of the "kindAge" field in the mutation.
+func (m *BedRecordMutation) KindAge() (r string, exists bool) {
+	v := m.kindAge
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKindAge returns the old "kindAge" field's value of the BedRecord entity.
+// If the BedRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BedRecordMutation) OldKindAge(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldKindAge is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldKindAge requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKindAge: %w", err)
+	}
+	return oldValue.KindAge, nil
+}
+
+// ResetKindAge resets all changes to the "kindAge" field.
+func (m *BedRecordMutation) ResetKindAge() {
+	m.kindAge = nil
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by ids.
+func (m *BedRecordMutation) AddPlaceIDs(ids ...int) {
+	if m.places == nil {
+		m.places = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.organization[ids[i]] = struct{}{}
+		m.places[ids[i]] = struct{}{}
 	}
 }
 
-// ClearOrganization clears the "organization" edge to the Organization entity.
-func (m *BedRecordMutation) ClearOrganization() {
-	m.clearedorganization = true
+// ClearPlaces clears the "places" edge to the Place entity.
+func (m *BedRecordMutation) ClearPlaces() {
+	m.clearedplaces = true
 }
 
-// OrganizationCleared returns if the "organization" edge to the Organization entity was cleared.
-func (m *BedRecordMutation) OrganizationCleared() bool {
-	return m.clearedorganization
+// PlacesCleared returns if the "places" edge to the Place entity was cleared.
+func (m *BedRecordMutation) PlacesCleared() bool {
+	return m.clearedplaces
 }
 
-// RemoveOrganizationIDs removes the "organization" edge to the Organization entity by IDs.
-func (m *BedRecordMutation) RemoveOrganizationIDs(ids ...int) {
-	if m.removedorganization == nil {
-		m.removedorganization = make(map[int]struct{})
+// RemovePlaceIDs removes the "places" edge to the Place entity by IDs.
+func (m *BedRecordMutation) RemovePlaceIDs(ids ...int) {
+	if m.removedplaces == nil {
+		m.removedplaces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removedorganization[ids[i]] = struct{}{}
+		m.removedplaces[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedOrganization returns the removed IDs of the "organization" edge to the Organization entity.
-func (m *BedRecordMutation) RemovedOrganizationIDs() (ids []int) {
-	for id := range m.removedorganization {
+// RemovedPlaces returns the removed IDs of the "places" edge to the Place entity.
+func (m *BedRecordMutation) RemovedPlacesIDs() (ids []int) {
+	for id := range m.removedplaces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// OrganizationIDs returns the "organization" edge IDs in the mutation.
-func (m *BedRecordMutation) OrganizationIDs() (ids []int) {
-	for id := range m.organization {
+// PlacesIDs returns the "places" edge IDs in the mutation.
+func (m *BedRecordMutation) PlacesIDs() (ids []int) {
+	for id := range m.places {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetOrganization resets all changes to the "organization" edge.
-func (m *BedRecordMutation) ResetOrganization() {
-	m.organization = nil
-	m.clearedorganization = false
-	m.removedorganization = nil
+// ResetPlaces resets all changes to the "places" edge.
+func (m *BedRecordMutation) ResetPlaces() {
+	m.places = nil
+	m.clearedplaces = false
+	m.removedplaces = nil
 }
 
 // Op returns the operation name.
@@ -311,12 +522,27 @@ func (m *BedRecordMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BedRecordMutation) Fields() []string {
-	fields := make([]string, 0, 2)
-	if m.busyCovidBeds != nil {
-		fields = append(fields, bedrecord.FieldBusyCovidBeds)
+	fields := make([]string, 0, 7)
+	if m.reportedDate != nil {
+		fields = append(fields, bedrecord.FieldReportedDate)
 	}
-	if m.availableCovidBeds != nil {
-		fields = append(fields, bedrecord.FieldAvailableCovidBeds)
+	if m.collectedDate != nil {
+		fields = append(fields, bedrecord.FieldCollectedDate)
+	}
+	if m.busyBeds != nil {
+		fields = append(fields, bedrecord.FieldBusyBeds)
+	}
+	if m.availableBeds != nil {
+		fields = append(fields, bedrecord.FieldAvailableBeds)
+	}
+	if m.totalBeds != nil {
+		fields = append(fields, bedrecord.FieldTotalBeds)
+	}
+	if m.kindBed != nil {
+		fields = append(fields, bedrecord.FieldKindBed)
+	}
+	if m.kindAge != nil {
+		fields = append(fields, bedrecord.FieldKindAge)
 	}
 	return fields
 }
@@ -326,10 +552,20 @@ func (m *BedRecordMutation) Fields() []string {
 // schema.
 func (m *BedRecordMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case bedrecord.FieldBusyCovidBeds:
-		return m.BusyCovidBeds()
-	case bedrecord.FieldAvailableCovidBeds:
-		return m.AvailableCovidBeds()
+	case bedrecord.FieldReportedDate:
+		return m.ReportedDate()
+	case bedrecord.FieldCollectedDate:
+		return m.CollectedDate()
+	case bedrecord.FieldBusyBeds:
+		return m.BusyBeds()
+	case bedrecord.FieldAvailableBeds:
+		return m.AvailableBeds()
+	case bedrecord.FieldTotalBeds:
+		return m.TotalBeds()
+	case bedrecord.FieldKindBed:
+		return m.KindBed()
+	case bedrecord.FieldKindAge:
+		return m.KindAge()
 	}
 	return nil, false
 }
@@ -339,10 +575,20 @@ func (m *BedRecordMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *BedRecordMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case bedrecord.FieldBusyCovidBeds:
-		return m.OldBusyCovidBeds(ctx)
-	case bedrecord.FieldAvailableCovidBeds:
-		return m.OldAvailableCovidBeds(ctx)
+	case bedrecord.FieldReportedDate:
+		return m.OldReportedDate(ctx)
+	case bedrecord.FieldCollectedDate:
+		return m.OldCollectedDate(ctx)
+	case bedrecord.FieldBusyBeds:
+		return m.OldBusyBeds(ctx)
+	case bedrecord.FieldAvailableBeds:
+		return m.OldAvailableBeds(ctx)
+	case bedrecord.FieldTotalBeds:
+		return m.OldTotalBeds(ctx)
+	case bedrecord.FieldKindBed:
+		return m.OldKindBed(ctx)
+	case bedrecord.FieldKindAge:
+		return m.OldKindAge(ctx)
 	}
 	return nil, fmt.Errorf("unknown BedRecord field %s", name)
 }
@@ -352,19 +598,54 @@ func (m *BedRecordMutation) OldField(ctx context.Context, name string) (ent.Valu
 // type.
 func (m *BedRecordMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case bedrecord.FieldBusyCovidBeds:
-		v, ok := value.(int)
+	case bedrecord.FieldReportedDate:
+		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetBusyCovidBeds(v)
+		m.SetReportedDate(v)
 		return nil
-	case bedrecord.FieldAvailableCovidBeds:
+	case bedrecord.FieldCollectedDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCollectedDate(v)
+		return nil
+	case bedrecord.FieldBusyBeds:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetAvailableCovidBeds(v)
+		m.SetBusyBeds(v)
+		return nil
+	case bedrecord.FieldAvailableBeds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAvailableBeds(v)
+		return nil
+	case bedrecord.FieldTotalBeds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalBeds(v)
+		return nil
+	case bedrecord.FieldKindBed:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKindBed(v)
+		return nil
+	case bedrecord.FieldKindAge:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKindAge(v)
 		return nil
 	}
 	return fmt.Errorf("unknown BedRecord field %s", name)
@@ -374,11 +655,14 @@ func (m *BedRecordMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *BedRecordMutation) AddedFields() []string {
 	var fields []string
-	if m.addbusyCovidBeds != nil {
-		fields = append(fields, bedrecord.FieldBusyCovidBeds)
+	if m.addbusyBeds != nil {
+		fields = append(fields, bedrecord.FieldBusyBeds)
 	}
-	if m.addavailableCovidBeds != nil {
-		fields = append(fields, bedrecord.FieldAvailableCovidBeds)
+	if m.addavailableBeds != nil {
+		fields = append(fields, bedrecord.FieldAvailableBeds)
+	}
+	if m.addtotalBeds != nil {
+		fields = append(fields, bedrecord.FieldTotalBeds)
 	}
 	return fields
 }
@@ -388,10 +672,12 @@ func (m *BedRecordMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *BedRecordMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case bedrecord.FieldBusyCovidBeds:
-		return m.AddedBusyCovidBeds()
-	case bedrecord.FieldAvailableCovidBeds:
-		return m.AddedAvailableCovidBeds()
+	case bedrecord.FieldBusyBeds:
+		return m.AddedBusyBeds()
+	case bedrecord.FieldAvailableBeds:
+		return m.AddedAvailableBeds()
+	case bedrecord.FieldTotalBeds:
+		return m.AddedTotalBeds()
 	}
 	return nil, false
 }
@@ -401,19 +687,26 @@ func (m *BedRecordMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *BedRecordMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case bedrecord.FieldBusyCovidBeds:
+	case bedrecord.FieldBusyBeds:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.AddBusyCovidBeds(v)
+		m.AddBusyBeds(v)
 		return nil
-	case bedrecord.FieldAvailableCovidBeds:
+	case bedrecord.FieldAvailableBeds:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.AddAvailableCovidBeds(v)
+		m.AddAvailableBeds(v)
+		return nil
+	case bedrecord.FieldTotalBeds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalBeds(v)
 		return nil
 	}
 	return fmt.Errorf("unknown BedRecord numeric field %s", name)
@@ -442,11 +735,26 @@ func (m *BedRecordMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *BedRecordMutation) ResetField(name string) error {
 	switch name {
-	case bedrecord.FieldBusyCovidBeds:
-		m.ResetBusyCovidBeds()
+	case bedrecord.FieldReportedDate:
+		m.ResetReportedDate()
 		return nil
-	case bedrecord.FieldAvailableCovidBeds:
-		m.ResetAvailableCovidBeds()
+	case bedrecord.FieldCollectedDate:
+		m.ResetCollectedDate()
+		return nil
+	case bedrecord.FieldBusyBeds:
+		m.ResetBusyBeds()
+		return nil
+	case bedrecord.FieldAvailableBeds:
+		m.ResetAvailableBeds()
+		return nil
+	case bedrecord.FieldTotalBeds:
+		m.ResetTotalBeds()
+		return nil
+	case bedrecord.FieldKindBed:
+		m.ResetKindBed()
+		return nil
+	case bedrecord.FieldKindAge:
+		m.ResetKindAge()
 		return nil
 	}
 	return fmt.Errorf("unknown BedRecord field %s", name)
@@ -455,8 +763,8 @@ func (m *BedRecordMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BedRecordMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.organization != nil {
-		edges = append(edges, bedrecord.EdgeOrganization)
+	if m.places != nil {
+		edges = append(edges, bedrecord.EdgePlaces)
 	}
 	return edges
 }
@@ -465,9 +773,9 @@ func (m *BedRecordMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *BedRecordMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case bedrecord.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.organization))
-		for id := range m.organization {
+	case bedrecord.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.places))
+		for id := range m.places {
 			ids = append(ids, id)
 		}
 		return ids
@@ -478,8 +786,8 @@ func (m *BedRecordMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BedRecordMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedorganization != nil {
-		edges = append(edges, bedrecord.EdgeOrganization)
+	if m.removedplaces != nil {
+		edges = append(edges, bedrecord.EdgePlaces)
 	}
 	return edges
 }
@@ -488,9 +796,9 @@ func (m *BedRecordMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *BedRecordMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case bedrecord.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.removedorganization))
-		for id := range m.removedorganization {
+	case bedrecord.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.removedplaces))
+		for id := range m.removedplaces {
 			ids = append(ids, id)
 		}
 		return ids
@@ -501,8 +809,8 @@ func (m *BedRecordMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BedRecordMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearedorganization {
-		edges = append(edges, bedrecord.EdgeOrganization)
+	if m.clearedplaces {
+		edges = append(edges, bedrecord.EdgePlaces)
 	}
 	return edges
 }
@@ -511,8 +819,8 @@ func (m *BedRecordMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *BedRecordMutation) EdgeCleared(name string) bool {
 	switch name {
-	case bedrecord.EdgeOrganization:
-		return m.clearedorganization
+	case bedrecord.EdgePlaces:
+		return m.clearedplaces
 	}
 	return false
 }
@@ -529,30 +837,640 @@ func (m *BedRecordMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *BedRecordMutation) ResetEdge(name string) error {
 	switch name {
-	case bedrecord.EdgeOrganization:
-		m.ResetOrganization()
+	case bedrecord.EdgePlaces:
+		m.ResetPlaces()
 		return nil
 	}
 	return fmt.Errorf("unknown BedRecord edge %s", name)
 }
 
-// DistrictMutation represents an operation that mutates the District nodes in the graph.
-type DistrictMutation struct {
+// DeathRecordMutation represents an operation that mutates the DeathRecord nodes in the graph.
+type DeathRecordMutation struct {
 	config
 	op                  Op
 	typ                 string
 	id                  *int
-	name                *string
+	reportedDate        *time.Time
+	collectedDate       *time.Time
+	sinadefRegisters    *int
+	addsinadefRegisters *int
+	minsaRegisters      *int
+	addminsaRegisters   *int
 	clearedFields       map[string]struct{}
-	organization        map[int]struct{}
-	removedorganization map[int]struct{}
-	clearedorganization bool
-	province            map[int]struct{}
-	removedprovince     map[int]struct{}
-	clearedprovince     bool
+	places              map[int]struct{}
+	removedplaces       map[int]struct{}
+	clearedplaces       bool
 	done                bool
-	oldValue            func(context.Context) (*District, error)
-	predicates          []predicate.District
+	oldValue            func(context.Context) (*DeathRecord, error)
+	predicates          []predicate.DeathRecord
+}
+
+var _ ent.Mutation = (*DeathRecordMutation)(nil)
+
+// deathrecordOption allows management of the mutation configuration using functional options.
+type deathrecordOption func(*DeathRecordMutation)
+
+// newDeathRecordMutation creates new mutation for the DeathRecord entity.
+func newDeathRecordMutation(c config, op Op, opts ...deathrecordOption) *DeathRecordMutation {
+	m := &DeathRecordMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeDeathRecord,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withDeathRecordID sets the ID field of the mutation.
+func withDeathRecordID(id int) deathrecordOption {
+	return func(m *DeathRecordMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *DeathRecord
+		)
+		m.oldValue = func(ctx context.Context) (*DeathRecord, error) {
+			once.Do(func() {
+				if m.done {
+					err = fmt.Errorf("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().DeathRecord.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withDeathRecord sets the old DeathRecord of the mutation.
+func withDeathRecord(node *DeathRecord) deathrecordOption {
+	return func(m *DeathRecordMutation) {
+		m.oldValue = func(context.Context) (*DeathRecord, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m DeathRecordMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m DeathRecordMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID
+// is only available if it was provided to the builder.
+func (m *DeathRecordMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// SetReportedDate sets the "reportedDate" field.
+func (m *DeathRecordMutation) SetReportedDate(t time.Time) {
+	m.reportedDate = &t
+}
+
+// ReportedDate returns the value of the "reportedDate" field in the mutation.
+func (m *DeathRecordMutation) ReportedDate() (r time.Time, exists bool) {
+	v := m.reportedDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReportedDate returns the old "reportedDate" field's value of the DeathRecord entity.
+// If the DeathRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeathRecordMutation) OldReportedDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldReportedDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldReportedDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReportedDate: %w", err)
+	}
+	return oldValue.ReportedDate, nil
+}
+
+// ResetReportedDate resets all changes to the "reportedDate" field.
+func (m *DeathRecordMutation) ResetReportedDate() {
+	m.reportedDate = nil
+}
+
+// SetCollectedDate sets the "collectedDate" field.
+func (m *DeathRecordMutation) SetCollectedDate(t time.Time) {
+	m.collectedDate = &t
+}
+
+// CollectedDate returns the value of the "collectedDate" field in the mutation.
+func (m *DeathRecordMutation) CollectedDate() (r time.Time, exists bool) {
+	v := m.collectedDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCollectedDate returns the old "collectedDate" field's value of the DeathRecord entity.
+// If the DeathRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeathRecordMutation) OldCollectedDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCollectedDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCollectedDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCollectedDate: %w", err)
+	}
+	return oldValue.CollectedDate, nil
+}
+
+// ResetCollectedDate resets all changes to the "collectedDate" field.
+func (m *DeathRecordMutation) ResetCollectedDate() {
+	m.collectedDate = nil
+}
+
+// SetSinadefRegisters sets the "sinadefRegisters" field.
+func (m *DeathRecordMutation) SetSinadefRegisters(i int) {
+	m.sinadefRegisters = &i
+	m.addsinadefRegisters = nil
+}
+
+// SinadefRegisters returns the value of the "sinadefRegisters" field in the mutation.
+func (m *DeathRecordMutation) SinadefRegisters() (r int, exists bool) {
+	v := m.sinadefRegisters
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSinadefRegisters returns the old "sinadefRegisters" field's value of the DeathRecord entity.
+// If the DeathRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeathRecordMutation) OldSinadefRegisters(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldSinadefRegisters is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldSinadefRegisters requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSinadefRegisters: %w", err)
+	}
+	return oldValue.SinadefRegisters, nil
+}
+
+// AddSinadefRegisters adds i to the "sinadefRegisters" field.
+func (m *DeathRecordMutation) AddSinadefRegisters(i int) {
+	if m.addsinadefRegisters != nil {
+		*m.addsinadefRegisters += i
+	} else {
+		m.addsinadefRegisters = &i
+	}
+}
+
+// AddedSinadefRegisters returns the value that was added to the "sinadefRegisters" field in this mutation.
+func (m *DeathRecordMutation) AddedSinadefRegisters() (r int, exists bool) {
+	v := m.addsinadefRegisters
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSinadefRegisters resets all changes to the "sinadefRegisters" field.
+func (m *DeathRecordMutation) ResetSinadefRegisters() {
+	m.sinadefRegisters = nil
+	m.addsinadefRegisters = nil
+}
+
+// SetMinsaRegisters sets the "minsaRegisters" field.
+func (m *DeathRecordMutation) SetMinsaRegisters(i int) {
+	m.minsaRegisters = &i
+	m.addminsaRegisters = nil
+}
+
+// MinsaRegisters returns the value of the "minsaRegisters" field in the mutation.
+func (m *DeathRecordMutation) MinsaRegisters() (r int, exists bool) {
+	v := m.minsaRegisters
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinsaRegisters returns the old "minsaRegisters" field's value of the DeathRecord entity.
+// If the DeathRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeathRecordMutation) OldMinsaRegisters(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldMinsaRegisters is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldMinsaRegisters requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinsaRegisters: %w", err)
+	}
+	return oldValue.MinsaRegisters, nil
+}
+
+// AddMinsaRegisters adds i to the "minsaRegisters" field.
+func (m *DeathRecordMutation) AddMinsaRegisters(i int) {
+	if m.addminsaRegisters != nil {
+		*m.addminsaRegisters += i
+	} else {
+		m.addminsaRegisters = &i
+	}
+}
+
+// AddedMinsaRegisters returns the value that was added to the "minsaRegisters" field in this mutation.
+func (m *DeathRecordMutation) AddedMinsaRegisters() (r int, exists bool) {
+	v := m.addminsaRegisters
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMinsaRegisters resets all changes to the "minsaRegisters" field.
+func (m *DeathRecordMutation) ResetMinsaRegisters() {
+	m.minsaRegisters = nil
+	m.addminsaRegisters = nil
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by ids.
+func (m *DeathRecordMutation) AddPlaceIDs(ids ...int) {
+	if m.places == nil {
+		m.places = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.places[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPlaces clears the "places" edge to the Place entity.
+func (m *DeathRecordMutation) ClearPlaces() {
+	m.clearedplaces = true
+}
+
+// PlacesCleared returns if the "places" edge to the Place entity was cleared.
+func (m *DeathRecordMutation) PlacesCleared() bool {
+	return m.clearedplaces
+}
+
+// RemovePlaceIDs removes the "places" edge to the Place entity by IDs.
+func (m *DeathRecordMutation) RemovePlaceIDs(ids ...int) {
+	if m.removedplaces == nil {
+		m.removedplaces = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedplaces[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPlaces returns the removed IDs of the "places" edge to the Place entity.
+func (m *DeathRecordMutation) RemovedPlacesIDs() (ids []int) {
+	for id := range m.removedplaces {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PlacesIDs returns the "places" edge IDs in the mutation.
+func (m *DeathRecordMutation) PlacesIDs() (ids []int) {
+	for id := range m.places {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPlaces resets all changes to the "places" edge.
+func (m *DeathRecordMutation) ResetPlaces() {
+	m.places = nil
+	m.clearedplaces = false
+	m.removedplaces = nil
+}
+
+// Op returns the operation name.
+func (m *DeathRecordMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (DeathRecord).
+func (m *DeathRecordMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *DeathRecordMutation) Fields() []string {
+	fields := make([]string, 0, 4)
+	if m.reportedDate != nil {
+		fields = append(fields, deathrecord.FieldReportedDate)
+	}
+	if m.collectedDate != nil {
+		fields = append(fields, deathrecord.FieldCollectedDate)
+	}
+	if m.sinadefRegisters != nil {
+		fields = append(fields, deathrecord.FieldSinadefRegisters)
+	}
+	if m.minsaRegisters != nil {
+		fields = append(fields, deathrecord.FieldMinsaRegisters)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *DeathRecordMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case deathrecord.FieldReportedDate:
+		return m.ReportedDate()
+	case deathrecord.FieldCollectedDate:
+		return m.CollectedDate()
+	case deathrecord.FieldSinadefRegisters:
+		return m.SinadefRegisters()
+	case deathrecord.FieldMinsaRegisters:
+		return m.MinsaRegisters()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *DeathRecordMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case deathrecord.FieldReportedDate:
+		return m.OldReportedDate(ctx)
+	case deathrecord.FieldCollectedDate:
+		return m.OldCollectedDate(ctx)
+	case deathrecord.FieldSinadefRegisters:
+		return m.OldSinadefRegisters(ctx)
+	case deathrecord.FieldMinsaRegisters:
+		return m.OldMinsaRegisters(ctx)
+	}
+	return nil, fmt.Errorf("unknown DeathRecord field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DeathRecordMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case deathrecord.FieldReportedDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReportedDate(v)
+		return nil
+	case deathrecord.FieldCollectedDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCollectedDate(v)
+		return nil
+	case deathrecord.FieldSinadefRegisters:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSinadefRegisters(v)
+		return nil
+	case deathrecord.FieldMinsaRegisters:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinsaRegisters(v)
+		return nil
+	}
+	return fmt.Errorf("unknown DeathRecord field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *DeathRecordMutation) AddedFields() []string {
+	var fields []string
+	if m.addsinadefRegisters != nil {
+		fields = append(fields, deathrecord.FieldSinadefRegisters)
+	}
+	if m.addminsaRegisters != nil {
+		fields = append(fields, deathrecord.FieldMinsaRegisters)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *DeathRecordMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case deathrecord.FieldSinadefRegisters:
+		return m.AddedSinadefRegisters()
+	case deathrecord.FieldMinsaRegisters:
+		return m.AddedMinsaRegisters()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DeathRecordMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case deathrecord.FieldSinadefRegisters:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSinadefRegisters(v)
+		return nil
+	case deathrecord.FieldMinsaRegisters:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMinsaRegisters(v)
+		return nil
+	}
+	return fmt.Errorf("unknown DeathRecord numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *DeathRecordMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *DeathRecordMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *DeathRecordMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown DeathRecord nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *DeathRecordMutation) ResetField(name string) error {
+	switch name {
+	case deathrecord.FieldReportedDate:
+		m.ResetReportedDate()
+		return nil
+	case deathrecord.FieldCollectedDate:
+		m.ResetCollectedDate()
+		return nil
+	case deathrecord.FieldSinadefRegisters:
+		m.ResetSinadefRegisters()
+		return nil
+	case deathrecord.FieldMinsaRegisters:
+		m.ResetMinsaRegisters()
+		return nil
+	}
+	return fmt.Errorf("unknown DeathRecord field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *DeathRecordMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.places != nil {
+		edges = append(edges, deathrecord.EdgePlaces)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *DeathRecordMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case deathrecord.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.places))
+		for id := range m.places {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *DeathRecordMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedplaces != nil {
+		edges = append(edges, deathrecord.EdgePlaces)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *DeathRecordMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case deathrecord.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.removedplaces))
+		for id := range m.removedplaces {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *DeathRecordMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedplaces {
+		edges = append(edges, deathrecord.EdgePlaces)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *DeathRecordMutation) EdgeCleared(name string) bool {
+	switch name {
+	case deathrecord.EdgePlaces:
+		return m.clearedplaces
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *DeathRecordMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown DeathRecord unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *DeathRecordMutation) ResetEdge(name string) error {
+	switch name {
+	case deathrecord.EdgePlaces:
+		m.ResetPlaces()
+		return nil
+	}
+	return fmt.Errorf("unknown DeathRecord edge %s", name)
+}
+
+// DistrictMutation represents an operation that mutates the District nodes in the graph.
+type DistrictMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *int
+	name             *string
+	clearedFields    map[string]struct{}
+	places           map[int]struct{}
+	removedplaces    map[int]struct{}
+	clearedplaces    bool
+	provinces        map[int]struct{}
+	removedprovinces map[int]struct{}
+	clearedprovinces bool
+	done             bool
+	oldValue         func(context.Context) (*District, error)
+	predicates       []predicate.District
 }
 
 var _ ent.Mutation = (*DistrictMutation)(nil)
@@ -670,110 +1588,110 @@ func (m *DistrictMutation) ResetName() {
 	m.name = nil
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by ids.
-func (m *DistrictMutation) AddOrganizationIDs(ids ...int) {
-	if m.organization == nil {
-		m.organization = make(map[int]struct{})
+// AddPlaceIDs adds the "places" edge to the Place entity by ids.
+func (m *DistrictMutation) AddPlaceIDs(ids ...int) {
+	if m.places == nil {
+		m.places = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.organization[ids[i]] = struct{}{}
+		m.places[ids[i]] = struct{}{}
 	}
 }
 
-// ClearOrganization clears the "organization" edge to the Organization entity.
-func (m *DistrictMutation) ClearOrganization() {
-	m.clearedorganization = true
+// ClearPlaces clears the "places" edge to the Place entity.
+func (m *DistrictMutation) ClearPlaces() {
+	m.clearedplaces = true
 }
 
-// OrganizationCleared returns if the "organization" edge to the Organization entity was cleared.
-func (m *DistrictMutation) OrganizationCleared() bool {
-	return m.clearedorganization
+// PlacesCleared returns if the "places" edge to the Place entity was cleared.
+func (m *DistrictMutation) PlacesCleared() bool {
+	return m.clearedplaces
 }
 
-// RemoveOrganizationIDs removes the "organization" edge to the Organization entity by IDs.
-func (m *DistrictMutation) RemoveOrganizationIDs(ids ...int) {
-	if m.removedorganization == nil {
-		m.removedorganization = make(map[int]struct{})
+// RemovePlaceIDs removes the "places" edge to the Place entity by IDs.
+func (m *DistrictMutation) RemovePlaceIDs(ids ...int) {
+	if m.removedplaces == nil {
+		m.removedplaces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removedorganization[ids[i]] = struct{}{}
+		m.removedplaces[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedOrganization returns the removed IDs of the "organization" edge to the Organization entity.
-func (m *DistrictMutation) RemovedOrganizationIDs() (ids []int) {
-	for id := range m.removedorganization {
+// RemovedPlaces returns the removed IDs of the "places" edge to the Place entity.
+func (m *DistrictMutation) RemovedPlacesIDs() (ids []int) {
+	for id := range m.removedplaces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// OrganizationIDs returns the "organization" edge IDs in the mutation.
-func (m *DistrictMutation) OrganizationIDs() (ids []int) {
-	for id := range m.organization {
+// PlacesIDs returns the "places" edge IDs in the mutation.
+func (m *DistrictMutation) PlacesIDs() (ids []int) {
+	for id := range m.places {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetOrganization resets all changes to the "organization" edge.
-func (m *DistrictMutation) ResetOrganization() {
-	m.organization = nil
-	m.clearedorganization = false
-	m.removedorganization = nil
+// ResetPlaces resets all changes to the "places" edge.
+func (m *DistrictMutation) ResetPlaces() {
+	m.places = nil
+	m.clearedplaces = false
+	m.removedplaces = nil
 }
 
-// AddProvinceIDs adds the "province" edge to the Province entity by ids.
+// AddProvinceIDs adds the "provinces" edge to the Province entity by ids.
 func (m *DistrictMutation) AddProvinceIDs(ids ...int) {
-	if m.province == nil {
-		m.province = make(map[int]struct{})
+	if m.provinces == nil {
+		m.provinces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.province[ids[i]] = struct{}{}
+		m.provinces[ids[i]] = struct{}{}
 	}
 }
 
-// ClearProvince clears the "province" edge to the Province entity.
-func (m *DistrictMutation) ClearProvince() {
-	m.clearedprovince = true
+// ClearProvinces clears the "provinces" edge to the Province entity.
+func (m *DistrictMutation) ClearProvinces() {
+	m.clearedprovinces = true
 }
 
-// ProvinceCleared returns if the "province" edge to the Province entity was cleared.
-func (m *DistrictMutation) ProvinceCleared() bool {
-	return m.clearedprovince
+// ProvincesCleared returns if the "provinces" edge to the Province entity was cleared.
+func (m *DistrictMutation) ProvincesCleared() bool {
+	return m.clearedprovinces
 }
 
-// RemoveProvinceIDs removes the "province" edge to the Province entity by IDs.
+// RemoveProvinceIDs removes the "provinces" edge to the Province entity by IDs.
 func (m *DistrictMutation) RemoveProvinceIDs(ids ...int) {
-	if m.removedprovince == nil {
-		m.removedprovince = make(map[int]struct{})
+	if m.removedprovinces == nil {
+		m.removedprovinces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removedprovince[ids[i]] = struct{}{}
+		m.removedprovinces[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedProvince returns the removed IDs of the "province" edge to the Province entity.
-func (m *DistrictMutation) RemovedProvinceIDs() (ids []int) {
-	for id := range m.removedprovince {
+// RemovedProvinces returns the removed IDs of the "provinces" edge to the Province entity.
+func (m *DistrictMutation) RemovedProvincesIDs() (ids []int) {
+	for id := range m.removedprovinces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ProvinceIDs returns the "province" edge IDs in the mutation.
-func (m *DistrictMutation) ProvinceIDs() (ids []int) {
-	for id := range m.province {
+// ProvincesIDs returns the "provinces" edge IDs in the mutation.
+func (m *DistrictMutation) ProvincesIDs() (ids []int) {
+	for id := range m.provinces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetProvince resets all changes to the "province" edge.
-func (m *DistrictMutation) ResetProvince() {
-	m.province = nil
-	m.clearedprovince = false
-	m.removedprovince = nil
+// ResetProvinces resets all changes to the "provinces" edge.
+func (m *DistrictMutation) ResetProvinces() {
+	m.provinces = nil
+	m.clearedprovinces = false
+	m.removedprovinces = nil
 }
 
 // Op returns the operation name.
@@ -890,11 +1808,11 @@ func (m *DistrictMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *DistrictMutation) AddedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.organization != nil {
-		edges = append(edges, district.EdgeOrganization)
+	if m.places != nil {
+		edges = append(edges, district.EdgePlaces)
 	}
-	if m.province != nil {
-		edges = append(edges, district.EdgeProvince)
+	if m.provinces != nil {
+		edges = append(edges, district.EdgeProvinces)
 	}
 	return edges
 }
@@ -903,15 +1821,15 @@ func (m *DistrictMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *DistrictMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case district.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.organization))
-		for id := range m.organization {
+	case district.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.places))
+		for id := range m.places {
 			ids = append(ids, id)
 		}
 		return ids
-	case district.EdgeProvince:
-		ids := make([]ent.Value, 0, len(m.province))
-		for id := range m.province {
+	case district.EdgeProvinces:
+		ids := make([]ent.Value, 0, len(m.provinces))
+		for id := range m.provinces {
 			ids = append(ids, id)
 		}
 		return ids
@@ -922,11 +1840,11 @@ func (m *DistrictMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *DistrictMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedorganization != nil {
-		edges = append(edges, district.EdgeOrganization)
+	if m.removedplaces != nil {
+		edges = append(edges, district.EdgePlaces)
 	}
-	if m.removedprovince != nil {
-		edges = append(edges, district.EdgeProvince)
+	if m.removedprovinces != nil {
+		edges = append(edges, district.EdgeProvinces)
 	}
 	return edges
 }
@@ -935,15 +1853,15 @@ func (m *DistrictMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *DistrictMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case district.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.removedorganization))
-		for id := range m.removedorganization {
+	case district.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.removedplaces))
+		for id := range m.removedplaces {
 			ids = append(ids, id)
 		}
 		return ids
-	case district.EdgeProvince:
-		ids := make([]ent.Value, 0, len(m.removedprovince))
-		for id := range m.removedprovince {
+	case district.EdgeProvinces:
+		ids := make([]ent.Value, 0, len(m.removedprovinces))
+		for id := range m.removedprovinces {
 			ids = append(ids, id)
 		}
 		return ids
@@ -954,11 +1872,11 @@ func (m *DistrictMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *DistrictMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.clearedorganization {
-		edges = append(edges, district.EdgeOrganization)
+	if m.clearedplaces {
+		edges = append(edges, district.EdgePlaces)
 	}
-	if m.clearedprovince {
-		edges = append(edges, district.EdgeProvince)
+	if m.clearedprovinces {
+		edges = append(edges, district.EdgeProvinces)
 	}
 	return edges
 }
@@ -967,10 +1885,10 @@ func (m *DistrictMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *DistrictMutation) EdgeCleared(name string) bool {
 	switch name {
-	case district.EdgeOrganization:
-		return m.clearedorganization
-	case district.EdgeProvince:
-		return m.clearedprovince
+	case district.EdgePlaces:
+		return m.clearedplaces
+	case district.EdgeProvinces:
+		return m.clearedprovinces
 	}
 	return false
 }
@@ -987,60 +1905,56 @@ func (m *DistrictMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *DistrictMutation) ResetEdge(name string) error {
 	switch name {
-	case district.EdgeOrganization:
-		m.ResetOrganization()
+	case district.EdgePlaces:
+		m.ResetPlaces()
 		return nil
-	case district.EdgeProvince:
-		m.ResetProvince()
+	case district.EdgeProvinces:
+		m.ResetProvinces()
 		return nil
 	}
 	return fmt.Errorf("unknown District edge %s", name)
 }
 
-// OrganizationMutation represents an operation that mutates the Organization nodes in the graph.
-type OrganizationMutation struct {
+// InfectedRecordMutation represents an operation that mutates the InfectedRecord nodes in the graph.
+type InfectedRecordMutation struct {
 	config
-	op                   Op
-	typ                  string
-	id                   *int
-	name                 *string
-	code                 *string
-	ubigeo               *string
-	kind                 *string
-	covidZone            *bool
-	category             *string
-	clearedFields        map[string]struct{}
-	region               map[int]struct{}
-	removedregion        map[int]struct{}
-	clearedregion        bool
-	province             map[int]struct{}
-	removedprovince      map[int]struct{}
-	clearedprovince      bool
-	district             map[int]struct{}
-	removeddistrict      map[int]struct{}
-	cleareddistrict      bool
-	oxygenRecords        map[int]struct{}
-	removedoxygenRecords map[int]struct{}
-	clearedoxygenRecords bool
-	bedRecords           map[int]struct{}
-	removedbedRecords    map[int]struct{}
-	clearedbedRecords    bool
-	done                 bool
-	oldValue             func(context.Context) (*Organization, error)
-	predicates           []predicate.Organization
+	op                  Op
+	typ                 string
+	id                  *int
+	reportedDate        *time.Time
+	collectedDate       *time.Time
+	pcrTotalTests       *int
+	addpcrTotalTests    *int
+	prTotalTests        *int
+	addprTotalTests     *int
+	agTotalTests        *int
+	addagTotalTests     *int
+	pcrPositiveTests    *int
+	addpcrPositiveTests *int
+	prPositiveTests     *int
+	addprPositiveTests  *int
+	agPositiveTests     *int
+	addagPositiveTests  *int
+	clearedFields       map[string]struct{}
+	places              map[int]struct{}
+	removedplaces       map[int]struct{}
+	clearedplaces       bool
+	done                bool
+	oldValue            func(context.Context) (*InfectedRecord, error)
+	predicates          []predicate.InfectedRecord
 }
 
-var _ ent.Mutation = (*OrganizationMutation)(nil)
+var _ ent.Mutation = (*InfectedRecordMutation)(nil)
 
-// organizationOption allows management of the mutation configuration using functional options.
-type organizationOption func(*OrganizationMutation)
+// infectedrecordOption allows management of the mutation configuration using functional options.
+type infectedrecordOption func(*InfectedRecordMutation)
 
-// newOrganizationMutation creates new mutation for the Organization entity.
-func newOrganizationMutation(c config, op Op, opts ...organizationOption) *OrganizationMutation {
-	m := &OrganizationMutation{
+// newInfectedRecordMutation creates new mutation for the InfectedRecord entity.
+func newInfectedRecordMutation(c config, op Op, opts ...infectedrecordOption) *InfectedRecordMutation {
+	m := &InfectedRecordMutation{
 		config:        c,
 		op:            op,
-		typ:           TypeOrganization,
+		typ:           TypeInfectedRecord,
 		clearedFields: make(map[string]struct{}),
 	}
 	for _, opt := range opts {
@@ -1049,20 +1963,20 @@ func newOrganizationMutation(c config, op Op, opts ...organizationOption) *Organ
 	return m
 }
 
-// withOrganizationID sets the ID field of the mutation.
-func withOrganizationID(id int) organizationOption {
-	return func(m *OrganizationMutation) {
+// withInfectedRecordID sets the ID field of the mutation.
+func withInfectedRecordID(id int) infectedrecordOption {
+	return func(m *InfectedRecordMutation) {
 		var (
 			err   error
 			once  sync.Once
-			value *Organization
+			value *InfectedRecord
 		)
-		m.oldValue = func(ctx context.Context) (*Organization, error) {
+		m.oldValue = func(ctx context.Context) (*InfectedRecord, error) {
 			once.Do(func() {
 				if m.done {
 					err = fmt.Errorf("querying old values post mutation is not allowed")
 				} else {
-					value, err = m.Client().Organization.Get(ctx, id)
+					value, err = m.Client().InfectedRecord.Get(ctx, id)
 				}
 			})
 			return value, err
@@ -1071,10 +1985,10 @@ func withOrganizationID(id int) organizationOption {
 	}
 }
 
-// withOrganization sets the old Organization of the mutation.
-func withOrganization(node *Organization) organizationOption {
-	return func(m *OrganizationMutation) {
-		m.oldValue = func(context.Context) (*Organization, error) {
+// withInfectedRecord sets the old InfectedRecord of the mutation.
+func withInfectedRecord(node *InfectedRecord) infectedrecordOption {
+	return func(m *InfectedRecordMutation) {
+		m.oldValue = func(context.Context) (*InfectedRecord, error) {
 			return node, nil
 		}
 		m.id = &node.ID
@@ -1083,7 +1997,7 @@ func withOrganization(node *Organization) organizationOption {
 
 // Client returns a new `ent.Client` from the mutation. If the mutation was
 // executed in a transaction (ent.Tx), a transactional client is returned.
-func (m OrganizationMutation) Client() *Client {
+func (m InfectedRecordMutation) Client() *Client {
 	client := &Client{config: m.config}
 	client.init()
 	return client
@@ -1091,7 +2005,7 @@ func (m OrganizationMutation) Client() *Client {
 
 // Tx returns an `ent.Tx` for mutations that were executed in transactions;
 // it returns an error otherwise.
-func (m OrganizationMutation) Tx() (*Tx, error) {
+func (m InfectedRecordMutation) Tx() (*Tx, error) {
 	if _, ok := m.driver.(*txDriver); !ok {
 		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
 	}
@@ -1102,565 +2016,512 @@ func (m OrganizationMutation) Tx() (*Tx, error) {
 
 // ID returns the ID value in the mutation. Note that the ID
 // is only available if it was provided to the builder.
-func (m *OrganizationMutation) ID() (id int, exists bool) {
+func (m *InfectedRecordMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
 	return *m.id, true
 }
 
-// SetName sets the "name" field.
-func (m *OrganizationMutation) SetName(s string) {
-	m.name = &s
+// SetReportedDate sets the "reportedDate" field.
+func (m *InfectedRecordMutation) SetReportedDate(t time.Time) {
+	m.reportedDate = &t
 }
 
-// Name returns the value of the "name" field in the mutation.
-func (m *OrganizationMutation) Name() (r string, exists bool) {
-	v := m.name
+// ReportedDate returns the value of the "reportedDate" field in the mutation.
+func (m *InfectedRecordMutation) ReportedDate() (r time.Time, exists bool) {
+	v := m.reportedDate
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldName returns the old "name" field's value of the Organization entity.
-// If the Organization object wasn't provided to the builder, the object is fetched from the database.
+// OldReportedDate returns the old "reportedDate" field's value of the InfectedRecord entity.
+// If the InfectedRecord object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *OrganizationMutation) OldName(ctx context.Context) (v string, err error) {
+func (m *InfectedRecordMutation) OldReportedDate(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldName is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldReportedDate is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldName requires an ID field in the mutation")
+		return v, fmt.Errorf("OldReportedDate requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
+		return v, fmt.Errorf("querying old value for OldReportedDate: %w", err)
 	}
-	return oldValue.Name, nil
+	return oldValue.ReportedDate, nil
 }
 
-// ResetName resets all changes to the "name" field.
-func (m *OrganizationMutation) ResetName() {
-	m.name = nil
+// ResetReportedDate resets all changes to the "reportedDate" field.
+func (m *InfectedRecordMutation) ResetReportedDate() {
+	m.reportedDate = nil
 }
 
-// SetCode sets the "code" field.
-func (m *OrganizationMutation) SetCode(s string) {
-	m.code = &s
+// SetCollectedDate sets the "collectedDate" field.
+func (m *InfectedRecordMutation) SetCollectedDate(t time.Time) {
+	m.collectedDate = &t
 }
 
-// Code returns the value of the "code" field in the mutation.
-func (m *OrganizationMutation) Code() (r string, exists bool) {
-	v := m.code
+// CollectedDate returns the value of the "collectedDate" field in the mutation.
+func (m *InfectedRecordMutation) CollectedDate() (r time.Time, exists bool) {
+	v := m.collectedDate
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCode returns the old "code" field's value of the Organization entity.
-// If the Organization object wasn't provided to the builder, the object is fetched from the database.
+// OldCollectedDate returns the old "collectedDate" field's value of the InfectedRecord entity.
+// If the InfectedRecord object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *OrganizationMutation) OldCode(ctx context.Context) (v string, err error) {
+func (m *InfectedRecordMutation) OldCollectedDate(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldCode is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldCollectedDate is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldCode requires an ID field in the mutation")
+		return v, fmt.Errorf("OldCollectedDate requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+		return v, fmt.Errorf("querying old value for OldCollectedDate: %w", err)
 	}
-	return oldValue.Code, nil
+	return oldValue.CollectedDate, nil
 }
 
-// ResetCode resets all changes to the "code" field.
-func (m *OrganizationMutation) ResetCode() {
-	m.code = nil
+// ResetCollectedDate resets all changes to the "collectedDate" field.
+func (m *InfectedRecordMutation) ResetCollectedDate() {
+	m.collectedDate = nil
 }
 
-// SetUbigeo sets the "ubigeo" field.
-func (m *OrganizationMutation) SetUbigeo(s string) {
-	m.ubigeo = &s
+// SetPcrTotalTests sets the "pcrTotalTests" field.
+func (m *InfectedRecordMutation) SetPcrTotalTests(i int) {
+	m.pcrTotalTests = &i
+	m.addpcrTotalTests = nil
 }
 
-// Ubigeo returns the value of the "ubigeo" field in the mutation.
-func (m *OrganizationMutation) Ubigeo() (r string, exists bool) {
-	v := m.ubigeo
+// PcrTotalTests returns the value of the "pcrTotalTests" field in the mutation.
+func (m *InfectedRecordMutation) PcrTotalTests() (r int, exists bool) {
+	v := m.pcrTotalTests
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldUbigeo returns the old "ubigeo" field's value of the Organization entity.
-// If the Organization object wasn't provided to the builder, the object is fetched from the database.
+// OldPcrTotalTests returns the old "pcrTotalTests" field's value of the InfectedRecord entity.
+// If the InfectedRecord object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *OrganizationMutation) OldUbigeo(ctx context.Context) (v string, err error) {
+func (m *InfectedRecordMutation) OldPcrTotalTests(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldUbigeo is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldPcrTotalTests is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldUbigeo requires an ID field in the mutation")
+		return v, fmt.Errorf("OldPcrTotalTests requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUbigeo: %w", err)
+		return v, fmt.Errorf("querying old value for OldPcrTotalTests: %w", err)
 	}
-	return oldValue.Ubigeo, nil
+	return oldValue.PcrTotalTests, nil
 }
 
-// ResetUbigeo resets all changes to the "ubigeo" field.
-func (m *OrganizationMutation) ResetUbigeo() {
-	m.ubigeo = nil
+// AddPcrTotalTests adds i to the "pcrTotalTests" field.
+func (m *InfectedRecordMutation) AddPcrTotalTests(i int) {
+	if m.addpcrTotalTests != nil {
+		*m.addpcrTotalTests += i
+	} else {
+		m.addpcrTotalTests = &i
+	}
 }
 
-// SetKind sets the "kind" field.
-func (m *OrganizationMutation) SetKind(s string) {
-	m.kind = &s
-}
-
-// Kind returns the value of the "kind" field in the mutation.
-func (m *OrganizationMutation) Kind() (r string, exists bool) {
-	v := m.kind
+// AddedPcrTotalTests returns the value that was added to the "pcrTotalTests" field in this mutation.
+func (m *InfectedRecordMutation) AddedPcrTotalTests() (r int, exists bool) {
+	v := m.addpcrTotalTests
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldKind returns the old "kind" field's value of the Organization entity.
-// If the Organization object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *OrganizationMutation) OldKind(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldKind is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldKind requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldKind: %w", err)
-	}
-	return oldValue.Kind, nil
+// ResetPcrTotalTests resets all changes to the "pcrTotalTests" field.
+func (m *InfectedRecordMutation) ResetPcrTotalTests() {
+	m.pcrTotalTests = nil
+	m.addpcrTotalTests = nil
 }
 
-// ClearKind clears the value of the "kind" field.
-func (m *OrganizationMutation) ClearKind() {
-	m.kind = nil
-	m.clearedFields[organization.FieldKind] = struct{}{}
+// SetPrTotalTests sets the "prTotalTests" field.
+func (m *InfectedRecordMutation) SetPrTotalTests(i int) {
+	m.prTotalTests = &i
+	m.addprTotalTests = nil
 }
 
-// KindCleared returns if the "kind" field was cleared in this mutation.
-func (m *OrganizationMutation) KindCleared() bool {
-	_, ok := m.clearedFields[organization.FieldKind]
-	return ok
-}
-
-// ResetKind resets all changes to the "kind" field.
-func (m *OrganizationMutation) ResetKind() {
-	m.kind = nil
-	delete(m.clearedFields, organization.FieldKind)
-}
-
-// SetCovidZone sets the "covidZone" field.
-func (m *OrganizationMutation) SetCovidZone(b bool) {
-	m.covidZone = &b
-}
-
-// CovidZone returns the value of the "covidZone" field in the mutation.
-func (m *OrganizationMutation) CovidZone() (r bool, exists bool) {
-	v := m.covidZone
+// PrTotalTests returns the value of the "prTotalTests" field in the mutation.
+func (m *InfectedRecordMutation) PrTotalTests() (r int, exists bool) {
+	v := m.prTotalTests
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCovidZone returns the old "covidZone" field's value of the Organization entity.
-// If the Organization object wasn't provided to the builder, the object is fetched from the database.
+// OldPrTotalTests returns the old "prTotalTests" field's value of the InfectedRecord entity.
+// If the InfectedRecord object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *OrganizationMutation) OldCovidZone(ctx context.Context) (v bool, err error) {
+func (m *InfectedRecordMutation) OldPrTotalTests(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldCovidZone is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldPrTotalTests is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldCovidZone requires an ID field in the mutation")
+		return v, fmt.Errorf("OldPrTotalTests requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCovidZone: %w", err)
+		return v, fmt.Errorf("querying old value for OldPrTotalTests: %w", err)
 	}
-	return oldValue.CovidZone, nil
+	return oldValue.PrTotalTests, nil
 }
 
-// ClearCovidZone clears the value of the "covidZone" field.
-func (m *OrganizationMutation) ClearCovidZone() {
-	m.covidZone = nil
-	m.clearedFields[organization.FieldCovidZone] = struct{}{}
+// AddPrTotalTests adds i to the "prTotalTests" field.
+func (m *InfectedRecordMutation) AddPrTotalTests(i int) {
+	if m.addprTotalTests != nil {
+		*m.addprTotalTests += i
+	} else {
+		m.addprTotalTests = &i
+	}
 }
 
-// CovidZoneCleared returns if the "covidZone" field was cleared in this mutation.
-func (m *OrganizationMutation) CovidZoneCleared() bool {
-	_, ok := m.clearedFields[organization.FieldCovidZone]
-	return ok
-}
-
-// ResetCovidZone resets all changes to the "covidZone" field.
-func (m *OrganizationMutation) ResetCovidZone() {
-	m.covidZone = nil
-	delete(m.clearedFields, organization.FieldCovidZone)
-}
-
-// SetCategory sets the "category" field.
-func (m *OrganizationMutation) SetCategory(s string) {
-	m.category = &s
-}
-
-// Category returns the value of the "category" field in the mutation.
-func (m *OrganizationMutation) Category() (r string, exists bool) {
-	v := m.category
+// AddedPrTotalTests returns the value that was added to the "prTotalTests" field in this mutation.
+func (m *InfectedRecordMutation) AddedPrTotalTests() (r int, exists bool) {
+	v := m.addprTotalTests
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCategory returns the old "category" field's value of the Organization entity.
-// If the Organization object wasn't provided to the builder, the object is fetched from the database.
+// ResetPrTotalTests resets all changes to the "prTotalTests" field.
+func (m *InfectedRecordMutation) ResetPrTotalTests() {
+	m.prTotalTests = nil
+	m.addprTotalTests = nil
+}
+
+// SetAgTotalTests sets the "agTotalTests" field.
+func (m *InfectedRecordMutation) SetAgTotalTests(i int) {
+	m.agTotalTests = &i
+	m.addagTotalTests = nil
+}
+
+// AgTotalTests returns the value of the "agTotalTests" field in the mutation.
+func (m *InfectedRecordMutation) AgTotalTests() (r int, exists bool) {
+	v := m.agTotalTests
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAgTotalTests returns the old "agTotalTests" field's value of the InfectedRecord entity.
+// If the InfectedRecord object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *OrganizationMutation) OldCategory(ctx context.Context) (v string, err error) {
+func (m *InfectedRecordMutation) OldAgTotalTests(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldCategory is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldAgTotalTests is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldCategory requires an ID field in the mutation")
+		return v, fmt.Errorf("OldAgTotalTests requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCategory: %w", err)
+		return v, fmt.Errorf("querying old value for OldAgTotalTests: %w", err)
 	}
-	return oldValue.Category, nil
+	return oldValue.AgTotalTests, nil
 }
 
-// ClearCategory clears the value of the "category" field.
-func (m *OrganizationMutation) ClearCategory() {
-	m.category = nil
-	m.clearedFields[organization.FieldCategory] = struct{}{}
+// AddAgTotalTests adds i to the "agTotalTests" field.
+func (m *InfectedRecordMutation) AddAgTotalTests(i int) {
+	if m.addagTotalTests != nil {
+		*m.addagTotalTests += i
+	} else {
+		m.addagTotalTests = &i
+	}
 }
 
-// CategoryCleared returns if the "category" field was cleared in this mutation.
-func (m *OrganizationMutation) CategoryCleared() bool {
-	_, ok := m.clearedFields[organization.FieldCategory]
-	return ok
+// AddedAgTotalTests returns the value that was added to the "agTotalTests" field in this mutation.
+func (m *InfectedRecordMutation) AddedAgTotalTests() (r int, exists bool) {
+	v := m.addagTotalTests
+	if v == nil {
+		return
+	}
+	return *v, true
 }
 
-// ResetCategory resets all changes to the "category" field.
-func (m *OrganizationMutation) ResetCategory() {
-	m.category = nil
-	delete(m.clearedFields, organization.FieldCategory)
+// ResetAgTotalTests resets all changes to the "agTotalTests" field.
+func (m *InfectedRecordMutation) ResetAgTotalTests() {
+	m.agTotalTests = nil
+	m.addagTotalTests = nil
 }
 
-// AddRegionIDs adds the "region" edge to the Region entity by ids.
-func (m *OrganizationMutation) AddRegionIDs(ids ...int) {
-	if m.region == nil {
-		m.region = make(map[int]struct{})
+// SetPcrPositiveTests sets the "pcrPositiveTests" field.
+func (m *InfectedRecordMutation) SetPcrPositiveTests(i int) {
+	m.pcrPositiveTests = &i
+	m.addpcrPositiveTests = nil
+}
+
+// PcrPositiveTests returns the value of the "pcrPositiveTests" field in the mutation.
+func (m *InfectedRecordMutation) PcrPositiveTests() (r int, exists bool) {
+	v := m.pcrPositiveTests
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPcrPositiveTests returns the old "pcrPositiveTests" field's value of the InfectedRecord entity.
+// If the InfectedRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InfectedRecordMutation) OldPcrPositiveTests(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldPcrPositiveTests is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldPcrPositiveTests requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPcrPositiveTests: %w", err)
+	}
+	return oldValue.PcrPositiveTests, nil
+}
+
+// AddPcrPositiveTests adds i to the "pcrPositiveTests" field.
+func (m *InfectedRecordMutation) AddPcrPositiveTests(i int) {
+	if m.addpcrPositiveTests != nil {
+		*m.addpcrPositiveTests += i
+	} else {
+		m.addpcrPositiveTests = &i
+	}
+}
+
+// AddedPcrPositiveTests returns the value that was added to the "pcrPositiveTests" field in this mutation.
+func (m *InfectedRecordMutation) AddedPcrPositiveTests() (r int, exists bool) {
+	v := m.addpcrPositiveTests
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPcrPositiveTests resets all changes to the "pcrPositiveTests" field.
+func (m *InfectedRecordMutation) ResetPcrPositiveTests() {
+	m.pcrPositiveTests = nil
+	m.addpcrPositiveTests = nil
+}
+
+// SetPrPositiveTests sets the "prPositiveTests" field.
+func (m *InfectedRecordMutation) SetPrPositiveTests(i int) {
+	m.prPositiveTests = &i
+	m.addprPositiveTests = nil
+}
+
+// PrPositiveTests returns the value of the "prPositiveTests" field in the mutation.
+func (m *InfectedRecordMutation) PrPositiveTests() (r int, exists bool) {
+	v := m.prPositiveTests
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPrPositiveTests returns the old "prPositiveTests" field's value of the InfectedRecord entity.
+// If the InfectedRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InfectedRecordMutation) OldPrPositiveTests(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldPrPositiveTests is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldPrPositiveTests requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPrPositiveTests: %w", err)
+	}
+	return oldValue.PrPositiveTests, nil
+}
+
+// AddPrPositiveTests adds i to the "prPositiveTests" field.
+func (m *InfectedRecordMutation) AddPrPositiveTests(i int) {
+	if m.addprPositiveTests != nil {
+		*m.addprPositiveTests += i
+	} else {
+		m.addprPositiveTests = &i
+	}
+}
+
+// AddedPrPositiveTests returns the value that was added to the "prPositiveTests" field in this mutation.
+func (m *InfectedRecordMutation) AddedPrPositiveTests() (r int, exists bool) {
+	v := m.addprPositiveTests
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPrPositiveTests resets all changes to the "prPositiveTests" field.
+func (m *InfectedRecordMutation) ResetPrPositiveTests() {
+	m.prPositiveTests = nil
+	m.addprPositiveTests = nil
+}
+
+// SetAgPositiveTests sets the "agPositiveTests" field.
+func (m *InfectedRecordMutation) SetAgPositiveTests(i int) {
+	m.agPositiveTests = &i
+	m.addagPositiveTests = nil
+}
+
+// AgPositiveTests returns the value of the "agPositiveTests" field in the mutation.
+func (m *InfectedRecordMutation) AgPositiveTests() (r int, exists bool) {
+	v := m.agPositiveTests
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAgPositiveTests returns the old "agPositiveTests" field's value of the InfectedRecord entity.
+// If the InfectedRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InfectedRecordMutation) OldAgPositiveTests(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldAgPositiveTests is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldAgPositiveTests requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAgPositiveTests: %w", err)
+	}
+	return oldValue.AgPositiveTests, nil
+}
+
+// AddAgPositiveTests adds i to the "agPositiveTests" field.
+func (m *InfectedRecordMutation) AddAgPositiveTests(i int) {
+	if m.addagPositiveTests != nil {
+		*m.addagPositiveTests += i
+	} else {
+		m.addagPositiveTests = &i
+	}
+}
+
+// AddedAgPositiveTests returns the value that was added to the "agPositiveTests" field in this mutation.
+func (m *InfectedRecordMutation) AddedAgPositiveTests() (r int, exists bool) {
+	v := m.addagPositiveTests
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAgPositiveTests resets all changes to the "agPositiveTests" field.
+func (m *InfectedRecordMutation) ResetAgPositiveTests() {
+	m.agPositiveTests = nil
+	m.addagPositiveTests = nil
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by ids.
+func (m *InfectedRecordMutation) AddPlaceIDs(ids ...int) {
+	if m.places == nil {
+		m.places = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.region[ids[i]] = struct{}{}
+		m.places[ids[i]] = struct{}{}
 	}
 }
 
-// ClearRegion clears the "region" edge to the Region entity.
-func (m *OrganizationMutation) ClearRegion() {
-	m.clearedregion = true
+// ClearPlaces clears the "places" edge to the Place entity.
+func (m *InfectedRecordMutation) ClearPlaces() {
+	m.clearedplaces = true
 }
 
-// RegionCleared returns if the "region" edge to the Region entity was cleared.
-func (m *OrganizationMutation) RegionCleared() bool {
-	return m.clearedregion
+// PlacesCleared returns if the "places" edge to the Place entity was cleared.
+func (m *InfectedRecordMutation) PlacesCleared() bool {
+	return m.clearedplaces
 }
 
-// RemoveRegionIDs removes the "region" edge to the Region entity by IDs.
-func (m *OrganizationMutation) RemoveRegionIDs(ids ...int) {
-	if m.removedregion == nil {
-		m.removedregion = make(map[int]struct{})
+// RemovePlaceIDs removes the "places" edge to the Place entity by IDs.
+func (m *InfectedRecordMutation) RemovePlaceIDs(ids ...int) {
+	if m.removedplaces == nil {
+		m.removedplaces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removedregion[ids[i]] = struct{}{}
+		m.removedplaces[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedRegion returns the removed IDs of the "region" edge to the Region entity.
-func (m *OrganizationMutation) RemovedRegionIDs() (ids []int) {
-	for id := range m.removedregion {
+// RemovedPlaces returns the removed IDs of the "places" edge to the Place entity.
+func (m *InfectedRecordMutation) RemovedPlacesIDs() (ids []int) {
+	for id := range m.removedplaces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// RegionIDs returns the "region" edge IDs in the mutation.
-func (m *OrganizationMutation) RegionIDs() (ids []int) {
-	for id := range m.region {
+// PlacesIDs returns the "places" edge IDs in the mutation.
+func (m *InfectedRecordMutation) PlacesIDs() (ids []int) {
+	for id := range m.places {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetRegion resets all changes to the "region" edge.
-func (m *OrganizationMutation) ResetRegion() {
-	m.region = nil
-	m.clearedregion = false
-	m.removedregion = nil
-}
-
-// AddProvinceIDs adds the "province" edge to the Province entity by ids.
-func (m *OrganizationMutation) AddProvinceIDs(ids ...int) {
-	if m.province == nil {
-		m.province = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.province[ids[i]] = struct{}{}
-	}
-}
-
-// ClearProvince clears the "province" edge to the Province entity.
-func (m *OrganizationMutation) ClearProvince() {
-	m.clearedprovince = true
-}
-
-// ProvinceCleared returns if the "province" edge to the Province entity was cleared.
-func (m *OrganizationMutation) ProvinceCleared() bool {
-	return m.clearedprovince
-}
-
-// RemoveProvinceIDs removes the "province" edge to the Province entity by IDs.
-func (m *OrganizationMutation) RemoveProvinceIDs(ids ...int) {
-	if m.removedprovince == nil {
-		m.removedprovince = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.removedprovince[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedProvince returns the removed IDs of the "province" edge to the Province entity.
-func (m *OrganizationMutation) RemovedProvinceIDs() (ids []int) {
-	for id := range m.removedprovince {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ProvinceIDs returns the "province" edge IDs in the mutation.
-func (m *OrganizationMutation) ProvinceIDs() (ids []int) {
-	for id := range m.province {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetProvince resets all changes to the "province" edge.
-func (m *OrganizationMutation) ResetProvince() {
-	m.province = nil
-	m.clearedprovince = false
-	m.removedprovince = nil
-}
-
-// AddDistrictIDs adds the "district" edge to the District entity by ids.
-func (m *OrganizationMutation) AddDistrictIDs(ids ...int) {
-	if m.district == nil {
-		m.district = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.district[ids[i]] = struct{}{}
-	}
-}
-
-// ClearDistrict clears the "district" edge to the District entity.
-func (m *OrganizationMutation) ClearDistrict() {
-	m.cleareddistrict = true
-}
-
-// DistrictCleared returns if the "district" edge to the District entity was cleared.
-func (m *OrganizationMutation) DistrictCleared() bool {
-	return m.cleareddistrict
-}
-
-// RemoveDistrictIDs removes the "district" edge to the District entity by IDs.
-func (m *OrganizationMutation) RemoveDistrictIDs(ids ...int) {
-	if m.removeddistrict == nil {
-		m.removeddistrict = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.removeddistrict[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedDistrict returns the removed IDs of the "district" edge to the District entity.
-func (m *OrganizationMutation) RemovedDistrictIDs() (ids []int) {
-	for id := range m.removeddistrict {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// DistrictIDs returns the "district" edge IDs in the mutation.
-func (m *OrganizationMutation) DistrictIDs() (ids []int) {
-	for id := range m.district {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetDistrict resets all changes to the "district" edge.
-func (m *OrganizationMutation) ResetDistrict() {
-	m.district = nil
-	m.cleareddistrict = false
-	m.removeddistrict = nil
-}
-
-// AddOxygenRecordIDs adds the "oxygenRecords" edge to the OxygenRecord entity by ids.
-func (m *OrganizationMutation) AddOxygenRecordIDs(ids ...int) {
-	if m.oxygenRecords == nil {
-		m.oxygenRecords = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.oxygenRecords[ids[i]] = struct{}{}
-	}
-}
-
-// ClearOxygenRecords clears the "oxygenRecords" edge to the OxygenRecord entity.
-func (m *OrganizationMutation) ClearOxygenRecords() {
-	m.clearedoxygenRecords = true
-}
-
-// OxygenRecordsCleared returns if the "oxygenRecords" edge to the OxygenRecord entity was cleared.
-func (m *OrganizationMutation) OxygenRecordsCleared() bool {
-	return m.clearedoxygenRecords
-}
-
-// RemoveOxygenRecordIDs removes the "oxygenRecords" edge to the OxygenRecord entity by IDs.
-func (m *OrganizationMutation) RemoveOxygenRecordIDs(ids ...int) {
-	if m.removedoxygenRecords == nil {
-		m.removedoxygenRecords = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.removedoxygenRecords[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedOxygenRecords returns the removed IDs of the "oxygenRecords" edge to the OxygenRecord entity.
-func (m *OrganizationMutation) RemovedOxygenRecordsIDs() (ids []int) {
-	for id := range m.removedoxygenRecords {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// OxygenRecordsIDs returns the "oxygenRecords" edge IDs in the mutation.
-func (m *OrganizationMutation) OxygenRecordsIDs() (ids []int) {
-	for id := range m.oxygenRecords {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetOxygenRecords resets all changes to the "oxygenRecords" edge.
-func (m *OrganizationMutation) ResetOxygenRecords() {
-	m.oxygenRecords = nil
-	m.clearedoxygenRecords = false
-	m.removedoxygenRecords = nil
-}
-
-// AddBedRecordIDs adds the "bedRecords" edge to the BedRecord entity by ids.
-func (m *OrganizationMutation) AddBedRecordIDs(ids ...int) {
-	if m.bedRecords == nil {
-		m.bedRecords = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.bedRecords[ids[i]] = struct{}{}
-	}
-}
-
-// ClearBedRecords clears the "bedRecords" edge to the BedRecord entity.
-func (m *OrganizationMutation) ClearBedRecords() {
-	m.clearedbedRecords = true
-}
-
-// BedRecordsCleared returns if the "bedRecords" edge to the BedRecord entity was cleared.
-func (m *OrganizationMutation) BedRecordsCleared() bool {
-	return m.clearedbedRecords
-}
-
-// RemoveBedRecordIDs removes the "bedRecords" edge to the BedRecord entity by IDs.
-func (m *OrganizationMutation) RemoveBedRecordIDs(ids ...int) {
-	if m.removedbedRecords == nil {
-		m.removedbedRecords = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.removedbedRecords[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedBedRecords returns the removed IDs of the "bedRecords" edge to the BedRecord entity.
-func (m *OrganizationMutation) RemovedBedRecordsIDs() (ids []int) {
-	for id := range m.removedbedRecords {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// BedRecordsIDs returns the "bedRecords" edge IDs in the mutation.
-func (m *OrganizationMutation) BedRecordsIDs() (ids []int) {
-	for id := range m.bedRecords {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetBedRecords resets all changes to the "bedRecords" edge.
-func (m *OrganizationMutation) ResetBedRecords() {
-	m.bedRecords = nil
-	m.clearedbedRecords = false
-	m.removedbedRecords = nil
+// ResetPlaces resets all changes to the "places" edge.
+func (m *InfectedRecordMutation) ResetPlaces() {
+	m.places = nil
+	m.clearedplaces = false
+	m.removedplaces = nil
 }
 
 // Op returns the operation name.
-func (m *OrganizationMutation) Op() Op {
+func (m *InfectedRecordMutation) Op() Op {
 	return m.op
 }
 
-// Type returns the node type of this mutation (Organization).
-func (m *OrganizationMutation) Type() string {
+// Type returns the node type of this mutation (InfectedRecord).
+func (m *InfectedRecordMutation) Type() string {
 	return m.typ
 }
 
 // Fields returns all fields that were changed during this mutation. Note that in
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
-func (m *OrganizationMutation) Fields() []string {
-	fields := make([]string, 0, 6)
-	if m.name != nil {
-		fields = append(fields, organization.FieldName)
+func (m *InfectedRecordMutation) Fields() []string {
+	fields := make([]string, 0, 8)
+	if m.reportedDate != nil {
+		fields = append(fields, infectedrecord.FieldReportedDate)
 	}
-	if m.code != nil {
-		fields = append(fields, organization.FieldCode)
+	if m.collectedDate != nil {
+		fields = append(fields, infectedrecord.FieldCollectedDate)
 	}
-	if m.ubigeo != nil {
-		fields = append(fields, organization.FieldUbigeo)
+	if m.pcrTotalTests != nil {
+		fields = append(fields, infectedrecord.FieldPcrTotalTests)
 	}
-	if m.kind != nil {
-		fields = append(fields, organization.FieldKind)
+	if m.prTotalTests != nil {
+		fields = append(fields, infectedrecord.FieldPrTotalTests)
 	}
-	if m.covidZone != nil {
-		fields = append(fields, organization.FieldCovidZone)
+	if m.agTotalTests != nil {
+		fields = append(fields, infectedrecord.FieldAgTotalTests)
 	}
-	if m.category != nil {
-		fields = append(fields, organization.FieldCategory)
+	if m.pcrPositiveTests != nil {
+		fields = append(fields, infectedrecord.FieldPcrPositiveTests)
+	}
+	if m.prPositiveTests != nil {
+		fields = append(fields, infectedrecord.FieldPrPositiveTests)
+	}
+	if m.agPositiveTests != nil {
+		fields = append(fields, infectedrecord.FieldAgPositiveTests)
 	}
 	return fields
 }
@@ -1668,20 +2529,24 @@ func (m *OrganizationMutation) Fields() []string {
 // Field returns the value of a field with the given name. The second boolean
 // return value indicates that this field was not set, or was not defined in the
 // schema.
-func (m *OrganizationMutation) Field(name string) (ent.Value, bool) {
+func (m *InfectedRecordMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case organization.FieldName:
-		return m.Name()
-	case organization.FieldCode:
-		return m.Code()
-	case organization.FieldUbigeo:
-		return m.Ubigeo()
-	case organization.FieldKind:
-		return m.Kind()
-	case organization.FieldCovidZone:
-		return m.CovidZone()
-	case organization.FieldCategory:
-		return m.Category()
+	case infectedrecord.FieldReportedDate:
+		return m.ReportedDate()
+	case infectedrecord.FieldCollectedDate:
+		return m.CollectedDate()
+	case infectedrecord.FieldPcrTotalTests:
+		return m.PcrTotalTests()
+	case infectedrecord.FieldPrTotalTests:
+		return m.PrTotalTests()
+	case infectedrecord.FieldAgTotalTests:
+		return m.AgTotalTests()
+	case infectedrecord.FieldPcrPositiveTests:
+		return m.PcrPositiveTests()
+	case infectedrecord.FieldPrPositiveTests:
+		return m.PrPositiveTests()
+	case infectedrecord.FieldAgPositiveTests:
+		return m.AgPositiveTests()
 	}
 	return nil, false
 }
@@ -1689,215 +2554,257 @@ func (m *OrganizationMutation) Field(name string) (ent.Value, bool) {
 // OldField returns the old value of the field from the database. An error is
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
-func (m *OrganizationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+func (m *InfectedRecordMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case organization.FieldName:
-		return m.OldName(ctx)
-	case organization.FieldCode:
-		return m.OldCode(ctx)
-	case organization.FieldUbigeo:
-		return m.OldUbigeo(ctx)
-	case organization.FieldKind:
-		return m.OldKind(ctx)
-	case organization.FieldCovidZone:
-		return m.OldCovidZone(ctx)
-	case organization.FieldCategory:
-		return m.OldCategory(ctx)
+	case infectedrecord.FieldReportedDate:
+		return m.OldReportedDate(ctx)
+	case infectedrecord.FieldCollectedDate:
+		return m.OldCollectedDate(ctx)
+	case infectedrecord.FieldPcrTotalTests:
+		return m.OldPcrTotalTests(ctx)
+	case infectedrecord.FieldPrTotalTests:
+		return m.OldPrTotalTests(ctx)
+	case infectedrecord.FieldAgTotalTests:
+		return m.OldAgTotalTests(ctx)
+	case infectedrecord.FieldPcrPositiveTests:
+		return m.OldPcrPositiveTests(ctx)
+	case infectedrecord.FieldPrPositiveTests:
+		return m.OldPrPositiveTests(ctx)
+	case infectedrecord.FieldAgPositiveTests:
+		return m.OldAgPositiveTests(ctx)
 	}
-	return nil, fmt.Errorf("unknown Organization field %s", name)
+	return nil, fmt.Errorf("unknown InfectedRecord field %s", name)
 }
 
 // SetField sets the value of a field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *OrganizationMutation) SetField(name string, value ent.Value) error {
+func (m *InfectedRecordMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case organization.FieldName:
-		v, ok := value.(string)
+	case infectedrecord.FieldReportedDate:
+		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetName(v)
+		m.SetReportedDate(v)
 		return nil
-	case organization.FieldCode:
-		v, ok := value.(string)
+	case infectedrecord.FieldCollectedDate:
+		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCode(v)
+		m.SetCollectedDate(v)
 		return nil
-	case organization.FieldUbigeo:
-		v, ok := value.(string)
+	case infectedrecord.FieldPcrTotalTests:
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetUbigeo(v)
+		m.SetPcrTotalTests(v)
 		return nil
-	case organization.FieldKind:
-		v, ok := value.(string)
+	case infectedrecord.FieldPrTotalTests:
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetKind(v)
+		m.SetPrTotalTests(v)
 		return nil
-	case organization.FieldCovidZone:
-		v, ok := value.(bool)
+	case infectedrecord.FieldAgTotalTests:
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCovidZone(v)
+		m.SetAgTotalTests(v)
 		return nil
-	case organization.FieldCategory:
-		v, ok := value.(string)
+	case infectedrecord.FieldPcrPositiveTests:
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCategory(v)
+		m.SetPcrPositiveTests(v)
+		return nil
+	case infectedrecord.FieldPrPositiveTests:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPrPositiveTests(v)
+		return nil
+	case infectedrecord.FieldAgPositiveTests:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAgPositiveTests(v)
 		return nil
 	}
-	return fmt.Errorf("unknown Organization field %s", name)
+	return fmt.Errorf("unknown InfectedRecord field %s", name)
 }
 
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
-func (m *OrganizationMutation) AddedFields() []string {
-	return nil
+func (m *InfectedRecordMutation) AddedFields() []string {
+	var fields []string
+	if m.addpcrTotalTests != nil {
+		fields = append(fields, infectedrecord.FieldPcrTotalTests)
+	}
+	if m.addprTotalTests != nil {
+		fields = append(fields, infectedrecord.FieldPrTotalTests)
+	}
+	if m.addagTotalTests != nil {
+		fields = append(fields, infectedrecord.FieldAgTotalTests)
+	}
+	if m.addpcrPositiveTests != nil {
+		fields = append(fields, infectedrecord.FieldPcrPositiveTests)
+	}
+	if m.addprPositiveTests != nil {
+		fields = append(fields, infectedrecord.FieldPrPositiveTests)
+	}
+	if m.addagPositiveTests != nil {
+		fields = append(fields, infectedrecord.FieldAgPositiveTests)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
-func (m *OrganizationMutation) AddedField(name string) (ent.Value, bool) {
+func (m *InfectedRecordMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case infectedrecord.FieldPcrTotalTests:
+		return m.AddedPcrTotalTests()
+	case infectedrecord.FieldPrTotalTests:
+		return m.AddedPrTotalTests()
+	case infectedrecord.FieldAgTotalTests:
+		return m.AddedAgTotalTests()
+	case infectedrecord.FieldPcrPositiveTests:
+		return m.AddedPcrPositiveTests()
+	case infectedrecord.FieldPrPositiveTests:
+		return m.AddedPrPositiveTests()
+	case infectedrecord.FieldAgPositiveTests:
+		return m.AddedAgPositiveTests()
+	}
 	return nil, false
 }
 
 // AddField adds the value to the field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *OrganizationMutation) AddField(name string, value ent.Value) error {
+func (m *InfectedRecordMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case infectedrecord.FieldPcrTotalTests:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPcrTotalTests(v)
+		return nil
+	case infectedrecord.FieldPrTotalTests:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPrTotalTests(v)
+		return nil
+	case infectedrecord.FieldAgTotalTests:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAgTotalTests(v)
+		return nil
+	case infectedrecord.FieldPcrPositiveTests:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPcrPositiveTests(v)
+		return nil
+	case infectedrecord.FieldPrPositiveTests:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPrPositiveTests(v)
+		return nil
+	case infectedrecord.FieldAgPositiveTests:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAgPositiveTests(v)
+		return nil
 	}
-	return fmt.Errorf("unknown Organization numeric field %s", name)
+	return fmt.Errorf("unknown InfectedRecord numeric field %s", name)
 }
 
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
-func (m *OrganizationMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(organization.FieldKind) {
-		fields = append(fields, organization.FieldKind)
-	}
-	if m.FieldCleared(organization.FieldCovidZone) {
-		fields = append(fields, organization.FieldCovidZone)
-	}
-	if m.FieldCleared(organization.FieldCategory) {
-		fields = append(fields, organization.FieldCategory)
-	}
-	return fields
+func (m *InfectedRecordMutation) ClearedFields() []string {
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
 // cleared in this mutation.
-func (m *OrganizationMutation) FieldCleared(name string) bool {
+func (m *InfectedRecordMutation) FieldCleared(name string) bool {
 	_, ok := m.clearedFields[name]
 	return ok
 }
 
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
-func (m *OrganizationMutation) ClearField(name string) error {
-	switch name {
-	case organization.FieldKind:
-		m.ClearKind()
-		return nil
-	case organization.FieldCovidZone:
-		m.ClearCovidZone()
-		return nil
-	case organization.FieldCategory:
-		m.ClearCategory()
-		return nil
-	}
-	return fmt.Errorf("unknown Organization nullable field %s", name)
+func (m *InfectedRecordMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown InfectedRecord nullable field %s", name)
 }
 
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
-func (m *OrganizationMutation) ResetField(name string) error {
+func (m *InfectedRecordMutation) ResetField(name string) error {
 	switch name {
-	case organization.FieldName:
-		m.ResetName()
+	case infectedrecord.FieldReportedDate:
+		m.ResetReportedDate()
 		return nil
-	case organization.FieldCode:
-		m.ResetCode()
+	case infectedrecord.FieldCollectedDate:
+		m.ResetCollectedDate()
 		return nil
-	case organization.FieldUbigeo:
-		m.ResetUbigeo()
+	case infectedrecord.FieldPcrTotalTests:
+		m.ResetPcrTotalTests()
 		return nil
-	case organization.FieldKind:
-		m.ResetKind()
+	case infectedrecord.FieldPrTotalTests:
+		m.ResetPrTotalTests()
 		return nil
-	case organization.FieldCovidZone:
-		m.ResetCovidZone()
+	case infectedrecord.FieldAgTotalTests:
+		m.ResetAgTotalTests()
 		return nil
-	case organization.FieldCategory:
-		m.ResetCategory()
+	case infectedrecord.FieldPcrPositiveTests:
+		m.ResetPcrPositiveTests()
+		return nil
+	case infectedrecord.FieldPrPositiveTests:
+		m.ResetPrPositiveTests()
+		return nil
+	case infectedrecord.FieldAgPositiveTests:
+		m.ResetAgPositiveTests()
 		return nil
 	}
-	return fmt.Errorf("unknown Organization field %s", name)
+	return fmt.Errorf("unknown InfectedRecord field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
-func (m *OrganizationMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
-	if m.region != nil {
-		edges = append(edges, organization.EdgeRegion)
-	}
-	if m.province != nil {
-		edges = append(edges, organization.EdgeProvince)
-	}
-	if m.district != nil {
-		edges = append(edges, organization.EdgeDistrict)
-	}
-	if m.oxygenRecords != nil {
-		edges = append(edges, organization.EdgeOxygenRecords)
-	}
-	if m.bedRecords != nil {
-		edges = append(edges, organization.EdgeBedRecords)
+func (m *InfectedRecordMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.places != nil {
+		edges = append(edges, infectedrecord.EdgePlaces)
 	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
-func (m *OrganizationMutation) AddedIDs(name string) []ent.Value {
+func (m *InfectedRecordMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case organization.EdgeRegion:
-		ids := make([]ent.Value, 0, len(m.region))
-		for id := range m.region {
-			ids = append(ids, id)
-		}
-		return ids
-	case organization.EdgeProvince:
-		ids := make([]ent.Value, 0, len(m.province))
-		for id := range m.province {
-			ids = append(ids, id)
-		}
-		return ids
-	case organization.EdgeDistrict:
-		ids := make([]ent.Value, 0, len(m.district))
-		for id := range m.district {
-			ids = append(ids, id)
-		}
-		return ids
-	case organization.EdgeOxygenRecords:
-		ids := make([]ent.Value, 0, len(m.oxygenRecords))
-		for id := range m.oxygenRecords {
-			ids = append(ids, id)
-		}
-		return ids
-	case organization.EdgeBedRecords:
-		ids := make([]ent.Value, 0, len(m.bedRecords))
-		for id := range m.bedRecords {
+	case infectedrecord.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.places))
+		for id := range m.places {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1906,57 +2813,21 @@ func (m *OrganizationMutation) AddedIDs(name string) []ent.Value {
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
-func (m *OrganizationMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
-	if m.removedregion != nil {
-		edges = append(edges, organization.EdgeRegion)
-	}
-	if m.removedprovince != nil {
-		edges = append(edges, organization.EdgeProvince)
-	}
-	if m.removeddistrict != nil {
-		edges = append(edges, organization.EdgeDistrict)
-	}
-	if m.removedoxygenRecords != nil {
-		edges = append(edges, organization.EdgeOxygenRecords)
-	}
-	if m.removedbedRecords != nil {
-		edges = append(edges, organization.EdgeBedRecords)
+func (m *InfectedRecordMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedplaces != nil {
+		edges = append(edges, infectedrecord.EdgePlaces)
 	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
-func (m *OrganizationMutation) RemovedIDs(name string) []ent.Value {
+func (m *InfectedRecordMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case organization.EdgeRegion:
-		ids := make([]ent.Value, 0, len(m.removedregion))
-		for id := range m.removedregion {
-			ids = append(ids, id)
-		}
-		return ids
-	case organization.EdgeProvince:
-		ids := make([]ent.Value, 0, len(m.removedprovince))
-		for id := range m.removedprovince {
-			ids = append(ids, id)
-		}
-		return ids
-	case organization.EdgeDistrict:
-		ids := make([]ent.Value, 0, len(m.removeddistrict))
-		for id := range m.removeddistrict {
-			ids = append(ids, id)
-		}
-		return ids
-	case organization.EdgeOxygenRecords:
-		ids := make([]ent.Value, 0, len(m.removedoxygenRecords))
-		for id := range m.removedoxygenRecords {
-			ids = append(ids, id)
-		}
-		return ids
-	case organization.EdgeBedRecords:
-		ids := make([]ent.Value, 0, len(m.removedbedRecords))
-		for id := range m.removedbedRecords {
+	case infectedrecord.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.removedplaces))
+		for id := range m.removedplaces {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1965,92 +2836,69 @@ func (m *OrganizationMutation) RemovedIDs(name string) []ent.Value {
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *OrganizationMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
-	if m.clearedregion {
-		edges = append(edges, organization.EdgeRegion)
-	}
-	if m.clearedprovince {
-		edges = append(edges, organization.EdgeProvince)
-	}
-	if m.cleareddistrict {
-		edges = append(edges, organization.EdgeDistrict)
-	}
-	if m.clearedoxygenRecords {
-		edges = append(edges, organization.EdgeOxygenRecords)
-	}
-	if m.clearedbedRecords {
-		edges = append(edges, organization.EdgeBedRecords)
+func (m *InfectedRecordMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedplaces {
+		edges = append(edges, infectedrecord.EdgePlaces)
 	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
-func (m *OrganizationMutation) EdgeCleared(name string) bool {
+func (m *InfectedRecordMutation) EdgeCleared(name string) bool {
 	switch name {
-	case organization.EdgeRegion:
-		return m.clearedregion
-	case organization.EdgeProvince:
-		return m.clearedprovince
-	case organization.EdgeDistrict:
-		return m.cleareddistrict
-	case organization.EdgeOxygenRecords:
-		return m.clearedoxygenRecords
-	case organization.EdgeBedRecords:
-		return m.clearedbedRecords
+	case infectedrecord.EdgePlaces:
+		return m.clearedplaces
 	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
-func (m *OrganizationMutation) ClearEdge(name string) error {
+func (m *InfectedRecordMutation) ClearEdge(name string) error {
 	switch name {
 	}
-	return fmt.Errorf("unknown Organization unique edge %s", name)
+	return fmt.Errorf("unknown InfectedRecord unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
-func (m *OrganizationMutation) ResetEdge(name string) error {
+func (m *InfectedRecordMutation) ResetEdge(name string) error {
 	switch name {
-	case organization.EdgeRegion:
-		m.ResetRegion()
-		return nil
-	case organization.EdgeProvince:
-		m.ResetProvince()
-		return nil
-	case organization.EdgeDistrict:
-		m.ResetDistrict()
-		return nil
-	case organization.EdgeOxygenRecords:
-		m.ResetOxygenRecords()
-		return nil
-	case organization.EdgeBedRecords:
-		m.ResetBedRecords()
+	case infectedrecord.EdgePlaces:
+		m.ResetPlaces()
 		return nil
 	}
-	return fmt.Errorf("unknown Organization edge %s", name)
+	return fmt.Errorf("unknown InfectedRecord edge %s", name)
 }
 
 // OxygenRecordMutation represents an operation that mutates the OxygenRecord nodes in the graph.
 type OxygenRecordMutation struct {
 	config
-	op                   Op
-	typ                  string
-	id                   *int
-	totalCylinders       *int
-	addtotalCylinders    *int
-	totalOwnCylinders    *int
-	addtotalOwnCylinders *int
-	clearedFields        map[string]struct{}
-	organization         map[int]struct{}
-	removedorganization  map[int]struct{}
-	clearedorganization  bool
-	done                 bool
-	oldValue             func(context.Context) (*OxygenRecord, error)
-	predicates           []predicate.OxygenRecord
+	op                    Op
+	typ                   string
+	id                    *int
+	reportedDate          *time.Time
+	collectedDate         *time.Time
+	totalCylinders        *int
+	addtotalCylinders     *int
+	totalOwnCylinders     *int
+	addtotalOwnCylinders  *int
+	dailyProduction       *int
+	adddailyProduction    *int
+	maxDailyProduction    *int
+	addmaxDailyProduction *int
+	dailyConsumption      *int
+	adddailyConsumption   *int
+	mainSourceKind        *string
+	clearedFields         map[string]struct{}
+	places                map[int]struct{}
+	removedplaces         map[int]struct{}
+	clearedplaces         bool
+	done                  bool
+	oldValue              func(context.Context) (*OxygenRecord, error)
+	predicates            []predicate.OxygenRecord
 }
 
 var _ ent.Mutation = (*OxygenRecordMutation)(nil)
@@ -2130,6 +2978,78 @@ func (m *OxygenRecordMutation) ID() (id int, exists bool) {
 		return
 	}
 	return *m.id, true
+}
+
+// SetReportedDate sets the "reportedDate" field.
+func (m *OxygenRecordMutation) SetReportedDate(t time.Time) {
+	m.reportedDate = &t
+}
+
+// ReportedDate returns the value of the "reportedDate" field in the mutation.
+func (m *OxygenRecordMutation) ReportedDate() (r time.Time, exists bool) {
+	v := m.reportedDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReportedDate returns the old "reportedDate" field's value of the OxygenRecord entity.
+// If the OxygenRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OxygenRecordMutation) OldReportedDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldReportedDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldReportedDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReportedDate: %w", err)
+	}
+	return oldValue.ReportedDate, nil
+}
+
+// ResetReportedDate resets all changes to the "reportedDate" field.
+func (m *OxygenRecordMutation) ResetReportedDate() {
+	m.reportedDate = nil
+}
+
+// SetCollectedDate sets the "collectedDate" field.
+func (m *OxygenRecordMutation) SetCollectedDate(t time.Time) {
+	m.collectedDate = &t
+}
+
+// CollectedDate returns the value of the "collectedDate" field in the mutation.
+func (m *OxygenRecordMutation) CollectedDate() (r time.Time, exists bool) {
+	v := m.collectedDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCollectedDate returns the old "collectedDate" field's value of the OxygenRecord entity.
+// If the OxygenRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OxygenRecordMutation) OldCollectedDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCollectedDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCollectedDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCollectedDate: %w", err)
+	}
+	return oldValue.CollectedDate, nil
+}
+
+// ResetCollectedDate resets all changes to the "collectedDate" field.
+func (m *OxygenRecordMutation) ResetCollectedDate() {
+	m.collectedDate = nil
 }
 
 // SetTotalCylinders sets the "totalCylinders" field.
@@ -2244,57 +3164,261 @@ func (m *OxygenRecordMutation) ResetTotalOwnCylinders() {
 	m.addtotalOwnCylinders = nil
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by ids.
-func (m *OxygenRecordMutation) AddOrganizationIDs(ids ...int) {
-	if m.organization == nil {
-		m.organization = make(map[int]struct{})
+// SetDailyProduction sets the "dailyProduction" field.
+func (m *OxygenRecordMutation) SetDailyProduction(i int) {
+	m.dailyProduction = &i
+	m.adddailyProduction = nil
+}
+
+// DailyProduction returns the value of the "dailyProduction" field in the mutation.
+func (m *OxygenRecordMutation) DailyProduction() (r int, exists bool) {
+	v := m.dailyProduction
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDailyProduction returns the old "dailyProduction" field's value of the OxygenRecord entity.
+// If the OxygenRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OxygenRecordMutation) OldDailyProduction(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldDailyProduction is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldDailyProduction requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDailyProduction: %w", err)
+	}
+	return oldValue.DailyProduction, nil
+}
+
+// AddDailyProduction adds i to the "dailyProduction" field.
+func (m *OxygenRecordMutation) AddDailyProduction(i int) {
+	if m.adddailyProduction != nil {
+		*m.adddailyProduction += i
+	} else {
+		m.adddailyProduction = &i
+	}
+}
+
+// AddedDailyProduction returns the value that was added to the "dailyProduction" field in this mutation.
+func (m *OxygenRecordMutation) AddedDailyProduction() (r int, exists bool) {
+	v := m.adddailyProduction
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDailyProduction resets all changes to the "dailyProduction" field.
+func (m *OxygenRecordMutation) ResetDailyProduction() {
+	m.dailyProduction = nil
+	m.adddailyProduction = nil
+}
+
+// SetMaxDailyProduction sets the "maxDailyProduction" field.
+func (m *OxygenRecordMutation) SetMaxDailyProduction(i int) {
+	m.maxDailyProduction = &i
+	m.addmaxDailyProduction = nil
+}
+
+// MaxDailyProduction returns the value of the "maxDailyProduction" field in the mutation.
+func (m *OxygenRecordMutation) MaxDailyProduction() (r int, exists bool) {
+	v := m.maxDailyProduction
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxDailyProduction returns the old "maxDailyProduction" field's value of the OxygenRecord entity.
+// If the OxygenRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OxygenRecordMutation) OldMaxDailyProduction(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldMaxDailyProduction is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldMaxDailyProduction requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxDailyProduction: %w", err)
+	}
+	return oldValue.MaxDailyProduction, nil
+}
+
+// AddMaxDailyProduction adds i to the "maxDailyProduction" field.
+func (m *OxygenRecordMutation) AddMaxDailyProduction(i int) {
+	if m.addmaxDailyProduction != nil {
+		*m.addmaxDailyProduction += i
+	} else {
+		m.addmaxDailyProduction = &i
+	}
+}
+
+// AddedMaxDailyProduction returns the value that was added to the "maxDailyProduction" field in this mutation.
+func (m *OxygenRecordMutation) AddedMaxDailyProduction() (r int, exists bool) {
+	v := m.addmaxDailyProduction
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxDailyProduction resets all changes to the "maxDailyProduction" field.
+func (m *OxygenRecordMutation) ResetMaxDailyProduction() {
+	m.maxDailyProduction = nil
+	m.addmaxDailyProduction = nil
+}
+
+// SetDailyConsumption sets the "dailyConsumption" field.
+func (m *OxygenRecordMutation) SetDailyConsumption(i int) {
+	m.dailyConsumption = &i
+	m.adddailyConsumption = nil
+}
+
+// DailyConsumption returns the value of the "dailyConsumption" field in the mutation.
+func (m *OxygenRecordMutation) DailyConsumption() (r int, exists bool) {
+	v := m.dailyConsumption
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDailyConsumption returns the old "dailyConsumption" field's value of the OxygenRecord entity.
+// If the OxygenRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OxygenRecordMutation) OldDailyConsumption(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldDailyConsumption is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldDailyConsumption requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDailyConsumption: %w", err)
+	}
+	return oldValue.DailyConsumption, nil
+}
+
+// AddDailyConsumption adds i to the "dailyConsumption" field.
+func (m *OxygenRecordMutation) AddDailyConsumption(i int) {
+	if m.adddailyConsumption != nil {
+		*m.adddailyConsumption += i
+	} else {
+		m.adddailyConsumption = &i
+	}
+}
+
+// AddedDailyConsumption returns the value that was added to the "dailyConsumption" field in this mutation.
+func (m *OxygenRecordMutation) AddedDailyConsumption() (r int, exists bool) {
+	v := m.adddailyConsumption
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDailyConsumption resets all changes to the "dailyConsumption" field.
+func (m *OxygenRecordMutation) ResetDailyConsumption() {
+	m.dailyConsumption = nil
+	m.adddailyConsumption = nil
+}
+
+// SetMainSourceKind sets the "mainSourceKind" field.
+func (m *OxygenRecordMutation) SetMainSourceKind(s string) {
+	m.mainSourceKind = &s
+}
+
+// MainSourceKind returns the value of the "mainSourceKind" field in the mutation.
+func (m *OxygenRecordMutation) MainSourceKind() (r string, exists bool) {
+	v := m.mainSourceKind
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMainSourceKind returns the old "mainSourceKind" field's value of the OxygenRecord entity.
+// If the OxygenRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OxygenRecordMutation) OldMainSourceKind(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldMainSourceKind is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldMainSourceKind requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMainSourceKind: %w", err)
+	}
+	return oldValue.MainSourceKind, nil
+}
+
+// ResetMainSourceKind resets all changes to the "mainSourceKind" field.
+func (m *OxygenRecordMutation) ResetMainSourceKind() {
+	m.mainSourceKind = nil
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by ids.
+func (m *OxygenRecordMutation) AddPlaceIDs(ids ...int) {
+	if m.places == nil {
+		m.places = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.organization[ids[i]] = struct{}{}
+		m.places[ids[i]] = struct{}{}
 	}
 }
 
-// ClearOrganization clears the "organization" edge to the Organization entity.
-func (m *OxygenRecordMutation) ClearOrganization() {
-	m.clearedorganization = true
+// ClearPlaces clears the "places" edge to the Place entity.
+func (m *OxygenRecordMutation) ClearPlaces() {
+	m.clearedplaces = true
 }
 
-// OrganizationCleared returns if the "organization" edge to the Organization entity was cleared.
-func (m *OxygenRecordMutation) OrganizationCleared() bool {
-	return m.clearedorganization
+// PlacesCleared returns if the "places" edge to the Place entity was cleared.
+func (m *OxygenRecordMutation) PlacesCleared() bool {
+	return m.clearedplaces
 }
 
-// RemoveOrganizationIDs removes the "organization" edge to the Organization entity by IDs.
-func (m *OxygenRecordMutation) RemoveOrganizationIDs(ids ...int) {
-	if m.removedorganization == nil {
-		m.removedorganization = make(map[int]struct{})
+// RemovePlaceIDs removes the "places" edge to the Place entity by IDs.
+func (m *OxygenRecordMutation) RemovePlaceIDs(ids ...int) {
+	if m.removedplaces == nil {
+		m.removedplaces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removedorganization[ids[i]] = struct{}{}
+		m.removedplaces[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedOrganization returns the removed IDs of the "organization" edge to the Organization entity.
-func (m *OxygenRecordMutation) RemovedOrganizationIDs() (ids []int) {
-	for id := range m.removedorganization {
+// RemovedPlaces returns the removed IDs of the "places" edge to the Place entity.
+func (m *OxygenRecordMutation) RemovedPlacesIDs() (ids []int) {
+	for id := range m.removedplaces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// OrganizationIDs returns the "organization" edge IDs in the mutation.
-func (m *OxygenRecordMutation) OrganizationIDs() (ids []int) {
-	for id := range m.organization {
+// PlacesIDs returns the "places" edge IDs in the mutation.
+func (m *OxygenRecordMutation) PlacesIDs() (ids []int) {
+	for id := range m.places {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetOrganization resets all changes to the "organization" edge.
-func (m *OxygenRecordMutation) ResetOrganization() {
-	m.organization = nil
-	m.clearedorganization = false
-	m.removedorganization = nil
+// ResetPlaces resets all changes to the "places" edge.
+func (m *OxygenRecordMutation) ResetPlaces() {
+	m.places = nil
+	m.clearedplaces = false
+	m.removedplaces = nil
 }
 
 // Op returns the operation name.
@@ -2311,12 +3435,30 @@ func (m *OxygenRecordMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OxygenRecordMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 8)
+	if m.reportedDate != nil {
+		fields = append(fields, oxygenrecord.FieldReportedDate)
+	}
+	if m.collectedDate != nil {
+		fields = append(fields, oxygenrecord.FieldCollectedDate)
+	}
 	if m.totalCylinders != nil {
 		fields = append(fields, oxygenrecord.FieldTotalCylinders)
 	}
 	if m.totalOwnCylinders != nil {
 		fields = append(fields, oxygenrecord.FieldTotalOwnCylinders)
+	}
+	if m.dailyProduction != nil {
+		fields = append(fields, oxygenrecord.FieldDailyProduction)
+	}
+	if m.maxDailyProduction != nil {
+		fields = append(fields, oxygenrecord.FieldMaxDailyProduction)
+	}
+	if m.dailyConsumption != nil {
+		fields = append(fields, oxygenrecord.FieldDailyConsumption)
+	}
+	if m.mainSourceKind != nil {
+		fields = append(fields, oxygenrecord.FieldMainSourceKind)
 	}
 	return fields
 }
@@ -2326,10 +3468,22 @@ func (m *OxygenRecordMutation) Fields() []string {
 // schema.
 func (m *OxygenRecordMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case oxygenrecord.FieldReportedDate:
+		return m.ReportedDate()
+	case oxygenrecord.FieldCollectedDate:
+		return m.CollectedDate()
 	case oxygenrecord.FieldTotalCylinders:
 		return m.TotalCylinders()
 	case oxygenrecord.FieldTotalOwnCylinders:
 		return m.TotalOwnCylinders()
+	case oxygenrecord.FieldDailyProduction:
+		return m.DailyProduction()
+	case oxygenrecord.FieldMaxDailyProduction:
+		return m.MaxDailyProduction()
+	case oxygenrecord.FieldDailyConsumption:
+		return m.DailyConsumption()
+	case oxygenrecord.FieldMainSourceKind:
+		return m.MainSourceKind()
 	}
 	return nil, false
 }
@@ -2339,10 +3493,22 @@ func (m *OxygenRecordMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *OxygenRecordMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case oxygenrecord.FieldReportedDate:
+		return m.OldReportedDate(ctx)
+	case oxygenrecord.FieldCollectedDate:
+		return m.OldCollectedDate(ctx)
 	case oxygenrecord.FieldTotalCylinders:
 		return m.OldTotalCylinders(ctx)
 	case oxygenrecord.FieldTotalOwnCylinders:
 		return m.OldTotalOwnCylinders(ctx)
+	case oxygenrecord.FieldDailyProduction:
+		return m.OldDailyProduction(ctx)
+	case oxygenrecord.FieldMaxDailyProduction:
+		return m.OldMaxDailyProduction(ctx)
+	case oxygenrecord.FieldDailyConsumption:
+		return m.OldDailyConsumption(ctx)
+	case oxygenrecord.FieldMainSourceKind:
+		return m.OldMainSourceKind(ctx)
 	}
 	return nil, fmt.Errorf("unknown OxygenRecord field %s", name)
 }
@@ -2352,6 +3518,20 @@ func (m *OxygenRecordMutation) OldField(ctx context.Context, name string) (ent.V
 // type.
 func (m *OxygenRecordMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case oxygenrecord.FieldReportedDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReportedDate(v)
+		return nil
+	case oxygenrecord.FieldCollectedDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCollectedDate(v)
+		return nil
 	case oxygenrecord.FieldTotalCylinders:
 		v, ok := value.(int)
 		if !ok {
@@ -2365,6 +3545,34 @@ func (m *OxygenRecordMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTotalOwnCylinders(v)
+		return nil
+	case oxygenrecord.FieldDailyProduction:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDailyProduction(v)
+		return nil
+	case oxygenrecord.FieldMaxDailyProduction:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxDailyProduction(v)
+		return nil
+	case oxygenrecord.FieldDailyConsumption:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDailyConsumption(v)
+		return nil
+	case oxygenrecord.FieldMainSourceKind:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMainSourceKind(v)
 		return nil
 	}
 	return fmt.Errorf("unknown OxygenRecord field %s", name)
@@ -2380,6 +3588,15 @@ func (m *OxygenRecordMutation) AddedFields() []string {
 	if m.addtotalOwnCylinders != nil {
 		fields = append(fields, oxygenrecord.FieldTotalOwnCylinders)
 	}
+	if m.adddailyProduction != nil {
+		fields = append(fields, oxygenrecord.FieldDailyProduction)
+	}
+	if m.addmaxDailyProduction != nil {
+		fields = append(fields, oxygenrecord.FieldMaxDailyProduction)
+	}
+	if m.adddailyConsumption != nil {
+		fields = append(fields, oxygenrecord.FieldDailyConsumption)
+	}
 	return fields
 }
 
@@ -2392,6 +3609,12 @@ func (m *OxygenRecordMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedTotalCylinders()
 	case oxygenrecord.FieldTotalOwnCylinders:
 		return m.AddedTotalOwnCylinders()
+	case oxygenrecord.FieldDailyProduction:
+		return m.AddedDailyProduction()
+	case oxygenrecord.FieldMaxDailyProduction:
+		return m.AddedMaxDailyProduction()
+	case oxygenrecord.FieldDailyConsumption:
+		return m.AddedDailyConsumption()
 	}
 	return nil, false
 }
@@ -2414,6 +3637,27 @@ func (m *OxygenRecordMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddTotalOwnCylinders(v)
+		return nil
+	case oxygenrecord.FieldDailyProduction:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDailyProduction(v)
+		return nil
+	case oxygenrecord.FieldMaxDailyProduction:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxDailyProduction(v)
+		return nil
+	case oxygenrecord.FieldDailyConsumption:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDailyConsumption(v)
 		return nil
 	}
 	return fmt.Errorf("unknown OxygenRecord numeric field %s", name)
@@ -2442,11 +3686,29 @@ func (m *OxygenRecordMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *OxygenRecordMutation) ResetField(name string) error {
 	switch name {
+	case oxygenrecord.FieldReportedDate:
+		m.ResetReportedDate()
+		return nil
+	case oxygenrecord.FieldCollectedDate:
+		m.ResetCollectedDate()
+		return nil
 	case oxygenrecord.FieldTotalCylinders:
 		m.ResetTotalCylinders()
 		return nil
 	case oxygenrecord.FieldTotalOwnCylinders:
 		m.ResetTotalOwnCylinders()
+		return nil
+	case oxygenrecord.FieldDailyProduction:
+		m.ResetDailyProduction()
+		return nil
+	case oxygenrecord.FieldMaxDailyProduction:
+		m.ResetMaxDailyProduction()
+		return nil
+	case oxygenrecord.FieldDailyConsumption:
+		m.ResetDailyConsumption()
+		return nil
+	case oxygenrecord.FieldMainSourceKind:
+		m.ResetMainSourceKind()
 		return nil
 	}
 	return fmt.Errorf("unknown OxygenRecord field %s", name)
@@ -2455,8 +3717,8 @@ func (m *OxygenRecordMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *OxygenRecordMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.organization != nil {
-		edges = append(edges, oxygenrecord.EdgeOrganization)
+	if m.places != nil {
+		edges = append(edges, oxygenrecord.EdgePlaces)
 	}
 	return edges
 }
@@ -2465,9 +3727,9 @@ func (m *OxygenRecordMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *OxygenRecordMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case oxygenrecord.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.organization))
-		for id := range m.organization {
+	case oxygenrecord.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.places))
+		for id := range m.places {
 			ids = append(ids, id)
 		}
 		return ids
@@ -2478,8 +3740,8 @@ func (m *OxygenRecordMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *OxygenRecordMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedorganization != nil {
-		edges = append(edges, oxygenrecord.EdgeOrganization)
+	if m.removedplaces != nil {
+		edges = append(edges, oxygenrecord.EdgePlaces)
 	}
 	return edges
 }
@@ -2488,9 +3750,9 @@ func (m *OxygenRecordMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *OxygenRecordMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case oxygenrecord.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.removedorganization))
-		for id := range m.removedorganization {
+	case oxygenrecord.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.removedplaces))
+		for id := range m.removedplaces {
 			ids = append(ids, id)
 		}
 		return ids
@@ -2501,8 +3763,8 @@ func (m *OxygenRecordMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *OxygenRecordMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearedorganization {
-		edges = append(edges, oxygenrecord.EdgeOrganization)
+	if m.clearedplaces {
+		edges = append(edges, oxygenrecord.EdgePlaces)
 	}
 	return edges
 }
@@ -2511,8 +3773,8 @@ func (m *OxygenRecordMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *OxygenRecordMutation) EdgeCleared(name string) bool {
 	switch name {
-	case oxygenrecord.EdgeOrganization:
-		return m.clearedorganization
+	case oxygenrecord.EdgePlaces:
+		return m.clearedplaces
 	}
 	return false
 }
@@ -2529,33 +3791,1397 @@ func (m *OxygenRecordMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *OxygenRecordMutation) ResetEdge(name string) error {
 	switch name {
-	case oxygenrecord.EdgeOrganization:
-		m.ResetOrganization()
+	case oxygenrecord.EdgePlaces:
+		m.ResetPlaces()
 		return nil
 	}
 	return fmt.Errorf("unknown OxygenRecord edge %s", name)
 }
 
+// PlaceMutation represents an operation that mutates the Place nodes in the graph.
+type PlaceMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *int
+	kind                   *string
+	name                   *string
+	politic                *string
+	ubigeo                 *string
+	covidZone              *bool
+	lat                    *float64
+	addlat                 *float64
+	lon                    *float64
+	addlon                 *float64
+	clearedFields          map[string]struct{}
+	oxygenrecords          map[int]struct{}
+	removedoxygenrecords   map[int]struct{}
+	clearedoxygenrecords   bool
+	bedRecords             map[int]struct{}
+	removedbedRecords      map[int]struct{}
+	clearedbedRecords      bool
+	deathRecords           map[int]struct{}
+	removeddeathRecords    map[int]struct{}
+	cleareddeathRecords    bool
+	infectedRecords        map[int]struct{}
+	removedinfectedRecords map[int]struct{}
+	clearedinfectedRecords bool
+	regions                map[int]struct{}
+	removedregions         map[int]struct{}
+	clearedregions         bool
+	provinces              map[int]struct{}
+	removedprovinces       map[int]struct{}
+	clearedprovinces       bool
+	districts              map[int]struct{}
+	removeddistricts       map[int]struct{}
+	cleareddistricts       bool
+	done                   bool
+	oldValue               func(context.Context) (*Place, error)
+	predicates             []predicate.Place
+}
+
+var _ ent.Mutation = (*PlaceMutation)(nil)
+
+// placeOption allows management of the mutation configuration using functional options.
+type placeOption func(*PlaceMutation)
+
+// newPlaceMutation creates new mutation for the Place entity.
+func newPlaceMutation(c config, op Op, opts ...placeOption) *PlaceMutation {
+	m := &PlaceMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePlace,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPlaceID sets the ID field of the mutation.
+func withPlaceID(id int) placeOption {
+	return func(m *PlaceMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Place
+		)
+		m.oldValue = func(ctx context.Context) (*Place, error) {
+			once.Do(func() {
+				if m.done {
+					err = fmt.Errorf("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Place.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPlace sets the old Place of the mutation.
+func withPlace(node *Place) placeOption {
+	return func(m *PlaceMutation) {
+		m.oldValue = func(context.Context) (*Place, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PlaceMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PlaceMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID
+// is only available if it was provided to the builder.
+func (m *PlaceMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// SetKind sets the "kind" field.
+func (m *PlaceMutation) SetKind(s string) {
+	m.kind = &s
+}
+
+// Kind returns the value of the "kind" field in the mutation.
+func (m *PlaceMutation) Kind() (r string, exists bool) {
+	v := m.kind
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKind returns the old "kind" field's value of the Place entity.
+// If the Place object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaceMutation) OldKind(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldKind is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldKind requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKind: %w", err)
+	}
+	return oldValue.Kind, nil
+}
+
+// ResetKind resets all changes to the "kind" field.
+func (m *PlaceMutation) ResetKind() {
+	m.kind = nil
+}
+
+// SetName sets the "name" field.
+func (m *PlaceMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *PlaceMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Place entity.
+// If the Place object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaceMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *PlaceMutation) ResetName() {
+	m.name = nil
+}
+
+// SetPolitic sets the "politic" field.
+func (m *PlaceMutation) SetPolitic(s string) {
+	m.politic = &s
+}
+
+// Politic returns the value of the "politic" field in the mutation.
+func (m *PlaceMutation) Politic() (r string, exists bool) {
+	v := m.politic
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPolitic returns the old "politic" field's value of the Place entity.
+// If the Place object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaceMutation) OldPolitic(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldPolitic is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldPolitic requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPolitic: %w", err)
+	}
+	return oldValue.Politic, nil
+}
+
+// ClearPolitic clears the value of the "politic" field.
+func (m *PlaceMutation) ClearPolitic() {
+	m.politic = nil
+	m.clearedFields[place.FieldPolitic] = struct{}{}
+}
+
+// PoliticCleared returns if the "politic" field was cleared in this mutation.
+func (m *PlaceMutation) PoliticCleared() bool {
+	_, ok := m.clearedFields[place.FieldPolitic]
+	return ok
+}
+
+// ResetPolitic resets all changes to the "politic" field.
+func (m *PlaceMutation) ResetPolitic() {
+	m.politic = nil
+	delete(m.clearedFields, place.FieldPolitic)
+}
+
+// SetUbigeo sets the "ubigeo" field.
+func (m *PlaceMutation) SetUbigeo(s string) {
+	m.ubigeo = &s
+}
+
+// Ubigeo returns the value of the "ubigeo" field in the mutation.
+func (m *PlaceMutation) Ubigeo() (r string, exists bool) {
+	v := m.ubigeo
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUbigeo returns the old "ubigeo" field's value of the Place entity.
+// If the Place object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaceMutation) OldUbigeo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUbigeo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUbigeo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUbigeo: %w", err)
+	}
+	return oldValue.Ubigeo, nil
+}
+
+// ClearUbigeo clears the value of the "ubigeo" field.
+func (m *PlaceMutation) ClearUbigeo() {
+	m.ubigeo = nil
+	m.clearedFields[place.FieldUbigeo] = struct{}{}
+}
+
+// UbigeoCleared returns if the "ubigeo" field was cleared in this mutation.
+func (m *PlaceMutation) UbigeoCleared() bool {
+	_, ok := m.clearedFields[place.FieldUbigeo]
+	return ok
+}
+
+// ResetUbigeo resets all changes to the "ubigeo" field.
+func (m *PlaceMutation) ResetUbigeo() {
+	m.ubigeo = nil
+	delete(m.clearedFields, place.FieldUbigeo)
+}
+
+// SetCovidZone sets the "covidZone" field.
+func (m *PlaceMutation) SetCovidZone(b bool) {
+	m.covidZone = &b
+}
+
+// CovidZone returns the value of the "covidZone" field in the mutation.
+func (m *PlaceMutation) CovidZone() (r bool, exists bool) {
+	v := m.covidZone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCovidZone returns the old "covidZone" field's value of the Place entity.
+// If the Place object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaceMutation) OldCovidZone(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCovidZone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCovidZone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCovidZone: %w", err)
+	}
+	return oldValue.CovidZone, nil
+}
+
+// ClearCovidZone clears the value of the "covidZone" field.
+func (m *PlaceMutation) ClearCovidZone() {
+	m.covidZone = nil
+	m.clearedFields[place.FieldCovidZone] = struct{}{}
+}
+
+// CovidZoneCleared returns if the "covidZone" field was cleared in this mutation.
+func (m *PlaceMutation) CovidZoneCleared() bool {
+	_, ok := m.clearedFields[place.FieldCovidZone]
+	return ok
+}
+
+// ResetCovidZone resets all changes to the "covidZone" field.
+func (m *PlaceMutation) ResetCovidZone() {
+	m.covidZone = nil
+	delete(m.clearedFields, place.FieldCovidZone)
+}
+
+// SetLat sets the "lat" field.
+func (m *PlaceMutation) SetLat(f float64) {
+	m.lat = &f
+	m.addlat = nil
+}
+
+// Lat returns the value of the "lat" field in the mutation.
+func (m *PlaceMutation) Lat() (r float64, exists bool) {
+	v := m.lat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLat returns the old "lat" field's value of the Place entity.
+// If the Place object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaceMutation) OldLat(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldLat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldLat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLat: %w", err)
+	}
+	return oldValue.Lat, nil
+}
+
+// AddLat adds f to the "lat" field.
+func (m *PlaceMutation) AddLat(f float64) {
+	if m.addlat != nil {
+		*m.addlat += f
+	} else {
+		m.addlat = &f
+	}
+}
+
+// AddedLat returns the value that was added to the "lat" field in this mutation.
+func (m *PlaceMutation) AddedLat() (r float64, exists bool) {
+	v := m.addlat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLat clears the value of the "lat" field.
+func (m *PlaceMutation) ClearLat() {
+	m.lat = nil
+	m.addlat = nil
+	m.clearedFields[place.FieldLat] = struct{}{}
+}
+
+// LatCleared returns if the "lat" field was cleared in this mutation.
+func (m *PlaceMutation) LatCleared() bool {
+	_, ok := m.clearedFields[place.FieldLat]
+	return ok
+}
+
+// ResetLat resets all changes to the "lat" field.
+func (m *PlaceMutation) ResetLat() {
+	m.lat = nil
+	m.addlat = nil
+	delete(m.clearedFields, place.FieldLat)
+}
+
+// SetLon sets the "lon" field.
+func (m *PlaceMutation) SetLon(f float64) {
+	m.lon = &f
+	m.addlon = nil
+}
+
+// Lon returns the value of the "lon" field in the mutation.
+func (m *PlaceMutation) Lon() (r float64, exists bool) {
+	v := m.lon
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLon returns the old "lon" field's value of the Place entity.
+// If the Place object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaceMutation) OldLon(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldLon is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldLon requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLon: %w", err)
+	}
+	return oldValue.Lon, nil
+}
+
+// AddLon adds f to the "lon" field.
+func (m *PlaceMutation) AddLon(f float64) {
+	if m.addlon != nil {
+		*m.addlon += f
+	} else {
+		m.addlon = &f
+	}
+}
+
+// AddedLon returns the value that was added to the "lon" field in this mutation.
+func (m *PlaceMutation) AddedLon() (r float64, exists bool) {
+	v := m.addlon
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLon clears the value of the "lon" field.
+func (m *PlaceMutation) ClearLon() {
+	m.lon = nil
+	m.addlon = nil
+	m.clearedFields[place.FieldLon] = struct{}{}
+}
+
+// LonCleared returns if the "lon" field was cleared in this mutation.
+func (m *PlaceMutation) LonCleared() bool {
+	_, ok := m.clearedFields[place.FieldLon]
+	return ok
+}
+
+// ResetLon resets all changes to the "lon" field.
+func (m *PlaceMutation) ResetLon() {
+	m.lon = nil
+	m.addlon = nil
+	delete(m.clearedFields, place.FieldLon)
+}
+
+// AddOxygenrecordIDs adds the "oxygenrecords" edge to the OxygenRecord entity by ids.
+func (m *PlaceMutation) AddOxygenrecordIDs(ids ...int) {
+	if m.oxygenrecords == nil {
+		m.oxygenrecords = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.oxygenrecords[ids[i]] = struct{}{}
+	}
+}
+
+// ClearOxygenrecords clears the "oxygenrecords" edge to the OxygenRecord entity.
+func (m *PlaceMutation) ClearOxygenrecords() {
+	m.clearedoxygenrecords = true
+}
+
+// OxygenrecordsCleared returns if the "oxygenrecords" edge to the OxygenRecord entity was cleared.
+func (m *PlaceMutation) OxygenrecordsCleared() bool {
+	return m.clearedoxygenrecords
+}
+
+// RemoveOxygenrecordIDs removes the "oxygenrecords" edge to the OxygenRecord entity by IDs.
+func (m *PlaceMutation) RemoveOxygenrecordIDs(ids ...int) {
+	if m.removedoxygenrecords == nil {
+		m.removedoxygenrecords = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedoxygenrecords[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedOxygenrecords returns the removed IDs of the "oxygenrecords" edge to the OxygenRecord entity.
+func (m *PlaceMutation) RemovedOxygenrecordsIDs() (ids []int) {
+	for id := range m.removedoxygenrecords {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// OxygenrecordsIDs returns the "oxygenrecords" edge IDs in the mutation.
+func (m *PlaceMutation) OxygenrecordsIDs() (ids []int) {
+	for id := range m.oxygenrecords {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetOxygenrecords resets all changes to the "oxygenrecords" edge.
+func (m *PlaceMutation) ResetOxygenrecords() {
+	m.oxygenrecords = nil
+	m.clearedoxygenrecords = false
+	m.removedoxygenrecords = nil
+}
+
+// AddBedRecordIDs adds the "bedRecords" edge to the BedRecord entity by ids.
+func (m *PlaceMutation) AddBedRecordIDs(ids ...int) {
+	if m.bedRecords == nil {
+		m.bedRecords = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.bedRecords[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBedRecords clears the "bedRecords" edge to the BedRecord entity.
+func (m *PlaceMutation) ClearBedRecords() {
+	m.clearedbedRecords = true
+}
+
+// BedRecordsCleared returns if the "bedRecords" edge to the BedRecord entity was cleared.
+func (m *PlaceMutation) BedRecordsCleared() bool {
+	return m.clearedbedRecords
+}
+
+// RemoveBedRecordIDs removes the "bedRecords" edge to the BedRecord entity by IDs.
+func (m *PlaceMutation) RemoveBedRecordIDs(ids ...int) {
+	if m.removedbedRecords == nil {
+		m.removedbedRecords = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedbedRecords[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBedRecords returns the removed IDs of the "bedRecords" edge to the BedRecord entity.
+func (m *PlaceMutation) RemovedBedRecordsIDs() (ids []int) {
+	for id := range m.removedbedRecords {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BedRecordsIDs returns the "bedRecords" edge IDs in the mutation.
+func (m *PlaceMutation) BedRecordsIDs() (ids []int) {
+	for id := range m.bedRecords {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBedRecords resets all changes to the "bedRecords" edge.
+func (m *PlaceMutation) ResetBedRecords() {
+	m.bedRecords = nil
+	m.clearedbedRecords = false
+	m.removedbedRecords = nil
+}
+
+// AddDeathRecordIDs adds the "deathRecords" edge to the DeathRecord entity by ids.
+func (m *PlaceMutation) AddDeathRecordIDs(ids ...int) {
+	if m.deathRecords == nil {
+		m.deathRecords = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.deathRecords[ids[i]] = struct{}{}
+	}
+}
+
+// ClearDeathRecords clears the "deathRecords" edge to the DeathRecord entity.
+func (m *PlaceMutation) ClearDeathRecords() {
+	m.cleareddeathRecords = true
+}
+
+// DeathRecordsCleared returns if the "deathRecords" edge to the DeathRecord entity was cleared.
+func (m *PlaceMutation) DeathRecordsCleared() bool {
+	return m.cleareddeathRecords
+}
+
+// RemoveDeathRecordIDs removes the "deathRecords" edge to the DeathRecord entity by IDs.
+func (m *PlaceMutation) RemoveDeathRecordIDs(ids ...int) {
+	if m.removeddeathRecords == nil {
+		m.removeddeathRecords = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removeddeathRecords[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedDeathRecords returns the removed IDs of the "deathRecords" edge to the DeathRecord entity.
+func (m *PlaceMutation) RemovedDeathRecordsIDs() (ids []int) {
+	for id := range m.removeddeathRecords {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// DeathRecordsIDs returns the "deathRecords" edge IDs in the mutation.
+func (m *PlaceMutation) DeathRecordsIDs() (ids []int) {
+	for id := range m.deathRecords {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetDeathRecords resets all changes to the "deathRecords" edge.
+func (m *PlaceMutation) ResetDeathRecords() {
+	m.deathRecords = nil
+	m.cleareddeathRecords = false
+	m.removeddeathRecords = nil
+}
+
+// AddInfectedRecordIDs adds the "infectedRecords" edge to the InfectedRecord entity by ids.
+func (m *PlaceMutation) AddInfectedRecordIDs(ids ...int) {
+	if m.infectedRecords == nil {
+		m.infectedRecords = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.infectedRecords[ids[i]] = struct{}{}
+	}
+}
+
+// ClearInfectedRecords clears the "infectedRecords" edge to the InfectedRecord entity.
+func (m *PlaceMutation) ClearInfectedRecords() {
+	m.clearedinfectedRecords = true
+}
+
+// InfectedRecordsCleared returns if the "infectedRecords" edge to the InfectedRecord entity was cleared.
+func (m *PlaceMutation) InfectedRecordsCleared() bool {
+	return m.clearedinfectedRecords
+}
+
+// RemoveInfectedRecordIDs removes the "infectedRecords" edge to the InfectedRecord entity by IDs.
+func (m *PlaceMutation) RemoveInfectedRecordIDs(ids ...int) {
+	if m.removedinfectedRecords == nil {
+		m.removedinfectedRecords = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedinfectedRecords[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedInfectedRecords returns the removed IDs of the "infectedRecords" edge to the InfectedRecord entity.
+func (m *PlaceMutation) RemovedInfectedRecordsIDs() (ids []int) {
+	for id := range m.removedinfectedRecords {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// InfectedRecordsIDs returns the "infectedRecords" edge IDs in the mutation.
+func (m *PlaceMutation) InfectedRecordsIDs() (ids []int) {
+	for id := range m.infectedRecords {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetInfectedRecords resets all changes to the "infectedRecords" edge.
+func (m *PlaceMutation) ResetInfectedRecords() {
+	m.infectedRecords = nil
+	m.clearedinfectedRecords = false
+	m.removedinfectedRecords = nil
+}
+
+// AddRegionIDs adds the "regions" edge to the Region entity by ids.
+func (m *PlaceMutation) AddRegionIDs(ids ...int) {
+	if m.regions == nil {
+		m.regions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.regions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRegions clears the "regions" edge to the Region entity.
+func (m *PlaceMutation) ClearRegions() {
+	m.clearedregions = true
+}
+
+// RegionsCleared returns if the "regions" edge to the Region entity was cleared.
+func (m *PlaceMutation) RegionsCleared() bool {
+	return m.clearedregions
+}
+
+// RemoveRegionIDs removes the "regions" edge to the Region entity by IDs.
+func (m *PlaceMutation) RemoveRegionIDs(ids ...int) {
+	if m.removedregions == nil {
+		m.removedregions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedregions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRegions returns the removed IDs of the "regions" edge to the Region entity.
+func (m *PlaceMutation) RemovedRegionsIDs() (ids []int) {
+	for id := range m.removedregions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RegionsIDs returns the "regions" edge IDs in the mutation.
+func (m *PlaceMutation) RegionsIDs() (ids []int) {
+	for id := range m.regions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRegions resets all changes to the "regions" edge.
+func (m *PlaceMutation) ResetRegions() {
+	m.regions = nil
+	m.clearedregions = false
+	m.removedregions = nil
+}
+
+// AddProvinceIDs adds the "provinces" edge to the Province entity by ids.
+func (m *PlaceMutation) AddProvinceIDs(ids ...int) {
+	if m.provinces == nil {
+		m.provinces = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.provinces[ids[i]] = struct{}{}
+	}
+}
+
+// ClearProvinces clears the "provinces" edge to the Province entity.
+func (m *PlaceMutation) ClearProvinces() {
+	m.clearedprovinces = true
+}
+
+// ProvincesCleared returns if the "provinces" edge to the Province entity was cleared.
+func (m *PlaceMutation) ProvincesCleared() bool {
+	return m.clearedprovinces
+}
+
+// RemoveProvinceIDs removes the "provinces" edge to the Province entity by IDs.
+func (m *PlaceMutation) RemoveProvinceIDs(ids ...int) {
+	if m.removedprovinces == nil {
+		m.removedprovinces = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedprovinces[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedProvinces returns the removed IDs of the "provinces" edge to the Province entity.
+func (m *PlaceMutation) RemovedProvincesIDs() (ids []int) {
+	for id := range m.removedprovinces {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ProvincesIDs returns the "provinces" edge IDs in the mutation.
+func (m *PlaceMutation) ProvincesIDs() (ids []int) {
+	for id := range m.provinces {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetProvinces resets all changes to the "provinces" edge.
+func (m *PlaceMutation) ResetProvinces() {
+	m.provinces = nil
+	m.clearedprovinces = false
+	m.removedprovinces = nil
+}
+
+// AddDistrictIDs adds the "districts" edge to the District entity by ids.
+func (m *PlaceMutation) AddDistrictIDs(ids ...int) {
+	if m.districts == nil {
+		m.districts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.districts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearDistricts clears the "districts" edge to the District entity.
+func (m *PlaceMutation) ClearDistricts() {
+	m.cleareddistricts = true
+}
+
+// DistrictsCleared returns if the "districts" edge to the District entity was cleared.
+func (m *PlaceMutation) DistrictsCleared() bool {
+	return m.cleareddistricts
+}
+
+// RemoveDistrictIDs removes the "districts" edge to the District entity by IDs.
+func (m *PlaceMutation) RemoveDistrictIDs(ids ...int) {
+	if m.removeddistricts == nil {
+		m.removeddistricts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removeddistricts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedDistricts returns the removed IDs of the "districts" edge to the District entity.
+func (m *PlaceMutation) RemovedDistrictsIDs() (ids []int) {
+	for id := range m.removeddistricts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// DistrictsIDs returns the "districts" edge IDs in the mutation.
+func (m *PlaceMutation) DistrictsIDs() (ids []int) {
+	for id := range m.districts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetDistricts resets all changes to the "districts" edge.
+func (m *PlaceMutation) ResetDistricts() {
+	m.districts = nil
+	m.cleareddistricts = false
+	m.removeddistricts = nil
+}
+
+// Op returns the operation name.
+func (m *PlaceMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Place).
+func (m *PlaceMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PlaceMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.kind != nil {
+		fields = append(fields, place.FieldKind)
+	}
+	if m.name != nil {
+		fields = append(fields, place.FieldName)
+	}
+	if m.politic != nil {
+		fields = append(fields, place.FieldPolitic)
+	}
+	if m.ubigeo != nil {
+		fields = append(fields, place.FieldUbigeo)
+	}
+	if m.covidZone != nil {
+		fields = append(fields, place.FieldCovidZone)
+	}
+	if m.lat != nil {
+		fields = append(fields, place.FieldLat)
+	}
+	if m.lon != nil {
+		fields = append(fields, place.FieldLon)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PlaceMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case place.FieldKind:
+		return m.Kind()
+	case place.FieldName:
+		return m.Name()
+	case place.FieldPolitic:
+		return m.Politic()
+	case place.FieldUbigeo:
+		return m.Ubigeo()
+	case place.FieldCovidZone:
+		return m.CovidZone()
+	case place.FieldLat:
+		return m.Lat()
+	case place.FieldLon:
+		return m.Lon()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PlaceMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case place.FieldKind:
+		return m.OldKind(ctx)
+	case place.FieldName:
+		return m.OldName(ctx)
+	case place.FieldPolitic:
+		return m.OldPolitic(ctx)
+	case place.FieldUbigeo:
+		return m.OldUbigeo(ctx)
+	case place.FieldCovidZone:
+		return m.OldCovidZone(ctx)
+	case place.FieldLat:
+		return m.OldLat(ctx)
+	case place.FieldLon:
+		return m.OldLon(ctx)
+	}
+	return nil, fmt.Errorf("unknown Place field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PlaceMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case place.FieldKind:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKind(v)
+		return nil
+	case place.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case place.FieldPolitic:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPolitic(v)
+		return nil
+	case place.FieldUbigeo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUbigeo(v)
+		return nil
+	case place.FieldCovidZone:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCovidZone(v)
+		return nil
+	case place.FieldLat:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLat(v)
+		return nil
+	case place.FieldLon:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLon(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Place field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PlaceMutation) AddedFields() []string {
+	var fields []string
+	if m.addlat != nil {
+		fields = append(fields, place.FieldLat)
+	}
+	if m.addlon != nil {
+		fields = append(fields, place.FieldLon)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PlaceMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case place.FieldLat:
+		return m.AddedLat()
+	case place.FieldLon:
+		return m.AddedLon()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PlaceMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case place.FieldLat:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLat(v)
+		return nil
+	case place.FieldLon:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLon(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Place numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PlaceMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(place.FieldPolitic) {
+		fields = append(fields, place.FieldPolitic)
+	}
+	if m.FieldCleared(place.FieldUbigeo) {
+		fields = append(fields, place.FieldUbigeo)
+	}
+	if m.FieldCleared(place.FieldCovidZone) {
+		fields = append(fields, place.FieldCovidZone)
+	}
+	if m.FieldCleared(place.FieldLat) {
+		fields = append(fields, place.FieldLat)
+	}
+	if m.FieldCleared(place.FieldLon) {
+		fields = append(fields, place.FieldLon)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PlaceMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PlaceMutation) ClearField(name string) error {
+	switch name {
+	case place.FieldPolitic:
+		m.ClearPolitic()
+		return nil
+	case place.FieldUbigeo:
+		m.ClearUbigeo()
+		return nil
+	case place.FieldCovidZone:
+		m.ClearCovidZone()
+		return nil
+	case place.FieldLat:
+		m.ClearLat()
+		return nil
+	case place.FieldLon:
+		m.ClearLon()
+		return nil
+	}
+	return fmt.Errorf("unknown Place nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PlaceMutation) ResetField(name string) error {
+	switch name {
+	case place.FieldKind:
+		m.ResetKind()
+		return nil
+	case place.FieldName:
+		m.ResetName()
+		return nil
+	case place.FieldPolitic:
+		m.ResetPolitic()
+		return nil
+	case place.FieldUbigeo:
+		m.ResetUbigeo()
+		return nil
+	case place.FieldCovidZone:
+		m.ResetCovidZone()
+		return nil
+	case place.FieldLat:
+		m.ResetLat()
+		return nil
+	case place.FieldLon:
+		m.ResetLon()
+		return nil
+	}
+	return fmt.Errorf("unknown Place field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PlaceMutation) AddedEdges() []string {
+	edges := make([]string, 0, 7)
+	if m.oxygenrecords != nil {
+		edges = append(edges, place.EdgeOxygenrecords)
+	}
+	if m.bedRecords != nil {
+		edges = append(edges, place.EdgeBedRecords)
+	}
+	if m.deathRecords != nil {
+		edges = append(edges, place.EdgeDeathRecords)
+	}
+	if m.infectedRecords != nil {
+		edges = append(edges, place.EdgeInfectedRecords)
+	}
+	if m.regions != nil {
+		edges = append(edges, place.EdgeRegions)
+	}
+	if m.provinces != nil {
+		edges = append(edges, place.EdgeProvinces)
+	}
+	if m.districts != nil {
+		edges = append(edges, place.EdgeDistricts)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PlaceMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case place.EdgeOxygenrecords:
+		ids := make([]ent.Value, 0, len(m.oxygenrecords))
+		for id := range m.oxygenrecords {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeBedRecords:
+		ids := make([]ent.Value, 0, len(m.bedRecords))
+		for id := range m.bedRecords {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeDeathRecords:
+		ids := make([]ent.Value, 0, len(m.deathRecords))
+		for id := range m.deathRecords {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeInfectedRecords:
+		ids := make([]ent.Value, 0, len(m.infectedRecords))
+		for id := range m.infectedRecords {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeRegions:
+		ids := make([]ent.Value, 0, len(m.regions))
+		for id := range m.regions {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeProvinces:
+		ids := make([]ent.Value, 0, len(m.provinces))
+		for id := range m.provinces {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeDistricts:
+		ids := make([]ent.Value, 0, len(m.districts))
+		for id := range m.districts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PlaceMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 7)
+	if m.removedoxygenrecords != nil {
+		edges = append(edges, place.EdgeOxygenrecords)
+	}
+	if m.removedbedRecords != nil {
+		edges = append(edges, place.EdgeBedRecords)
+	}
+	if m.removeddeathRecords != nil {
+		edges = append(edges, place.EdgeDeathRecords)
+	}
+	if m.removedinfectedRecords != nil {
+		edges = append(edges, place.EdgeInfectedRecords)
+	}
+	if m.removedregions != nil {
+		edges = append(edges, place.EdgeRegions)
+	}
+	if m.removedprovinces != nil {
+		edges = append(edges, place.EdgeProvinces)
+	}
+	if m.removeddistricts != nil {
+		edges = append(edges, place.EdgeDistricts)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PlaceMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case place.EdgeOxygenrecords:
+		ids := make([]ent.Value, 0, len(m.removedoxygenrecords))
+		for id := range m.removedoxygenrecords {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeBedRecords:
+		ids := make([]ent.Value, 0, len(m.removedbedRecords))
+		for id := range m.removedbedRecords {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeDeathRecords:
+		ids := make([]ent.Value, 0, len(m.removeddeathRecords))
+		for id := range m.removeddeathRecords {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeInfectedRecords:
+		ids := make([]ent.Value, 0, len(m.removedinfectedRecords))
+		for id := range m.removedinfectedRecords {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeRegions:
+		ids := make([]ent.Value, 0, len(m.removedregions))
+		for id := range m.removedregions {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeProvinces:
+		ids := make([]ent.Value, 0, len(m.removedprovinces))
+		for id := range m.removedprovinces {
+			ids = append(ids, id)
+		}
+		return ids
+	case place.EdgeDistricts:
+		ids := make([]ent.Value, 0, len(m.removeddistricts))
+		for id := range m.removeddistricts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PlaceMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 7)
+	if m.clearedoxygenrecords {
+		edges = append(edges, place.EdgeOxygenrecords)
+	}
+	if m.clearedbedRecords {
+		edges = append(edges, place.EdgeBedRecords)
+	}
+	if m.cleareddeathRecords {
+		edges = append(edges, place.EdgeDeathRecords)
+	}
+	if m.clearedinfectedRecords {
+		edges = append(edges, place.EdgeInfectedRecords)
+	}
+	if m.clearedregions {
+		edges = append(edges, place.EdgeRegions)
+	}
+	if m.clearedprovinces {
+		edges = append(edges, place.EdgeProvinces)
+	}
+	if m.cleareddistricts {
+		edges = append(edges, place.EdgeDistricts)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PlaceMutation) EdgeCleared(name string) bool {
+	switch name {
+	case place.EdgeOxygenrecords:
+		return m.clearedoxygenrecords
+	case place.EdgeBedRecords:
+		return m.clearedbedRecords
+	case place.EdgeDeathRecords:
+		return m.cleareddeathRecords
+	case place.EdgeInfectedRecords:
+		return m.clearedinfectedRecords
+	case place.EdgeRegions:
+		return m.clearedregions
+	case place.EdgeProvinces:
+		return m.clearedprovinces
+	case place.EdgeDistricts:
+		return m.cleareddistricts
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PlaceMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Place unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PlaceMutation) ResetEdge(name string) error {
+	switch name {
+	case place.EdgeOxygenrecords:
+		m.ResetOxygenrecords()
+		return nil
+	case place.EdgeBedRecords:
+		m.ResetBedRecords()
+		return nil
+	case place.EdgeDeathRecords:
+		m.ResetDeathRecords()
+		return nil
+	case place.EdgeInfectedRecords:
+		m.ResetInfectedRecords()
+		return nil
+	case place.EdgeRegions:
+		m.ResetRegions()
+		return nil
+	case place.EdgeProvinces:
+		m.ResetProvinces()
+		return nil
+	case place.EdgeDistricts:
+		m.ResetDistricts()
+		return nil
+	}
+	return fmt.Errorf("unknown Place edge %s", name)
+}
+
 // ProvinceMutation represents an operation that mutates the Province nodes in the graph.
 type ProvinceMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *int
-	name                *string
-	clearedFields       map[string]struct{}
-	organization        map[int]struct{}
-	removedorganization map[int]struct{}
-	clearedorganization bool
-	region              map[int]struct{}
-	removedregion       map[int]struct{}
-	clearedregion       bool
-	district            map[int]struct{}
-	removeddistrict     map[int]struct{}
-	cleareddistrict     bool
-	done                bool
-	oldValue            func(context.Context) (*Province, error)
-	predicates          []predicate.Province
+	op               Op
+	typ              string
+	id               *int
+	name             *string
+	clearedFields    map[string]struct{}
+	places           map[int]struct{}
+	removedplaces    map[int]struct{}
+	clearedplaces    bool
+	regions          map[int]struct{}
+	removedregions   map[int]struct{}
+	clearedregions   bool
+	districts        map[int]struct{}
+	removeddistricts map[int]struct{}
+	cleareddistricts bool
+	done             bool
+	oldValue         func(context.Context) (*Province, error)
+	predicates       []predicate.Province
 }
 
 var _ ent.Mutation = (*ProvinceMutation)(nil)
@@ -2673,163 +5299,163 @@ func (m *ProvinceMutation) ResetName() {
 	m.name = nil
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by ids.
-func (m *ProvinceMutation) AddOrganizationIDs(ids ...int) {
-	if m.organization == nil {
-		m.organization = make(map[int]struct{})
+// AddPlaceIDs adds the "places" edge to the Place entity by ids.
+func (m *ProvinceMutation) AddPlaceIDs(ids ...int) {
+	if m.places == nil {
+		m.places = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.organization[ids[i]] = struct{}{}
+		m.places[ids[i]] = struct{}{}
 	}
 }
 
-// ClearOrganization clears the "organization" edge to the Organization entity.
-func (m *ProvinceMutation) ClearOrganization() {
-	m.clearedorganization = true
+// ClearPlaces clears the "places" edge to the Place entity.
+func (m *ProvinceMutation) ClearPlaces() {
+	m.clearedplaces = true
 }
 
-// OrganizationCleared returns if the "organization" edge to the Organization entity was cleared.
-func (m *ProvinceMutation) OrganizationCleared() bool {
-	return m.clearedorganization
+// PlacesCleared returns if the "places" edge to the Place entity was cleared.
+func (m *ProvinceMutation) PlacesCleared() bool {
+	return m.clearedplaces
 }
 
-// RemoveOrganizationIDs removes the "organization" edge to the Organization entity by IDs.
-func (m *ProvinceMutation) RemoveOrganizationIDs(ids ...int) {
-	if m.removedorganization == nil {
-		m.removedorganization = make(map[int]struct{})
+// RemovePlaceIDs removes the "places" edge to the Place entity by IDs.
+func (m *ProvinceMutation) RemovePlaceIDs(ids ...int) {
+	if m.removedplaces == nil {
+		m.removedplaces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removedorganization[ids[i]] = struct{}{}
+		m.removedplaces[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedOrganization returns the removed IDs of the "organization" edge to the Organization entity.
-func (m *ProvinceMutation) RemovedOrganizationIDs() (ids []int) {
-	for id := range m.removedorganization {
+// RemovedPlaces returns the removed IDs of the "places" edge to the Place entity.
+func (m *ProvinceMutation) RemovedPlacesIDs() (ids []int) {
+	for id := range m.removedplaces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// OrganizationIDs returns the "organization" edge IDs in the mutation.
-func (m *ProvinceMutation) OrganizationIDs() (ids []int) {
-	for id := range m.organization {
+// PlacesIDs returns the "places" edge IDs in the mutation.
+func (m *ProvinceMutation) PlacesIDs() (ids []int) {
+	for id := range m.places {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetOrganization resets all changes to the "organization" edge.
-func (m *ProvinceMutation) ResetOrganization() {
-	m.organization = nil
-	m.clearedorganization = false
-	m.removedorganization = nil
+// ResetPlaces resets all changes to the "places" edge.
+func (m *ProvinceMutation) ResetPlaces() {
+	m.places = nil
+	m.clearedplaces = false
+	m.removedplaces = nil
 }
 
-// AddRegionIDs adds the "region" edge to the Region entity by ids.
+// AddRegionIDs adds the "regions" edge to the Region entity by ids.
 func (m *ProvinceMutation) AddRegionIDs(ids ...int) {
-	if m.region == nil {
-		m.region = make(map[int]struct{})
+	if m.regions == nil {
+		m.regions = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.region[ids[i]] = struct{}{}
+		m.regions[ids[i]] = struct{}{}
 	}
 }
 
-// ClearRegion clears the "region" edge to the Region entity.
-func (m *ProvinceMutation) ClearRegion() {
-	m.clearedregion = true
+// ClearRegions clears the "regions" edge to the Region entity.
+func (m *ProvinceMutation) ClearRegions() {
+	m.clearedregions = true
 }
 
-// RegionCleared returns if the "region" edge to the Region entity was cleared.
-func (m *ProvinceMutation) RegionCleared() bool {
-	return m.clearedregion
+// RegionsCleared returns if the "regions" edge to the Region entity was cleared.
+func (m *ProvinceMutation) RegionsCleared() bool {
+	return m.clearedregions
 }
 
-// RemoveRegionIDs removes the "region" edge to the Region entity by IDs.
+// RemoveRegionIDs removes the "regions" edge to the Region entity by IDs.
 func (m *ProvinceMutation) RemoveRegionIDs(ids ...int) {
-	if m.removedregion == nil {
-		m.removedregion = make(map[int]struct{})
+	if m.removedregions == nil {
+		m.removedregions = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removedregion[ids[i]] = struct{}{}
+		m.removedregions[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedRegion returns the removed IDs of the "region" edge to the Region entity.
-func (m *ProvinceMutation) RemovedRegionIDs() (ids []int) {
-	for id := range m.removedregion {
+// RemovedRegions returns the removed IDs of the "regions" edge to the Region entity.
+func (m *ProvinceMutation) RemovedRegionsIDs() (ids []int) {
+	for id := range m.removedregions {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// RegionIDs returns the "region" edge IDs in the mutation.
-func (m *ProvinceMutation) RegionIDs() (ids []int) {
-	for id := range m.region {
+// RegionsIDs returns the "regions" edge IDs in the mutation.
+func (m *ProvinceMutation) RegionsIDs() (ids []int) {
+	for id := range m.regions {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetRegion resets all changes to the "region" edge.
-func (m *ProvinceMutation) ResetRegion() {
-	m.region = nil
-	m.clearedregion = false
-	m.removedregion = nil
+// ResetRegions resets all changes to the "regions" edge.
+func (m *ProvinceMutation) ResetRegions() {
+	m.regions = nil
+	m.clearedregions = false
+	m.removedregions = nil
 }
 
-// AddDistrictIDs adds the "district" edge to the District entity by ids.
+// AddDistrictIDs adds the "districts" edge to the District entity by ids.
 func (m *ProvinceMutation) AddDistrictIDs(ids ...int) {
-	if m.district == nil {
-		m.district = make(map[int]struct{})
+	if m.districts == nil {
+		m.districts = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.district[ids[i]] = struct{}{}
+		m.districts[ids[i]] = struct{}{}
 	}
 }
 
-// ClearDistrict clears the "district" edge to the District entity.
-func (m *ProvinceMutation) ClearDistrict() {
-	m.cleareddistrict = true
+// ClearDistricts clears the "districts" edge to the District entity.
+func (m *ProvinceMutation) ClearDistricts() {
+	m.cleareddistricts = true
 }
 
-// DistrictCleared returns if the "district" edge to the District entity was cleared.
-func (m *ProvinceMutation) DistrictCleared() bool {
-	return m.cleareddistrict
+// DistrictsCleared returns if the "districts" edge to the District entity was cleared.
+func (m *ProvinceMutation) DistrictsCleared() bool {
+	return m.cleareddistricts
 }
 
-// RemoveDistrictIDs removes the "district" edge to the District entity by IDs.
+// RemoveDistrictIDs removes the "districts" edge to the District entity by IDs.
 func (m *ProvinceMutation) RemoveDistrictIDs(ids ...int) {
-	if m.removeddistrict == nil {
-		m.removeddistrict = make(map[int]struct{})
+	if m.removeddistricts == nil {
+		m.removeddistricts = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removeddistrict[ids[i]] = struct{}{}
+		m.removeddistricts[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedDistrict returns the removed IDs of the "district" edge to the District entity.
-func (m *ProvinceMutation) RemovedDistrictIDs() (ids []int) {
-	for id := range m.removeddistrict {
+// RemovedDistricts returns the removed IDs of the "districts" edge to the District entity.
+func (m *ProvinceMutation) RemovedDistrictsIDs() (ids []int) {
+	for id := range m.removeddistricts {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// DistrictIDs returns the "district" edge IDs in the mutation.
-func (m *ProvinceMutation) DistrictIDs() (ids []int) {
-	for id := range m.district {
+// DistrictsIDs returns the "districts" edge IDs in the mutation.
+func (m *ProvinceMutation) DistrictsIDs() (ids []int) {
+	for id := range m.districts {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetDistrict resets all changes to the "district" edge.
-func (m *ProvinceMutation) ResetDistrict() {
-	m.district = nil
-	m.cleareddistrict = false
-	m.removeddistrict = nil
+// ResetDistricts resets all changes to the "districts" edge.
+func (m *ProvinceMutation) ResetDistricts() {
+	m.districts = nil
+	m.cleareddistricts = false
+	m.removeddistricts = nil
 }
 
 // Op returns the operation name.
@@ -2946,14 +5572,14 @@ func (m *ProvinceMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProvinceMutation) AddedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.organization != nil {
-		edges = append(edges, province.EdgeOrganization)
+	if m.places != nil {
+		edges = append(edges, province.EdgePlaces)
 	}
-	if m.region != nil {
-		edges = append(edges, province.EdgeRegion)
+	if m.regions != nil {
+		edges = append(edges, province.EdgeRegions)
 	}
-	if m.district != nil {
-		edges = append(edges, province.EdgeDistrict)
+	if m.districts != nil {
+		edges = append(edges, province.EdgeDistricts)
 	}
 	return edges
 }
@@ -2962,21 +5588,21 @@ func (m *ProvinceMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *ProvinceMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case province.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.organization))
-		for id := range m.organization {
+	case province.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.places))
+		for id := range m.places {
 			ids = append(ids, id)
 		}
 		return ids
-	case province.EdgeRegion:
-		ids := make([]ent.Value, 0, len(m.region))
-		for id := range m.region {
+	case province.EdgeRegions:
+		ids := make([]ent.Value, 0, len(m.regions))
+		for id := range m.regions {
 			ids = append(ids, id)
 		}
 		return ids
-	case province.EdgeDistrict:
-		ids := make([]ent.Value, 0, len(m.district))
-		for id := range m.district {
+	case province.EdgeDistricts:
+		ids := make([]ent.Value, 0, len(m.districts))
+		for id := range m.districts {
 			ids = append(ids, id)
 		}
 		return ids
@@ -2987,14 +5613,14 @@ func (m *ProvinceMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProvinceMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.removedorganization != nil {
-		edges = append(edges, province.EdgeOrganization)
+	if m.removedplaces != nil {
+		edges = append(edges, province.EdgePlaces)
 	}
-	if m.removedregion != nil {
-		edges = append(edges, province.EdgeRegion)
+	if m.removedregions != nil {
+		edges = append(edges, province.EdgeRegions)
 	}
-	if m.removeddistrict != nil {
-		edges = append(edges, province.EdgeDistrict)
+	if m.removeddistricts != nil {
+		edges = append(edges, province.EdgeDistricts)
 	}
 	return edges
 }
@@ -3003,21 +5629,21 @@ func (m *ProvinceMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *ProvinceMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case province.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.removedorganization))
-		for id := range m.removedorganization {
+	case province.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.removedplaces))
+		for id := range m.removedplaces {
 			ids = append(ids, id)
 		}
 		return ids
-	case province.EdgeRegion:
-		ids := make([]ent.Value, 0, len(m.removedregion))
-		for id := range m.removedregion {
+	case province.EdgeRegions:
+		ids := make([]ent.Value, 0, len(m.removedregions))
+		for id := range m.removedregions {
 			ids = append(ids, id)
 		}
 		return ids
-	case province.EdgeDistrict:
-		ids := make([]ent.Value, 0, len(m.removeddistrict))
-		for id := range m.removeddistrict {
+	case province.EdgeDistricts:
+		ids := make([]ent.Value, 0, len(m.removeddistricts))
+		for id := range m.removeddistricts {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3028,14 +5654,14 @@ func (m *ProvinceMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProvinceMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.clearedorganization {
-		edges = append(edges, province.EdgeOrganization)
+	if m.clearedplaces {
+		edges = append(edges, province.EdgePlaces)
 	}
-	if m.clearedregion {
-		edges = append(edges, province.EdgeRegion)
+	if m.clearedregions {
+		edges = append(edges, province.EdgeRegions)
 	}
-	if m.cleareddistrict {
-		edges = append(edges, province.EdgeDistrict)
+	if m.cleareddistricts {
+		edges = append(edges, province.EdgeDistricts)
 	}
 	return edges
 }
@@ -3044,12 +5670,12 @@ func (m *ProvinceMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *ProvinceMutation) EdgeCleared(name string) bool {
 	switch name {
-	case province.EdgeOrganization:
-		return m.clearedorganization
-	case province.EdgeRegion:
-		return m.clearedregion
-	case province.EdgeDistrict:
-		return m.cleareddistrict
+	case province.EdgePlaces:
+		return m.clearedplaces
+	case province.EdgeRegions:
+		return m.clearedregions
+	case province.EdgeDistricts:
+		return m.cleareddistricts
 	}
 	return false
 }
@@ -3066,14 +5692,14 @@ func (m *ProvinceMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ProvinceMutation) ResetEdge(name string) error {
 	switch name {
-	case province.EdgeOrganization:
-		m.ResetOrganization()
+	case province.EdgePlaces:
+		m.ResetPlaces()
 		return nil
-	case province.EdgeRegion:
-		m.ResetRegion()
+	case province.EdgeRegions:
+		m.ResetRegions()
 		return nil
-	case province.EdgeDistrict:
-		m.ResetDistrict()
+	case province.EdgeDistricts:
+		m.ResetDistricts()
 		return nil
 	}
 	return fmt.Errorf("unknown Province edge %s", name)
@@ -3082,20 +5708,20 @@ func (m *ProvinceMutation) ResetEdge(name string) error {
 // RegionMutation represents an operation that mutates the Region nodes in the graph.
 type RegionMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *int
-	name                *string
-	clearedFields       map[string]struct{}
-	organization        map[int]struct{}
-	removedorganization map[int]struct{}
-	clearedorganization bool
-	province            map[int]struct{}
-	removedprovince     map[int]struct{}
-	clearedprovince     bool
-	done                bool
-	oldValue            func(context.Context) (*Region, error)
-	predicates          []predicate.Region
+	op               Op
+	typ              string
+	id               *int
+	name             *string
+	clearedFields    map[string]struct{}
+	places           map[int]struct{}
+	removedplaces    map[int]struct{}
+	clearedplaces    bool
+	provinces        map[int]struct{}
+	removedprovinces map[int]struct{}
+	clearedprovinces bool
+	done             bool
+	oldValue         func(context.Context) (*Region, error)
+	predicates       []predicate.Region
 }
 
 var _ ent.Mutation = (*RegionMutation)(nil)
@@ -3213,110 +5839,110 @@ func (m *RegionMutation) ResetName() {
 	m.name = nil
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by ids.
-func (m *RegionMutation) AddOrganizationIDs(ids ...int) {
-	if m.organization == nil {
-		m.organization = make(map[int]struct{})
+// AddPlaceIDs adds the "places" edge to the Place entity by ids.
+func (m *RegionMutation) AddPlaceIDs(ids ...int) {
+	if m.places == nil {
+		m.places = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.organization[ids[i]] = struct{}{}
+		m.places[ids[i]] = struct{}{}
 	}
 }
 
-// ClearOrganization clears the "organization" edge to the Organization entity.
-func (m *RegionMutation) ClearOrganization() {
-	m.clearedorganization = true
+// ClearPlaces clears the "places" edge to the Place entity.
+func (m *RegionMutation) ClearPlaces() {
+	m.clearedplaces = true
 }
 
-// OrganizationCleared returns if the "organization" edge to the Organization entity was cleared.
-func (m *RegionMutation) OrganizationCleared() bool {
-	return m.clearedorganization
+// PlacesCleared returns if the "places" edge to the Place entity was cleared.
+func (m *RegionMutation) PlacesCleared() bool {
+	return m.clearedplaces
 }
 
-// RemoveOrganizationIDs removes the "organization" edge to the Organization entity by IDs.
-func (m *RegionMutation) RemoveOrganizationIDs(ids ...int) {
-	if m.removedorganization == nil {
-		m.removedorganization = make(map[int]struct{})
+// RemovePlaceIDs removes the "places" edge to the Place entity by IDs.
+func (m *RegionMutation) RemovePlaceIDs(ids ...int) {
+	if m.removedplaces == nil {
+		m.removedplaces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removedorganization[ids[i]] = struct{}{}
+		m.removedplaces[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedOrganization returns the removed IDs of the "organization" edge to the Organization entity.
-func (m *RegionMutation) RemovedOrganizationIDs() (ids []int) {
-	for id := range m.removedorganization {
+// RemovedPlaces returns the removed IDs of the "places" edge to the Place entity.
+func (m *RegionMutation) RemovedPlacesIDs() (ids []int) {
+	for id := range m.removedplaces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// OrganizationIDs returns the "organization" edge IDs in the mutation.
-func (m *RegionMutation) OrganizationIDs() (ids []int) {
-	for id := range m.organization {
+// PlacesIDs returns the "places" edge IDs in the mutation.
+func (m *RegionMutation) PlacesIDs() (ids []int) {
+	for id := range m.places {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetOrganization resets all changes to the "organization" edge.
-func (m *RegionMutation) ResetOrganization() {
-	m.organization = nil
-	m.clearedorganization = false
-	m.removedorganization = nil
+// ResetPlaces resets all changes to the "places" edge.
+func (m *RegionMutation) ResetPlaces() {
+	m.places = nil
+	m.clearedplaces = false
+	m.removedplaces = nil
 }
 
-// AddProvinceIDs adds the "province" edge to the Province entity by ids.
+// AddProvinceIDs adds the "provinces" edge to the Province entity by ids.
 func (m *RegionMutation) AddProvinceIDs(ids ...int) {
-	if m.province == nil {
-		m.province = make(map[int]struct{})
+	if m.provinces == nil {
+		m.provinces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.province[ids[i]] = struct{}{}
+		m.provinces[ids[i]] = struct{}{}
 	}
 }
 
-// ClearProvince clears the "province" edge to the Province entity.
-func (m *RegionMutation) ClearProvince() {
-	m.clearedprovince = true
+// ClearProvinces clears the "provinces" edge to the Province entity.
+func (m *RegionMutation) ClearProvinces() {
+	m.clearedprovinces = true
 }
 
-// ProvinceCleared returns if the "province" edge to the Province entity was cleared.
-func (m *RegionMutation) ProvinceCleared() bool {
-	return m.clearedprovince
+// ProvincesCleared returns if the "provinces" edge to the Province entity was cleared.
+func (m *RegionMutation) ProvincesCleared() bool {
+	return m.clearedprovinces
 }
 
-// RemoveProvinceIDs removes the "province" edge to the Province entity by IDs.
+// RemoveProvinceIDs removes the "provinces" edge to the Province entity by IDs.
 func (m *RegionMutation) RemoveProvinceIDs(ids ...int) {
-	if m.removedprovince == nil {
-		m.removedprovince = make(map[int]struct{})
+	if m.removedprovinces == nil {
+		m.removedprovinces = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.removedprovince[ids[i]] = struct{}{}
+		m.removedprovinces[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedProvince returns the removed IDs of the "province" edge to the Province entity.
-func (m *RegionMutation) RemovedProvinceIDs() (ids []int) {
-	for id := range m.removedprovince {
+// RemovedProvinces returns the removed IDs of the "provinces" edge to the Province entity.
+func (m *RegionMutation) RemovedProvincesIDs() (ids []int) {
+	for id := range m.removedprovinces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ProvinceIDs returns the "province" edge IDs in the mutation.
-func (m *RegionMutation) ProvinceIDs() (ids []int) {
-	for id := range m.province {
+// ProvincesIDs returns the "provinces" edge IDs in the mutation.
+func (m *RegionMutation) ProvincesIDs() (ids []int) {
+	for id := range m.provinces {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetProvince resets all changes to the "province" edge.
-func (m *RegionMutation) ResetProvince() {
-	m.province = nil
-	m.clearedprovince = false
-	m.removedprovince = nil
+// ResetProvinces resets all changes to the "provinces" edge.
+func (m *RegionMutation) ResetProvinces() {
+	m.provinces = nil
+	m.clearedprovinces = false
+	m.removedprovinces = nil
 }
 
 // Op returns the operation name.
@@ -3433,11 +6059,11 @@ func (m *RegionMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RegionMutation) AddedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.organization != nil {
-		edges = append(edges, region.EdgeOrganization)
+	if m.places != nil {
+		edges = append(edges, region.EdgePlaces)
 	}
-	if m.province != nil {
-		edges = append(edges, region.EdgeProvince)
+	if m.provinces != nil {
+		edges = append(edges, region.EdgeProvinces)
 	}
 	return edges
 }
@@ -3446,15 +6072,15 @@ func (m *RegionMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *RegionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case region.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.organization))
-		for id := range m.organization {
+	case region.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.places))
+		for id := range m.places {
 			ids = append(ids, id)
 		}
 		return ids
-	case region.EdgeProvince:
-		ids := make([]ent.Value, 0, len(m.province))
-		for id := range m.province {
+	case region.EdgeProvinces:
+		ids := make([]ent.Value, 0, len(m.provinces))
+		for id := range m.provinces {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3465,11 +6091,11 @@ func (m *RegionMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RegionMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedorganization != nil {
-		edges = append(edges, region.EdgeOrganization)
+	if m.removedplaces != nil {
+		edges = append(edges, region.EdgePlaces)
 	}
-	if m.removedprovince != nil {
-		edges = append(edges, region.EdgeProvince)
+	if m.removedprovinces != nil {
+		edges = append(edges, region.EdgeProvinces)
 	}
 	return edges
 }
@@ -3478,15 +6104,15 @@ func (m *RegionMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *RegionMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case region.EdgeOrganization:
-		ids := make([]ent.Value, 0, len(m.removedorganization))
-		for id := range m.removedorganization {
+	case region.EdgePlaces:
+		ids := make([]ent.Value, 0, len(m.removedplaces))
+		for id := range m.removedplaces {
 			ids = append(ids, id)
 		}
 		return ids
-	case region.EdgeProvince:
-		ids := make([]ent.Value, 0, len(m.removedprovince))
-		for id := range m.removedprovince {
+	case region.EdgeProvinces:
+		ids := make([]ent.Value, 0, len(m.removedprovinces))
+		for id := range m.removedprovinces {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3497,11 +6123,11 @@ func (m *RegionMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RegionMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.clearedorganization {
-		edges = append(edges, region.EdgeOrganization)
+	if m.clearedplaces {
+		edges = append(edges, region.EdgePlaces)
 	}
-	if m.clearedprovince {
-		edges = append(edges, region.EdgeProvince)
+	if m.clearedprovinces {
+		edges = append(edges, region.EdgeProvinces)
 	}
 	return edges
 }
@@ -3510,10 +6136,10 @@ func (m *RegionMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *RegionMutation) EdgeCleared(name string) bool {
 	switch name {
-	case region.EdgeOrganization:
-		return m.clearedorganization
-	case region.EdgeProvince:
-		return m.clearedprovince
+	case region.EdgePlaces:
+		return m.clearedplaces
+	case region.EdgeProvinces:
+		return m.clearedprovinces
 	}
 	return false
 }
@@ -3530,11 +6156,11 @@ func (m *RegionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *RegionMutation) ResetEdge(name string) error {
 	switch name {
-	case region.EdgeOrganization:
-		m.ResetOrganization()
+	case region.EdgePlaces:
+		m.ResetPlaces()
 		return nil
-	case region.EdgeProvince:
-		m.ResetProvince()
+	case region.EdgeProvinces:
+		m.ResetProvinces()
 		return nil
 	}
 	return fmt.Errorf("unknown Region edge %s", name)

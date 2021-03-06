@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"math"
 	"opencensus/core/ent/district"
-	"opencensus/core/ent/organization"
+	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
 	"opencensus/core/ent/province"
 
@@ -27,8 +27,8 @@ type DistrictQuery struct {
 	fields     []string
 	predicates []predicate.District
 	// eager-loading edges.
-	withOrganization *OrganizationQuery
-	withProvince     *ProvinceQuery
+	withPlaces    *PlaceQuery
+	withProvinces *ProvinceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,9 +58,9 @@ func (dq *DistrictQuery) Order(o ...OrderFunc) *DistrictQuery {
 	return dq
 }
 
-// QueryOrganization chains the current query on the "organization" edge.
-func (dq *DistrictQuery) QueryOrganization() *OrganizationQuery {
-	query := &OrganizationQuery{config: dq.config}
+// QueryPlaces chains the current query on the "places" edge.
+func (dq *DistrictQuery) QueryPlaces() *PlaceQuery {
+	query := &PlaceQuery{config: dq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := dq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -71,8 +71,8 @@ func (dq *DistrictQuery) QueryOrganization() *OrganizationQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(district.Table, district.FieldID, selector),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, district.OrganizationTable, district.OrganizationPrimaryKey...),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, district.PlacesTable, district.PlacesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(dq.driver.Dialect(), step)
 		return fromU, nil
@@ -80,8 +80,8 @@ func (dq *DistrictQuery) QueryOrganization() *OrganizationQuery {
 	return query
 }
 
-// QueryProvince chains the current query on the "province" edge.
-func (dq *DistrictQuery) QueryProvince() *ProvinceQuery {
+// QueryProvinces chains the current query on the "provinces" edge.
+func (dq *DistrictQuery) QueryProvinces() *ProvinceQuery {
 	query := &ProvinceQuery{config: dq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := dq.prepareQuery(ctx); err != nil {
@@ -94,7 +94,7 @@ func (dq *DistrictQuery) QueryProvince() *ProvinceQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(district.Table, district.FieldID, selector),
 			sqlgraph.To(province.Table, province.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, district.ProvinceTable, district.ProvincePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, district.ProvincesTable, district.ProvincesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(dq.driver.Dialect(), step)
 		return fromU, nil
@@ -278,38 +278,38 @@ func (dq *DistrictQuery) Clone() *DistrictQuery {
 		return nil
 	}
 	return &DistrictQuery{
-		config:           dq.config,
-		limit:            dq.limit,
-		offset:           dq.offset,
-		order:            append([]OrderFunc{}, dq.order...),
-		predicates:       append([]predicate.District{}, dq.predicates...),
-		withOrganization: dq.withOrganization.Clone(),
-		withProvince:     dq.withProvince.Clone(),
+		config:        dq.config,
+		limit:         dq.limit,
+		offset:        dq.offset,
+		order:         append([]OrderFunc{}, dq.order...),
+		predicates:    append([]predicate.District{}, dq.predicates...),
+		withPlaces:    dq.withPlaces.Clone(),
+		withProvinces: dq.withProvinces.Clone(),
 		// clone intermediate query.
 		sql:  dq.sql.Clone(),
 		path: dq.path,
 	}
 }
 
-// WithOrganization tells the query-builder to eager-load the nodes that are connected to
-// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
-func (dq *DistrictQuery) WithOrganization(opts ...func(*OrganizationQuery)) *DistrictQuery {
-	query := &OrganizationQuery{config: dq.config}
+// WithPlaces tells the query-builder to eager-load the nodes that are connected to
+// the "places" edge. The optional arguments are used to configure the query builder of the edge.
+func (dq *DistrictQuery) WithPlaces(opts ...func(*PlaceQuery)) *DistrictQuery {
+	query := &PlaceQuery{config: dq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	dq.withOrganization = query
+	dq.withPlaces = query
 	return dq
 }
 
-// WithProvince tells the query-builder to eager-load the nodes that are connected to
-// the "province" edge. The optional arguments are used to configure the query builder of the edge.
-func (dq *DistrictQuery) WithProvince(opts ...func(*ProvinceQuery)) *DistrictQuery {
+// WithProvinces tells the query-builder to eager-load the nodes that are connected to
+// the "provinces" edge. The optional arguments are used to configure the query builder of the edge.
+func (dq *DistrictQuery) WithProvinces(opts ...func(*ProvinceQuery)) *DistrictQuery {
 	query := &ProvinceQuery{config: dq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	dq.withProvince = query
+	dq.withProvinces = query
 	return dq
 }
 
@@ -379,8 +379,8 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 		nodes       = []*District{}
 		_spec       = dq.querySpec()
 		loadedTypes = [2]bool{
-			dq.withOrganization != nil,
-			dq.withProvince != nil,
+			dq.withPlaces != nil,
+			dq.withProvinces != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -403,13 +403,13 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 		return nodes, nil
 	}
 
-	if query := dq.withOrganization; query != nil {
+	if query := dq.withPlaces; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
 		ids := make(map[int]*District, len(nodes))
 		for _, node := range nodes {
 			ids[node.ID] = node
 			fks = append(fks, node.ID)
-			node.Edges.Organization = []*Organization{}
+			node.Edges.Places = []*Place{}
 		}
 		var (
 			edgeids []int
@@ -418,11 +418,11 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 		_spec := &sqlgraph.EdgeQuerySpec{
 			Edge: &sqlgraph.EdgeSpec{
 				Inverse: true,
-				Table:   district.OrganizationTable,
-				Columns: district.OrganizationPrimaryKey,
+				Table:   district.PlacesTable,
+				Columns: district.PlacesPrimaryKey,
 			},
 			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(district.OrganizationPrimaryKey[1], fks...))
+				s.Where(sql.InValues(district.PlacesPrimaryKey[1], fks...))
 			},
 
 			ScanValues: func() [2]interface{} {
@@ -449,9 +449,9 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 			},
 		}
 		if err := sqlgraph.QueryEdges(ctx, dq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "organization": %v`, err)
+			return nil, fmt.Errorf(`query edges "places": %v`, err)
 		}
-		query.Where(organization.IDIn(edgeids...))
+		query.Where(place.IDIn(edgeids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
@@ -459,21 +459,21 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 		for _, n := range neighbors {
 			nodes, ok := edges[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "organization" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected "places" node returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.Organization = append(nodes[i].Edges.Organization, n)
+				nodes[i].Edges.Places = append(nodes[i].Edges.Places, n)
 			}
 		}
 	}
 
-	if query := dq.withProvince; query != nil {
+	if query := dq.withProvinces; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
 		ids := make(map[int]*District, len(nodes))
 		for _, node := range nodes {
 			ids[node.ID] = node
 			fks = append(fks, node.ID)
-			node.Edges.Province = []*Province{}
+			node.Edges.Provinces = []*Province{}
 		}
 		var (
 			edgeids []int
@@ -482,11 +482,11 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 		_spec := &sqlgraph.EdgeQuerySpec{
 			Edge: &sqlgraph.EdgeSpec{
 				Inverse: true,
-				Table:   district.ProvinceTable,
-				Columns: district.ProvincePrimaryKey,
+				Table:   district.ProvincesTable,
+				Columns: district.ProvincesPrimaryKey,
 			},
 			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(district.ProvincePrimaryKey[1], fks...))
+				s.Where(sql.InValues(district.ProvincesPrimaryKey[1], fks...))
 			},
 
 			ScanValues: func() [2]interface{} {
@@ -513,7 +513,7 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 			},
 		}
 		if err := sqlgraph.QueryEdges(ctx, dq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "province": %v`, err)
+			return nil, fmt.Errorf(`query edges "provinces": %v`, err)
 		}
 		query.Where(province.IDIn(edgeids...))
 		neighbors, err := query.All(ctx)
@@ -523,10 +523,10 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 		for _, n := range neighbors {
 			nodes, ok := edges[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "province" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected "provinces" node returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.Province = append(nodes[i].Edges.Province, n)
+				nodes[i].Edges.Provinces = append(nodes[i].Edges.Provinces, n)
 			}
 		}
 	}

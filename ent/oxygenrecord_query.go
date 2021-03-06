@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"opencensus/core/ent/organization"
 	"opencensus/core/ent/oxygenrecord"
+	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
@@ -26,7 +26,7 @@ type OxygenRecordQuery struct {
 	fields     []string
 	predicates []predicate.OxygenRecord
 	// eager-loading edges.
-	withOrganization *OrganizationQuery
+	withPlaces *PlaceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,9 +56,9 @@ func (orq *OxygenRecordQuery) Order(o ...OrderFunc) *OxygenRecordQuery {
 	return orq
 }
 
-// QueryOrganization chains the current query on the "organization" edge.
-func (orq *OxygenRecordQuery) QueryOrganization() *OrganizationQuery {
-	query := &OrganizationQuery{config: orq.config}
+// QueryPlaces chains the current query on the "places" edge.
+func (orq *OxygenRecordQuery) QueryPlaces() *PlaceQuery {
+	query := &PlaceQuery{config: orq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := orq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -69,8 +69,8 @@ func (orq *OxygenRecordQuery) QueryOrganization() *OrganizationQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(oxygenrecord.Table, oxygenrecord.FieldID, selector),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, oxygenrecord.OrganizationTable, oxygenrecord.OrganizationPrimaryKey...),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, oxygenrecord.PlacesTable, oxygenrecord.PlacesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(orq.driver.Dialect(), step)
 		return fromU, nil
@@ -254,26 +254,26 @@ func (orq *OxygenRecordQuery) Clone() *OxygenRecordQuery {
 		return nil
 	}
 	return &OxygenRecordQuery{
-		config:           orq.config,
-		limit:            orq.limit,
-		offset:           orq.offset,
-		order:            append([]OrderFunc{}, orq.order...),
-		predicates:       append([]predicate.OxygenRecord{}, orq.predicates...),
-		withOrganization: orq.withOrganization.Clone(),
+		config:     orq.config,
+		limit:      orq.limit,
+		offset:     orq.offset,
+		order:      append([]OrderFunc{}, orq.order...),
+		predicates: append([]predicate.OxygenRecord{}, orq.predicates...),
+		withPlaces: orq.withPlaces.Clone(),
 		// clone intermediate query.
 		sql:  orq.sql.Clone(),
 		path: orq.path,
 	}
 }
 
-// WithOrganization tells the query-builder to eager-load the nodes that are connected to
-// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
-func (orq *OxygenRecordQuery) WithOrganization(opts ...func(*OrganizationQuery)) *OxygenRecordQuery {
-	query := &OrganizationQuery{config: orq.config}
+// WithPlaces tells the query-builder to eager-load the nodes that are connected to
+// the "places" edge. The optional arguments are used to configure the query builder of the edge.
+func (orq *OxygenRecordQuery) WithPlaces(opts ...func(*PlaceQuery)) *OxygenRecordQuery {
+	query := &PlaceQuery{config: orq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	orq.withOrganization = query
+	orq.withPlaces = query
 	return orq
 }
 
@@ -283,12 +283,12 @@ func (orq *OxygenRecordQuery) WithOrganization(opts ...func(*OrganizationQuery))
 // Example:
 //
 //	var v []struct {
-//		TotalCylinders int `json:"totalCylinders,omitempty"`
+//		ReportedDate time.Time `json:"reportedDate,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.OxygenRecord.Query().
-//		GroupBy(oxygenrecord.FieldTotalCylinders).
+//		GroupBy(oxygenrecord.FieldReportedDate).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -310,11 +310,11 @@ func (orq *OxygenRecordQuery) GroupBy(field string, fields ...string) *OxygenRec
 // Example:
 //
 //	var v []struct {
-//		TotalCylinders int `json:"totalCylinders,omitempty"`
+//		ReportedDate time.Time `json:"reportedDate,omitempty"`
 //	}
 //
 //	client.OxygenRecord.Query().
-//		Select(oxygenrecord.FieldTotalCylinders).
+//		Select(oxygenrecord.FieldReportedDate).
 //		Scan(ctx, &v)
 //
 func (orq *OxygenRecordQuery) Select(field string, fields ...string) *OxygenRecordSelect {
@@ -343,7 +343,7 @@ func (orq *OxygenRecordQuery) sqlAll(ctx context.Context) ([]*OxygenRecord, erro
 		nodes       = []*OxygenRecord{}
 		_spec       = orq.querySpec()
 		loadedTypes = [1]bool{
-			orq.withOrganization != nil,
+			orq.withPlaces != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -366,13 +366,13 @@ func (orq *OxygenRecordQuery) sqlAll(ctx context.Context) ([]*OxygenRecord, erro
 		return nodes, nil
 	}
 
-	if query := orq.withOrganization; query != nil {
+	if query := orq.withPlaces; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
 		ids := make(map[int]*OxygenRecord, len(nodes))
 		for _, node := range nodes {
 			ids[node.ID] = node
 			fks = append(fks, node.ID)
-			node.Edges.Organization = []*Organization{}
+			node.Edges.Places = []*Place{}
 		}
 		var (
 			edgeids []int
@@ -380,12 +380,12 @@ func (orq *OxygenRecordQuery) sqlAll(ctx context.Context) ([]*OxygenRecord, erro
 		)
 		_spec := &sqlgraph.EdgeQuerySpec{
 			Edge: &sqlgraph.EdgeSpec{
-				Inverse: true,
-				Table:   oxygenrecord.OrganizationTable,
-				Columns: oxygenrecord.OrganizationPrimaryKey,
+				Inverse: false,
+				Table:   oxygenrecord.PlacesTable,
+				Columns: oxygenrecord.PlacesPrimaryKey,
 			},
 			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(oxygenrecord.OrganizationPrimaryKey[1], fks...))
+				s.Where(sql.InValues(oxygenrecord.PlacesPrimaryKey[0], fks...))
 			},
 
 			ScanValues: func() [2]interface{} {
@@ -412,9 +412,9 @@ func (orq *OxygenRecordQuery) sqlAll(ctx context.Context) ([]*OxygenRecord, erro
 			},
 		}
 		if err := sqlgraph.QueryEdges(ctx, orq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "organization": %v`, err)
+			return nil, fmt.Errorf(`query edges "places": %v`, err)
 		}
-		query.Where(organization.IDIn(edgeids...))
+		query.Where(place.IDIn(edgeids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
@@ -422,10 +422,10 @@ func (orq *OxygenRecordQuery) sqlAll(ctx context.Context) ([]*OxygenRecord, erro
 		for _, n := range neighbors {
 			nodes, ok := edges[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "organization" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected "places" node returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.Organization = append(nodes[i].Edges.Organization, n)
+				nodes[i].Edges.Places = append(nodes[i].Edges.Places, n)
 			}
 		}
 	}

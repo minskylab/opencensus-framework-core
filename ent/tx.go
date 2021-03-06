@@ -14,12 +14,16 @@ type Tx struct {
 	config
 	// BedRecord is the client for interacting with the BedRecord builders.
 	BedRecord *BedRecordClient
+	// DeathRecord is the client for interacting with the DeathRecord builders.
+	DeathRecord *DeathRecordClient
 	// District is the client for interacting with the District builders.
 	District *DistrictClient
-	// Organization is the client for interacting with the Organization builders.
-	Organization *OrganizationClient
+	// InfectedRecord is the client for interacting with the InfectedRecord builders.
+	InfectedRecord *InfectedRecordClient
 	// OxygenRecord is the client for interacting with the OxygenRecord builders.
 	OxygenRecord *OxygenRecordClient
+	// Place is the client for interacting with the Place builders.
+	Place *PlaceClient
 	// Province is the client for interacting with the Province builders.
 	Province *ProvinceClient
 	// Region is the client for interacting with the Region builders.
@@ -160,9 +164,11 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.BedRecord = NewBedRecordClient(tx.config)
+	tx.DeathRecord = NewDeathRecordClient(tx.config)
 	tx.District = NewDistrictClient(tx.config)
-	tx.Organization = NewOrganizationClient(tx.config)
+	tx.InfectedRecord = NewInfectedRecordClient(tx.config)
 	tx.OxygenRecord = NewOxygenRecordClient(tx.config)
+	tx.Place = NewPlaceClient(tx.config)
 	tx.Province = NewProvinceClient(tx.config)
 	tx.Region = NewRegionClient(tx.config)
 }

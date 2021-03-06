@@ -24,12 +24,14 @@ type config struct {
 
 // hooks per client, for fast access.
 type hooks struct {
-	BedRecord    []ent.Hook
-	District     []ent.Hook
-	Organization []ent.Hook
-	OxygenRecord []ent.Hook
-	Province     []ent.Hook
-	Region       []ent.Hook
+	BedRecord      []ent.Hook
+	DeathRecord    []ent.Hook
+	District       []ent.Hook
+	InfectedRecord []ent.Hook
+	OxygenRecord   []ent.Hook
+	Place          []ent.Hook
+	Province       []ent.Hook
+	Region         []ent.Hook
 }
 
 // Options applies the options on the config object.

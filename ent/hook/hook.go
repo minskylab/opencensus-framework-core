@@ -21,6 +21,19 @@ func (f BedRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return f(ctx, mv)
 }
 
+// The DeathRecordFunc type is an adapter to allow the use of ordinary
+// function as DeathRecord mutator.
+type DeathRecordFunc func(context.Context, *ent.DeathRecordMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DeathRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.DeathRecordMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DeathRecordMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The DistrictFunc type is an adapter to allow the use of ordinary
 // function as District mutator.
 type DistrictFunc func(context.Context, *ent.DistrictMutation) (ent.Value, error)
@@ -34,15 +47,15 @@ func (f DistrictFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return f(ctx, mv)
 }
 
-// The OrganizationFunc type is an adapter to allow the use of ordinary
-// function as Organization mutator.
-type OrganizationFunc func(context.Context, *ent.OrganizationMutation) (ent.Value, error)
+// The InfectedRecordFunc type is an adapter to allow the use of ordinary
+// function as InfectedRecord mutator.
+type InfectedRecordFunc func(context.Context, *ent.InfectedRecordMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f OrganizationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.OrganizationMutation)
+func (f InfectedRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.InfectedRecordMutation)
 	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrganizationMutation", m)
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.InfectedRecordMutation", m)
 	}
 	return f(ctx, mv)
 }
@@ -56,6 +69,19 @@ func (f OxygenRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	mv, ok := m.(*ent.OxygenRecordMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OxygenRecordMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The PlaceFunc type is an adapter to allow the use of ordinary
+// function as Place mutator.
+type PlaceFunc func(context.Context, *ent.PlaceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PlaceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.PlaceMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaceMutation", m)
 	}
 	return f(ctx, mv)
 }

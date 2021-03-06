@@ -7,34 +7,49 @@ const (
 	Label = "bed_record"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldBusyCovidBeds holds the string denoting the busycovidbeds field in the database.
-	FieldBusyCovidBeds = "busy_covid_beds"
-	// FieldAvailableCovidBeds holds the string denoting the availablecovidbeds field in the database.
-	FieldAvailableCovidBeds = "available_covid_beds"
+	// FieldReportedDate holds the string denoting the reporteddate field in the database.
+	FieldReportedDate = "reported_date"
+	// FieldCollectedDate holds the string denoting the collecteddate field in the database.
+	FieldCollectedDate = "collected_date"
+	// FieldBusyBeds holds the string denoting the busybeds field in the database.
+	FieldBusyBeds = "busy_beds"
+	// FieldAvailableBeds holds the string denoting the availablebeds field in the database.
+	FieldAvailableBeds = "available_beds"
+	// FieldTotalBeds holds the string denoting the totalbeds field in the database.
+	FieldTotalBeds = "total_beds"
+	// FieldKindBed holds the string denoting the kindbed field in the database.
+	FieldKindBed = "kind_bed"
+	// FieldKindAge holds the string denoting the kindage field in the database.
+	FieldKindAge = "kind_age"
 
-	// EdgeOrganization holds the string denoting the organization edge name in mutations.
-	EdgeOrganization = "organization"
+	// EdgePlaces holds the string denoting the places edge name in mutations.
+	EdgePlaces = "places"
 
 	// Table holds the table name of the bedrecord in the database.
 	Table = "bed_records"
-	// OrganizationTable is the table the holds the organization relation/edge. The primary key declared below.
-	OrganizationTable = "organization_bedRecords"
-	// OrganizationInverseTable is the table name for the Organization entity.
-	// It exists in this package in order to avoid circular dependency with the "organization" package.
-	OrganizationInverseTable = "organizations"
+	// PlacesTable is the table the holds the places relation/edge. The primary key declared below.
+	PlacesTable = "bed_record_places"
+	// PlacesInverseTable is the table name for the Place entity.
+	// It exists in this package in order to avoid circular dependency with the "place" package.
+	PlacesInverseTable = "places"
 )
 
 // Columns holds all SQL columns for bedrecord fields.
 var Columns = []string{
 	FieldID,
-	FieldBusyCovidBeds,
-	FieldAvailableCovidBeds,
+	FieldReportedDate,
+	FieldCollectedDate,
+	FieldBusyBeds,
+	FieldAvailableBeds,
+	FieldTotalBeds,
+	FieldKindBed,
+	FieldKindAge,
 }
 
 var (
-	// OrganizationPrimaryKey and OrganizationColumn2 are the table columns denoting the
-	// primary key for the organization relation (M2M).
-	OrganizationPrimaryKey = []string{"organization_id", "bed_record_id"}
+	// PlacesPrimaryKey and PlacesColumn2 are the table columns denoting the
+	// primary key for the places relation (M2M).
+	PlacesPrimaryKey = []string{"bed_record_id", "place_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"opencensus/core/ent/oxygenrecord"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 )
@@ -15,10 +16,22 @@ type OxygenRecord struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// ReportedDate holds the value of the "reportedDate" field.
+	ReportedDate time.Time `json:"reportedDate,omitempty"`
+	// CollectedDate holds the value of the "collectedDate" field.
+	CollectedDate time.Time `json:"collectedDate,omitempty"`
 	// TotalCylinders holds the value of the "totalCylinders" field.
 	TotalCylinders int `json:"totalCylinders,omitempty"`
 	// TotalOwnCylinders holds the value of the "totalOwnCylinders" field.
 	TotalOwnCylinders int `json:"totalOwnCylinders,omitempty"`
+	// DailyProduction holds the value of the "dailyProduction" field.
+	DailyProduction int `json:"dailyProduction,omitempty"`
+	// MaxDailyProduction holds the value of the "maxDailyProduction" field.
+	MaxDailyProduction int `json:"maxDailyProduction,omitempty"`
+	// DailyConsumption holds the value of the "dailyConsumption" field.
+	DailyConsumption int `json:"dailyConsumption,omitempty"`
+	// MainSourceKind holds the value of the "mainSourceKind" field.
+	MainSourceKind string `json:"mainSourceKind,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the OxygenRecordQuery when eager-loading is set.
 	Edges OxygenRecordEdges `json:"edges"`
@@ -26,20 +39,20 @@ type OxygenRecord struct {
 
 // OxygenRecordEdges holds the relations/edges for other nodes in the graph.
 type OxygenRecordEdges struct {
-	// Organization holds the value of the organization edge.
-	Organization []*Organization `json:"organization,omitempty"`
+	// Places holds the value of the places edge.
+	Places []*Place `json:"places,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// OrganizationOrErr returns the Organization value or an error if the edge
+// PlacesOrErr returns the Places value or an error if the edge
 // was not loaded in eager-loading.
-func (e OxygenRecordEdges) OrganizationOrErr() ([]*Organization, error) {
+func (e OxygenRecordEdges) PlacesOrErr() ([]*Place, error) {
 	if e.loadedTypes[0] {
-		return e.Organization, nil
+		return e.Places, nil
 	}
-	return nil, &NotLoadedError{edge: "organization"}
+	return nil, &NotLoadedError{edge: "places"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -47,8 +60,12 @@ func (*OxygenRecord) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case oxygenrecord.FieldID, oxygenrecord.FieldTotalCylinders, oxygenrecord.FieldTotalOwnCylinders:
+		case oxygenrecord.FieldID, oxygenrecord.FieldTotalCylinders, oxygenrecord.FieldTotalOwnCylinders, oxygenrecord.FieldDailyProduction, oxygenrecord.FieldMaxDailyProduction, oxygenrecord.FieldDailyConsumption:
 			values[i] = &sql.NullInt64{}
+		case oxygenrecord.FieldMainSourceKind:
+			values[i] = &sql.NullString{}
+		case oxygenrecord.FieldReportedDate, oxygenrecord.FieldCollectedDate:
+			values[i] = &sql.NullTime{}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type OxygenRecord", columns[i])
 		}
@@ -70,6 +87,18 @@ func (or *OxygenRecord) assignValues(columns []string, values []interface{}) err
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			or.ID = int(value.Int64)
+		case oxygenrecord.FieldReportedDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field reportedDate", values[i])
+			} else if value.Valid {
+				or.ReportedDate = value.Time
+			}
+		case oxygenrecord.FieldCollectedDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field collectedDate", values[i])
+			} else if value.Valid {
+				or.CollectedDate = value.Time
+			}
 		case oxygenrecord.FieldTotalCylinders:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field totalCylinders", values[i])
@@ -82,14 +111,38 @@ func (or *OxygenRecord) assignValues(columns []string, values []interface{}) err
 			} else if value.Valid {
 				or.TotalOwnCylinders = int(value.Int64)
 			}
+		case oxygenrecord.FieldDailyProduction:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field dailyProduction", values[i])
+			} else if value.Valid {
+				or.DailyProduction = int(value.Int64)
+			}
+		case oxygenrecord.FieldMaxDailyProduction:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field maxDailyProduction", values[i])
+			} else if value.Valid {
+				or.MaxDailyProduction = int(value.Int64)
+			}
+		case oxygenrecord.FieldDailyConsumption:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field dailyConsumption", values[i])
+			} else if value.Valid {
+				or.DailyConsumption = int(value.Int64)
+			}
+		case oxygenrecord.FieldMainSourceKind:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field mainSourceKind", values[i])
+			} else if value.Valid {
+				or.MainSourceKind = value.String
+			}
 		}
 	}
 	return nil
 }
 
-// QueryOrganization queries the "organization" edge of the OxygenRecord entity.
-func (or *OxygenRecord) QueryOrganization() *OrganizationQuery {
-	return (&OxygenRecordClient{config: or.config}).QueryOrganization(or)
+// QueryPlaces queries the "places" edge of the OxygenRecord entity.
+func (or *OxygenRecord) QueryPlaces() *PlaceQuery {
+	return (&OxygenRecordClient{config: or.config}).QueryPlaces(or)
 }
 
 // Update returns a builder for updating this OxygenRecord.
@@ -115,10 +168,22 @@ func (or *OxygenRecord) String() string {
 	var builder strings.Builder
 	builder.WriteString("OxygenRecord(")
 	builder.WriteString(fmt.Sprintf("id=%v", or.ID))
+	builder.WriteString(", reportedDate=")
+	builder.WriteString(or.ReportedDate.Format(time.ANSIC))
+	builder.WriteString(", collectedDate=")
+	builder.WriteString(or.CollectedDate.Format(time.ANSIC))
 	builder.WriteString(", totalCylinders=")
 	builder.WriteString(fmt.Sprintf("%v", or.TotalCylinders))
 	builder.WriteString(", totalOwnCylinders=")
 	builder.WriteString(fmt.Sprintf("%v", or.TotalOwnCylinders))
+	builder.WriteString(", dailyProduction=")
+	builder.WriteString(fmt.Sprintf("%v", or.DailyProduction))
+	builder.WriteString(", maxDailyProduction=")
+	builder.WriteString(fmt.Sprintf("%v", or.MaxDailyProduction))
+	builder.WriteString(", dailyConsumption=")
+	builder.WriteString(fmt.Sprintf("%v", or.DailyConsumption))
+	builder.WriteString(", mainSourceKind=")
+	builder.WriteString(or.MainSourceKind)
 	builder.WriteByte(')')
 	return builder.String()
 }

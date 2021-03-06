@@ -15,6 +15,8 @@ type Place struct {
 func (Place) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("kind"),
+		field.String("name"),
+		field.String("politic").Optional(), // private or public
 		field.String("ubigeo").Optional(),
 		field.Bool("covidZone").Optional(),
 		field.Float("lat").Optional(),
@@ -30,7 +32,8 @@ func (Place) Edges() []ent.Edge {
 		edge.From("deathRecords", DeathRecord.Type).Ref("places"),
 		edge.From("infectedRecords", InfectedRecord.Type).Ref("places"),
 
-		edge.To("institutions", Institution.Type),
 		edge.To("regions", Region.Type),
+		edge.To("provinces", Province.Type),
+		edge.To("districts", District.Type),
 	}
 }

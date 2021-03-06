@@ -7,7 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"opencensus/core/ent/bedrecord"
-	"opencensus/core/ent/organization"
+	"opencensus/core/ent/place"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -20,31 +21,61 @@ type BedRecordCreate struct {
 	hooks    []Hook
 }
 
-// SetBusyCovidBeds sets the "busyCovidBeds" field.
-func (brc *BedRecordCreate) SetBusyCovidBeds(i int) *BedRecordCreate {
-	brc.mutation.SetBusyCovidBeds(i)
+// SetReportedDate sets the "reportedDate" field.
+func (brc *BedRecordCreate) SetReportedDate(t time.Time) *BedRecordCreate {
+	brc.mutation.SetReportedDate(t)
 	return brc
 }
 
-// SetAvailableCovidBeds sets the "availableCovidBeds" field.
-func (brc *BedRecordCreate) SetAvailableCovidBeds(i int) *BedRecordCreate {
-	brc.mutation.SetAvailableCovidBeds(i)
+// SetCollectedDate sets the "collectedDate" field.
+func (brc *BedRecordCreate) SetCollectedDate(t time.Time) *BedRecordCreate {
+	brc.mutation.SetCollectedDate(t)
 	return brc
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by IDs.
-func (brc *BedRecordCreate) AddOrganizationIDs(ids ...int) *BedRecordCreate {
-	brc.mutation.AddOrganizationIDs(ids...)
+// SetBusyBeds sets the "busyBeds" field.
+func (brc *BedRecordCreate) SetBusyBeds(i int) *BedRecordCreate {
+	brc.mutation.SetBusyBeds(i)
 	return brc
 }
 
-// AddOrganization adds the "organization" edges to the Organization entity.
-func (brc *BedRecordCreate) AddOrganization(o ...*Organization) *BedRecordCreate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// SetAvailableBeds sets the "availableBeds" field.
+func (brc *BedRecordCreate) SetAvailableBeds(i int) *BedRecordCreate {
+	brc.mutation.SetAvailableBeds(i)
+	return brc
+}
+
+// SetTotalBeds sets the "totalBeds" field.
+func (brc *BedRecordCreate) SetTotalBeds(i int) *BedRecordCreate {
+	brc.mutation.SetTotalBeds(i)
+	return brc
+}
+
+// SetKindBed sets the "kindBed" field.
+func (brc *BedRecordCreate) SetKindBed(s string) *BedRecordCreate {
+	brc.mutation.SetKindBed(s)
+	return brc
+}
+
+// SetKindAge sets the "kindAge" field.
+func (brc *BedRecordCreate) SetKindAge(s string) *BedRecordCreate {
+	brc.mutation.SetKindAge(s)
+	return brc
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by IDs.
+func (brc *BedRecordCreate) AddPlaceIDs(ids ...int) *BedRecordCreate {
+	brc.mutation.AddPlaceIDs(ids...)
+	return brc
+}
+
+// AddPlaces adds the "places" edges to the Place entity.
+func (brc *BedRecordCreate) AddPlaces(p ...*Place) *BedRecordCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return brc.AddOrganizationIDs(ids...)
+	return brc.AddPlaceIDs(ids...)
 }
 
 // Mutation returns the BedRecordMutation object of the builder.
@@ -98,11 +129,26 @@ func (brc *BedRecordCreate) SaveX(ctx context.Context) *BedRecord {
 
 // check runs all checks and user-defined validators on the builder.
 func (brc *BedRecordCreate) check() error {
-	if _, ok := brc.mutation.BusyCovidBeds(); !ok {
-		return &ValidationError{Name: "busyCovidBeds", err: errors.New("ent: missing required field \"busyCovidBeds\"")}
+	if _, ok := brc.mutation.ReportedDate(); !ok {
+		return &ValidationError{Name: "reportedDate", err: errors.New("ent: missing required field \"reportedDate\"")}
 	}
-	if _, ok := brc.mutation.AvailableCovidBeds(); !ok {
-		return &ValidationError{Name: "availableCovidBeds", err: errors.New("ent: missing required field \"availableCovidBeds\"")}
+	if _, ok := brc.mutation.CollectedDate(); !ok {
+		return &ValidationError{Name: "collectedDate", err: errors.New("ent: missing required field \"collectedDate\"")}
+	}
+	if _, ok := brc.mutation.BusyBeds(); !ok {
+		return &ValidationError{Name: "busyBeds", err: errors.New("ent: missing required field \"busyBeds\"")}
+	}
+	if _, ok := brc.mutation.AvailableBeds(); !ok {
+		return &ValidationError{Name: "availableBeds", err: errors.New("ent: missing required field \"availableBeds\"")}
+	}
+	if _, ok := brc.mutation.TotalBeds(); !ok {
+		return &ValidationError{Name: "totalBeds", err: errors.New("ent: missing required field \"totalBeds\"")}
+	}
+	if _, ok := brc.mutation.KindBed(); !ok {
+		return &ValidationError{Name: "kindBed", err: errors.New("ent: missing required field \"kindBed\"")}
+	}
+	if _, ok := brc.mutation.KindAge(); !ok {
+		return &ValidationError{Name: "kindAge", err: errors.New("ent: missing required field \"kindAge\"")}
 	}
 	return nil
 }
@@ -131,33 +177,73 @@ func (brc *BedRecordCreate) createSpec() (*BedRecord, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
-	if value, ok := brc.mutation.BusyCovidBeds(); ok {
+	if value, ok := brc.mutation.ReportedDate(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: bedrecord.FieldReportedDate,
+		})
+		_node.ReportedDate = value
+	}
+	if value, ok := brc.mutation.CollectedDate(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: bedrecord.FieldCollectedDate,
+		})
+		_node.CollectedDate = value
+	}
+	if value, ok := brc.mutation.BusyBeds(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldBusyCovidBeds,
+			Column: bedrecord.FieldBusyBeds,
 		})
-		_node.BusyCovidBeds = value
+		_node.BusyBeds = value
 	}
-	if value, ok := brc.mutation.AvailableCovidBeds(); ok {
+	if value, ok := brc.mutation.AvailableBeds(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldAvailableCovidBeds,
+			Column: bedrecord.FieldAvailableBeds,
 		})
-		_node.AvailableCovidBeds = value
+		_node.AvailableBeds = value
 	}
-	if nodes := brc.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if value, ok := brc.mutation.TotalBeds(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: bedrecord.FieldTotalBeds,
+		})
+		_node.TotalBeds = value
+	}
+	if value, ok := brc.mutation.KindBed(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: bedrecord.FieldKindBed,
+		})
+		_node.KindBed = value
+	}
+	if value, ok := brc.mutation.KindAge(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: bedrecord.FieldKindAge,
+		})
+		_node.KindAge = value
+	}
+	if nodes := brc.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   bedrecord.OrganizationTable,
-			Columns: bedrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   bedrecord.PlacesTable,
+			Columns: bedrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}

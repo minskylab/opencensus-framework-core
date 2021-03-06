@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"opencensus/core/ent/bedrecord"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 )
@@ -15,10 +16,20 @@ type BedRecord struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// BusyCovidBeds holds the value of the "busyCovidBeds" field.
-	BusyCovidBeds int `json:"busyCovidBeds,omitempty"`
-	// AvailableCovidBeds holds the value of the "availableCovidBeds" field.
-	AvailableCovidBeds int `json:"availableCovidBeds,omitempty"`
+	// ReportedDate holds the value of the "reportedDate" field.
+	ReportedDate time.Time `json:"reportedDate,omitempty"`
+	// CollectedDate holds the value of the "collectedDate" field.
+	CollectedDate time.Time `json:"collectedDate,omitempty"`
+	// BusyBeds holds the value of the "busyBeds" field.
+	BusyBeds int `json:"busyBeds,omitempty"`
+	// AvailableBeds holds the value of the "availableBeds" field.
+	AvailableBeds int `json:"availableBeds,omitempty"`
+	// TotalBeds holds the value of the "totalBeds" field.
+	TotalBeds int `json:"totalBeds,omitempty"`
+	// KindBed holds the value of the "kindBed" field.
+	KindBed string `json:"kindBed,omitempty"`
+	// KindAge holds the value of the "kindAge" field.
+	KindAge string `json:"kindAge,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the BedRecordQuery when eager-loading is set.
 	Edges BedRecordEdges `json:"edges"`
@@ -26,20 +37,20 @@ type BedRecord struct {
 
 // BedRecordEdges holds the relations/edges for other nodes in the graph.
 type BedRecordEdges struct {
-	// Organization holds the value of the organization edge.
-	Organization []*Organization `json:"organization,omitempty"`
+	// Places holds the value of the places edge.
+	Places []*Place `json:"places,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// OrganizationOrErr returns the Organization value or an error if the edge
+// PlacesOrErr returns the Places value or an error if the edge
 // was not loaded in eager-loading.
-func (e BedRecordEdges) OrganizationOrErr() ([]*Organization, error) {
+func (e BedRecordEdges) PlacesOrErr() ([]*Place, error) {
 	if e.loadedTypes[0] {
-		return e.Organization, nil
+		return e.Places, nil
 	}
-	return nil, &NotLoadedError{edge: "organization"}
+	return nil, &NotLoadedError{edge: "places"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -47,8 +58,12 @@ func (*BedRecord) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case bedrecord.FieldID, bedrecord.FieldBusyCovidBeds, bedrecord.FieldAvailableCovidBeds:
+		case bedrecord.FieldID, bedrecord.FieldBusyBeds, bedrecord.FieldAvailableBeds, bedrecord.FieldTotalBeds:
 			values[i] = &sql.NullInt64{}
+		case bedrecord.FieldKindBed, bedrecord.FieldKindAge:
+			values[i] = &sql.NullString{}
+		case bedrecord.FieldReportedDate, bedrecord.FieldCollectedDate:
+			values[i] = &sql.NullTime{}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type BedRecord", columns[i])
 		}
@@ -70,26 +85,56 @@ func (br *BedRecord) assignValues(columns []string, values []interface{}) error 
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			br.ID = int(value.Int64)
-		case bedrecord.FieldBusyCovidBeds:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field busyCovidBeds", values[i])
+		case bedrecord.FieldReportedDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field reportedDate", values[i])
 			} else if value.Valid {
-				br.BusyCovidBeds = int(value.Int64)
+				br.ReportedDate = value.Time
 			}
-		case bedrecord.FieldAvailableCovidBeds:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field availableCovidBeds", values[i])
+		case bedrecord.FieldCollectedDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field collectedDate", values[i])
 			} else if value.Valid {
-				br.AvailableCovidBeds = int(value.Int64)
+				br.CollectedDate = value.Time
+			}
+		case bedrecord.FieldBusyBeds:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field busyBeds", values[i])
+			} else if value.Valid {
+				br.BusyBeds = int(value.Int64)
+			}
+		case bedrecord.FieldAvailableBeds:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field availableBeds", values[i])
+			} else if value.Valid {
+				br.AvailableBeds = int(value.Int64)
+			}
+		case bedrecord.FieldTotalBeds:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field totalBeds", values[i])
+			} else if value.Valid {
+				br.TotalBeds = int(value.Int64)
+			}
+		case bedrecord.FieldKindBed:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field kindBed", values[i])
+			} else if value.Valid {
+				br.KindBed = value.String
+			}
+		case bedrecord.FieldKindAge:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field kindAge", values[i])
+			} else if value.Valid {
+				br.KindAge = value.String
 			}
 		}
 	}
 	return nil
 }
 
-// QueryOrganization queries the "organization" edge of the BedRecord entity.
-func (br *BedRecord) QueryOrganization() *OrganizationQuery {
-	return (&BedRecordClient{config: br.config}).QueryOrganization(br)
+// QueryPlaces queries the "places" edge of the BedRecord entity.
+func (br *BedRecord) QueryPlaces() *PlaceQuery {
+	return (&BedRecordClient{config: br.config}).QueryPlaces(br)
 }
 
 // Update returns a builder for updating this BedRecord.
@@ -115,10 +160,20 @@ func (br *BedRecord) String() string {
 	var builder strings.Builder
 	builder.WriteString("BedRecord(")
 	builder.WriteString(fmt.Sprintf("id=%v", br.ID))
-	builder.WriteString(", busyCovidBeds=")
-	builder.WriteString(fmt.Sprintf("%v", br.BusyCovidBeds))
-	builder.WriteString(", availableCovidBeds=")
-	builder.WriteString(fmt.Sprintf("%v", br.AvailableCovidBeds))
+	builder.WriteString(", reportedDate=")
+	builder.WriteString(br.ReportedDate.Format(time.ANSIC))
+	builder.WriteString(", collectedDate=")
+	builder.WriteString(br.CollectedDate.Format(time.ANSIC))
+	builder.WriteString(", busyBeds=")
+	builder.WriteString(fmt.Sprintf("%v", br.BusyBeds))
+	builder.WriteString(", availableBeds=")
+	builder.WriteString(fmt.Sprintf("%v", br.AvailableBeds))
+	builder.WriteString(", totalBeds=")
+	builder.WriteString(fmt.Sprintf("%v", br.TotalBeds))
+	builder.WriteString(", kindBed=")
+	builder.WriteString(br.KindBed)
+	builder.WriteString(", kindAge=")
+	builder.WriteString(br.KindAge)
 	builder.WriteByte(')')
 	return builder.String()
 }

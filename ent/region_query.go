@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"opencensus/core/ent/organization"
+	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
 	"opencensus/core/ent/province"
 	"opencensus/core/ent/region"
@@ -27,8 +27,8 @@ type RegionQuery struct {
 	fields     []string
 	predicates []predicate.Region
 	// eager-loading edges.
-	withOrganization *OrganizationQuery
-	withProvince     *ProvinceQuery
+	withPlaces    *PlaceQuery
+	withProvinces *ProvinceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,9 +58,9 @@ func (rq *RegionQuery) Order(o ...OrderFunc) *RegionQuery {
 	return rq
 }
 
-// QueryOrganization chains the current query on the "organization" edge.
-func (rq *RegionQuery) QueryOrganization() *OrganizationQuery {
-	query := &OrganizationQuery{config: rq.config}
+// QueryPlaces chains the current query on the "places" edge.
+func (rq *RegionQuery) QueryPlaces() *PlaceQuery {
+	query := &PlaceQuery{config: rq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := rq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -71,8 +71,8 @@ func (rq *RegionQuery) QueryOrganization() *OrganizationQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(region.Table, region.FieldID, selector),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, region.OrganizationTable, region.OrganizationPrimaryKey...),
+			sqlgraph.To(place.Table, place.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, region.PlacesTable, region.PlacesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -80,8 +80,8 @@ func (rq *RegionQuery) QueryOrganization() *OrganizationQuery {
 	return query
 }
 
-// QueryProvince chains the current query on the "province" edge.
-func (rq *RegionQuery) QueryProvince() *ProvinceQuery {
+// QueryProvinces chains the current query on the "provinces" edge.
+func (rq *RegionQuery) QueryProvinces() *ProvinceQuery {
 	query := &ProvinceQuery{config: rq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := rq.prepareQuery(ctx); err != nil {
@@ -94,7 +94,7 @@ func (rq *RegionQuery) QueryProvince() *ProvinceQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(region.Table, region.FieldID, selector),
 			sqlgraph.To(province.Table, province.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, region.ProvinceTable, region.ProvincePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, region.ProvincesTable, region.ProvincesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -278,38 +278,38 @@ func (rq *RegionQuery) Clone() *RegionQuery {
 		return nil
 	}
 	return &RegionQuery{
-		config:           rq.config,
-		limit:            rq.limit,
-		offset:           rq.offset,
-		order:            append([]OrderFunc{}, rq.order...),
-		predicates:       append([]predicate.Region{}, rq.predicates...),
-		withOrganization: rq.withOrganization.Clone(),
-		withProvince:     rq.withProvince.Clone(),
+		config:        rq.config,
+		limit:         rq.limit,
+		offset:        rq.offset,
+		order:         append([]OrderFunc{}, rq.order...),
+		predicates:    append([]predicate.Region{}, rq.predicates...),
+		withPlaces:    rq.withPlaces.Clone(),
+		withProvinces: rq.withProvinces.Clone(),
 		// clone intermediate query.
 		sql:  rq.sql.Clone(),
 		path: rq.path,
 	}
 }
 
-// WithOrganization tells the query-builder to eager-load the nodes that are connected to
-// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
-func (rq *RegionQuery) WithOrganization(opts ...func(*OrganizationQuery)) *RegionQuery {
-	query := &OrganizationQuery{config: rq.config}
+// WithPlaces tells the query-builder to eager-load the nodes that are connected to
+// the "places" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RegionQuery) WithPlaces(opts ...func(*PlaceQuery)) *RegionQuery {
+	query := &PlaceQuery{config: rq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	rq.withOrganization = query
+	rq.withPlaces = query
 	return rq
 }
 
-// WithProvince tells the query-builder to eager-load the nodes that are connected to
-// the "province" edge. The optional arguments are used to configure the query builder of the edge.
-func (rq *RegionQuery) WithProvince(opts ...func(*ProvinceQuery)) *RegionQuery {
+// WithProvinces tells the query-builder to eager-load the nodes that are connected to
+// the "provinces" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RegionQuery) WithProvinces(opts ...func(*ProvinceQuery)) *RegionQuery {
 	query := &ProvinceQuery{config: rq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	rq.withProvince = query
+	rq.withProvinces = query
 	return rq
 }
 
@@ -379,8 +379,8 @@ func (rq *RegionQuery) sqlAll(ctx context.Context) ([]*Region, error) {
 		nodes       = []*Region{}
 		_spec       = rq.querySpec()
 		loadedTypes = [2]bool{
-			rq.withOrganization != nil,
-			rq.withProvince != nil,
+			rq.withPlaces != nil,
+			rq.withProvinces != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -403,13 +403,13 @@ func (rq *RegionQuery) sqlAll(ctx context.Context) ([]*Region, error) {
 		return nodes, nil
 	}
 
-	if query := rq.withOrganization; query != nil {
+	if query := rq.withPlaces; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
 		ids := make(map[int]*Region, len(nodes))
 		for _, node := range nodes {
 			ids[node.ID] = node
 			fks = append(fks, node.ID)
-			node.Edges.Organization = []*Organization{}
+			node.Edges.Places = []*Place{}
 		}
 		var (
 			edgeids []int
@@ -418,11 +418,11 @@ func (rq *RegionQuery) sqlAll(ctx context.Context) ([]*Region, error) {
 		_spec := &sqlgraph.EdgeQuerySpec{
 			Edge: &sqlgraph.EdgeSpec{
 				Inverse: true,
-				Table:   region.OrganizationTable,
-				Columns: region.OrganizationPrimaryKey,
+				Table:   region.PlacesTable,
+				Columns: region.PlacesPrimaryKey,
 			},
 			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(region.OrganizationPrimaryKey[1], fks...))
+				s.Where(sql.InValues(region.PlacesPrimaryKey[1], fks...))
 			},
 
 			ScanValues: func() [2]interface{} {
@@ -449,9 +449,9 @@ func (rq *RegionQuery) sqlAll(ctx context.Context) ([]*Region, error) {
 			},
 		}
 		if err := sqlgraph.QueryEdges(ctx, rq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "organization": %v`, err)
+			return nil, fmt.Errorf(`query edges "places": %v`, err)
 		}
-		query.Where(organization.IDIn(edgeids...))
+		query.Where(place.IDIn(edgeids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
@@ -459,21 +459,21 @@ func (rq *RegionQuery) sqlAll(ctx context.Context) ([]*Region, error) {
 		for _, n := range neighbors {
 			nodes, ok := edges[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "organization" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected "places" node returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.Organization = append(nodes[i].Edges.Organization, n)
+				nodes[i].Edges.Places = append(nodes[i].Edges.Places, n)
 			}
 		}
 	}
 
-	if query := rq.withProvince; query != nil {
+	if query := rq.withProvinces; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
 		ids := make(map[int]*Region, len(nodes))
 		for _, node := range nodes {
 			ids[node.ID] = node
 			fks = append(fks, node.ID)
-			node.Edges.Province = []*Province{}
+			node.Edges.Provinces = []*Province{}
 		}
 		var (
 			edgeids []int
@@ -482,11 +482,11 @@ func (rq *RegionQuery) sqlAll(ctx context.Context) ([]*Region, error) {
 		_spec := &sqlgraph.EdgeQuerySpec{
 			Edge: &sqlgraph.EdgeSpec{
 				Inverse: false,
-				Table:   region.ProvinceTable,
-				Columns: region.ProvincePrimaryKey,
+				Table:   region.ProvincesTable,
+				Columns: region.ProvincesPrimaryKey,
 			},
 			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(region.ProvincePrimaryKey[0], fks...))
+				s.Where(sql.InValues(region.ProvincesPrimaryKey[0], fks...))
 			},
 
 			ScanValues: func() [2]interface{} {
@@ -513,7 +513,7 @@ func (rq *RegionQuery) sqlAll(ctx context.Context) ([]*Region, error) {
 			},
 		}
 		if err := sqlgraph.QueryEdges(ctx, rq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "province": %v`, err)
+			return nil, fmt.Errorf(`query edges "provinces": %v`, err)
 		}
 		query.Where(province.IDIn(edgeids...))
 		neighbors, err := query.All(ctx)
@@ -523,10 +523,10 @@ func (rq *RegionQuery) sqlAll(ctx context.Context) ([]*Region, error) {
 		for _, n := range neighbors {
 			nodes, ok := edges[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "province" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected "provinces" node returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.Province = append(nodes[i].Edges.Province, n)
+				nodes[i].Edges.Provinces = append(nodes[i].Edges.Provinces, n)
 			}
 		}
 	}

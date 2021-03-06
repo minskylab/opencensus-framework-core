@@ -6,8 +6,9 @@ import (
 	"context"
 	"fmt"
 	"opencensus/core/ent/bedrecord"
-	"opencensus/core/ent/organization"
+	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -27,45 +28,82 @@ func (bru *BedRecordUpdate) Where(ps ...predicate.BedRecord) *BedRecordUpdate {
 	return bru
 }
 
-// SetBusyCovidBeds sets the "busyCovidBeds" field.
-func (bru *BedRecordUpdate) SetBusyCovidBeds(i int) *BedRecordUpdate {
-	bru.mutation.ResetBusyCovidBeds()
-	bru.mutation.SetBusyCovidBeds(i)
+// SetReportedDate sets the "reportedDate" field.
+func (bru *BedRecordUpdate) SetReportedDate(t time.Time) *BedRecordUpdate {
+	bru.mutation.SetReportedDate(t)
 	return bru
 }
 
-// AddBusyCovidBeds adds i to the "busyCovidBeds" field.
-func (bru *BedRecordUpdate) AddBusyCovidBeds(i int) *BedRecordUpdate {
-	bru.mutation.AddBusyCovidBeds(i)
+// SetCollectedDate sets the "collectedDate" field.
+func (bru *BedRecordUpdate) SetCollectedDate(t time.Time) *BedRecordUpdate {
+	bru.mutation.SetCollectedDate(t)
 	return bru
 }
 
-// SetAvailableCovidBeds sets the "availableCovidBeds" field.
-func (bru *BedRecordUpdate) SetAvailableCovidBeds(i int) *BedRecordUpdate {
-	bru.mutation.ResetAvailableCovidBeds()
-	bru.mutation.SetAvailableCovidBeds(i)
+// SetBusyBeds sets the "busyBeds" field.
+func (bru *BedRecordUpdate) SetBusyBeds(i int) *BedRecordUpdate {
+	bru.mutation.ResetBusyBeds()
+	bru.mutation.SetBusyBeds(i)
 	return bru
 }
 
-// AddAvailableCovidBeds adds i to the "availableCovidBeds" field.
-func (bru *BedRecordUpdate) AddAvailableCovidBeds(i int) *BedRecordUpdate {
-	bru.mutation.AddAvailableCovidBeds(i)
+// AddBusyBeds adds i to the "busyBeds" field.
+func (bru *BedRecordUpdate) AddBusyBeds(i int) *BedRecordUpdate {
+	bru.mutation.AddBusyBeds(i)
 	return bru
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by IDs.
-func (bru *BedRecordUpdate) AddOrganizationIDs(ids ...int) *BedRecordUpdate {
-	bru.mutation.AddOrganizationIDs(ids...)
+// SetAvailableBeds sets the "availableBeds" field.
+func (bru *BedRecordUpdate) SetAvailableBeds(i int) *BedRecordUpdate {
+	bru.mutation.ResetAvailableBeds()
+	bru.mutation.SetAvailableBeds(i)
 	return bru
 }
 
-// AddOrganization adds the "organization" edges to the Organization entity.
-func (bru *BedRecordUpdate) AddOrganization(o ...*Organization) *BedRecordUpdate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// AddAvailableBeds adds i to the "availableBeds" field.
+func (bru *BedRecordUpdate) AddAvailableBeds(i int) *BedRecordUpdate {
+	bru.mutation.AddAvailableBeds(i)
+	return bru
+}
+
+// SetTotalBeds sets the "totalBeds" field.
+func (bru *BedRecordUpdate) SetTotalBeds(i int) *BedRecordUpdate {
+	bru.mutation.ResetTotalBeds()
+	bru.mutation.SetTotalBeds(i)
+	return bru
+}
+
+// AddTotalBeds adds i to the "totalBeds" field.
+func (bru *BedRecordUpdate) AddTotalBeds(i int) *BedRecordUpdate {
+	bru.mutation.AddTotalBeds(i)
+	return bru
+}
+
+// SetKindBed sets the "kindBed" field.
+func (bru *BedRecordUpdate) SetKindBed(s string) *BedRecordUpdate {
+	bru.mutation.SetKindBed(s)
+	return bru
+}
+
+// SetKindAge sets the "kindAge" field.
+func (bru *BedRecordUpdate) SetKindAge(s string) *BedRecordUpdate {
+	bru.mutation.SetKindAge(s)
+	return bru
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by IDs.
+func (bru *BedRecordUpdate) AddPlaceIDs(ids ...int) *BedRecordUpdate {
+	bru.mutation.AddPlaceIDs(ids...)
+	return bru
+}
+
+// AddPlaces adds the "places" edges to the Place entity.
+func (bru *BedRecordUpdate) AddPlaces(p ...*Place) *BedRecordUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return bru.AddOrganizationIDs(ids...)
+	return bru.AddPlaceIDs(ids...)
 }
 
 // Mutation returns the BedRecordMutation object of the builder.
@@ -73,25 +111,25 @@ func (bru *BedRecordUpdate) Mutation() *BedRecordMutation {
 	return bru.mutation
 }
 
-// ClearOrganization clears all "organization" edges to the Organization entity.
-func (bru *BedRecordUpdate) ClearOrganization() *BedRecordUpdate {
-	bru.mutation.ClearOrganization()
+// ClearPlaces clears all "places" edges to the Place entity.
+func (bru *BedRecordUpdate) ClearPlaces() *BedRecordUpdate {
+	bru.mutation.ClearPlaces()
 	return bru
 }
 
-// RemoveOrganizationIDs removes the "organization" edge to Organization entities by IDs.
-func (bru *BedRecordUpdate) RemoveOrganizationIDs(ids ...int) *BedRecordUpdate {
-	bru.mutation.RemoveOrganizationIDs(ids...)
+// RemovePlaceIDs removes the "places" edge to Place entities by IDs.
+func (bru *BedRecordUpdate) RemovePlaceIDs(ids ...int) *BedRecordUpdate {
+	bru.mutation.RemovePlaceIDs(ids...)
 	return bru
 }
 
-// RemoveOrganization removes "organization" edges to Organization entities.
-func (bru *BedRecordUpdate) RemoveOrganization(o ...*Organization) *BedRecordUpdate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// RemovePlaces removes "places" edges to Place entities.
+func (bru *BedRecordUpdate) RemovePlaces(p ...*Place) *BedRecordUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return bru.RemoveOrganizationIDs(ids...)
+	return bru.RemovePlaceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -163,61 +201,103 @@ func (bru *BedRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := bru.mutation.BusyCovidBeds(); ok {
+	if value, ok := bru.mutation.ReportedDate(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: bedrecord.FieldReportedDate,
+		})
+	}
+	if value, ok := bru.mutation.CollectedDate(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: bedrecord.FieldCollectedDate,
+		})
+	}
+	if value, ok := bru.mutation.BusyBeds(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldBusyCovidBeds,
+			Column: bedrecord.FieldBusyBeds,
 		})
 	}
-	if value, ok := bru.mutation.AddedBusyCovidBeds(); ok {
+	if value, ok := bru.mutation.AddedBusyBeds(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldBusyCovidBeds,
+			Column: bedrecord.FieldBusyBeds,
 		})
 	}
-	if value, ok := bru.mutation.AvailableCovidBeds(); ok {
+	if value, ok := bru.mutation.AvailableBeds(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldAvailableCovidBeds,
+			Column: bedrecord.FieldAvailableBeds,
 		})
 	}
-	if value, ok := bru.mutation.AddedAvailableCovidBeds(); ok {
+	if value, ok := bru.mutation.AddedAvailableBeds(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldAvailableCovidBeds,
+			Column: bedrecord.FieldAvailableBeds,
 		})
 	}
-	if bru.mutation.OrganizationCleared() {
+	if value, ok := bru.mutation.TotalBeds(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: bedrecord.FieldTotalBeds,
+		})
+	}
+	if value, ok := bru.mutation.AddedTotalBeds(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: bedrecord.FieldTotalBeds,
+		})
+	}
+	if value, ok := bru.mutation.KindBed(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: bedrecord.FieldKindBed,
+		})
+	}
+	if value, ok := bru.mutation.KindAge(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: bedrecord.FieldKindAge,
+		})
+	}
+	if bru.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   bedrecord.OrganizationTable,
-			Columns: bedrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   bedrecord.PlacesTable,
+			Columns: bedrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := bru.mutation.RemovedOrganizationIDs(); len(nodes) > 0 && !bru.mutation.OrganizationCleared() {
+	if nodes := bru.mutation.RemovedPlacesIDs(); len(nodes) > 0 && !bru.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   bedrecord.OrganizationTable,
-			Columns: bedrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   bedrecord.PlacesTable,
+			Columns: bedrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
@@ -226,17 +306,17 @@ func (bru *BedRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := bru.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if nodes := bru.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   bedrecord.OrganizationTable,
-			Columns: bedrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   bedrecord.PlacesTable,
+			Columns: bedrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
@@ -263,45 +343,82 @@ type BedRecordUpdateOne struct {
 	mutation *BedRecordMutation
 }
 
-// SetBusyCovidBeds sets the "busyCovidBeds" field.
-func (bruo *BedRecordUpdateOne) SetBusyCovidBeds(i int) *BedRecordUpdateOne {
-	bruo.mutation.ResetBusyCovidBeds()
-	bruo.mutation.SetBusyCovidBeds(i)
+// SetReportedDate sets the "reportedDate" field.
+func (bruo *BedRecordUpdateOne) SetReportedDate(t time.Time) *BedRecordUpdateOne {
+	bruo.mutation.SetReportedDate(t)
 	return bruo
 }
 
-// AddBusyCovidBeds adds i to the "busyCovidBeds" field.
-func (bruo *BedRecordUpdateOne) AddBusyCovidBeds(i int) *BedRecordUpdateOne {
-	bruo.mutation.AddBusyCovidBeds(i)
+// SetCollectedDate sets the "collectedDate" field.
+func (bruo *BedRecordUpdateOne) SetCollectedDate(t time.Time) *BedRecordUpdateOne {
+	bruo.mutation.SetCollectedDate(t)
 	return bruo
 }
 
-// SetAvailableCovidBeds sets the "availableCovidBeds" field.
-func (bruo *BedRecordUpdateOne) SetAvailableCovidBeds(i int) *BedRecordUpdateOne {
-	bruo.mutation.ResetAvailableCovidBeds()
-	bruo.mutation.SetAvailableCovidBeds(i)
+// SetBusyBeds sets the "busyBeds" field.
+func (bruo *BedRecordUpdateOne) SetBusyBeds(i int) *BedRecordUpdateOne {
+	bruo.mutation.ResetBusyBeds()
+	bruo.mutation.SetBusyBeds(i)
 	return bruo
 }
 
-// AddAvailableCovidBeds adds i to the "availableCovidBeds" field.
-func (bruo *BedRecordUpdateOne) AddAvailableCovidBeds(i int) *BedRecordUpdateOne {
-	bruo.mutation.AddAvailableCovidBeds(i)
+// AddBusyBeds adds i to the "busyBeds" field.
+func (bruo *BedRecordUpdateOne) AddBusyBeds(i int) *BedRecordUpdateOne {
+	bruo.mutation.AddBusyBeds(i)
 	return bruo
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by IDs.
-func (bruo *BedRecordUpdateOne) AddOrganizationIDs(ids ...int) *BedRecordUpdateOne {
-	bruo.mutation.AddOrganizationIDs(ids...)
+// SetAvailableBeds sets the "availableBeds" field.
+func (bruo *BedRecordUpdateOne) SetAvailableBeds(i int) *BedRecordUpdateOne {
+	bruo.mutation.ResetAvailableBeds()
+	bruo.mutation.SetAvailableBeds(i)
 	return bruo
 }
 
-// AddOrganization adds the "organization" edges to the Organization entity.
-func (bruo *BedRecordUpdateOne) AddOrganization(o ...*Organization) *BedRecordUpdateOne {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// AddAvailableBeds adds i to the "availableBeds" field.
+func (bruo *BedRecordUpdateOne) AddAvailableBeds(i int) *BedRecordUpdateOne {
+	bruo.mutation.AddAvailableBeds(i)
+	return bruo
+}
+
+// SetTotalBeds sets the "totalBeds" field.
+func (bruo *BedRecordUpdateOne) SetTotalBeds(i int) *BedRecordUpdateOne {
+	bruo.mutation.ResetTotalBeds()
+	bruo.mutation.SetTotalBeds(i)
+	return bruo
+}
+
+// AddTotalBeds adds i to the "totalBeds" field.
+func (bruo *BedRecordUpdateOne) AddTotalBeds(i int) *BedRecordUpdateOne {
+	bruo.mutation.AddTotalBeds(i)
+	return bruo
+}
+
+// SetKindBed sets the "kindBed" field.
+func (bruo *BedRecordUpdateOne) SetKindBed(s string) *BedRecordUpdateOne {
+	bruo.mutation.SetKindBed(s)
+	return bruo
+}
+
+// SetKindAge sets the "kindAge" field.
+func (bruo *BedRecordUpdateOne) SetKindAge(s string) *BedRecordUpdateOne {
+	bruo.mutation.SetKindAge(s)
+	return bruo
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by IDs.
+func (bruo *BedRecordUpdateOne) AddPlaceIDs(ids ...int) *BedRecordUpdateOne {
+	bruo.mutation.AddPlaceIDs(ids...)
+	return bruo
+}
+
+// AddPlaces adds the "places" edges to the Place entity.
+func (bruo *BedRecordUpdateOne) AddPlaces(p ...*Place) *BedRecordUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return bruo.AddOrganizationIDs(ids...)
+	return bruo.AddPlaceIDs(ids...)
 }
 
 // Mutation returns the BedRecordMutation object of the builder.
@@ -309,25 +426,25 @@ func (bruo *BedRecordUpdateOne) Mutation() *BedRecordMutation {
 	return bruo.mutation
 }
 
-// ClearOrganization clears all "organization" edges to the Organization entity.
-func (bruo *BedRecordUpdateOne) ClearOrganization() *BedRecordUpdateOne {
-	bruo.mutation.ClearOrganization()
+// ClearPlaces clears all "places" edges to the Place entity.
+func (bruo *BedRecordUpdateOne) ClearPlaces() *BedRecordUpdateOne {
+	bruo.mutation.ClearPlaces()
 	return bruo
 }
 
-// RemoveOrganizationIDs removes the "organization" edge to Organization entities by IDs.
-func (bruo *BedRecordUpdateOne) RemoveOrganizationIDs(ids ...int) *BedRecordUpdateOne {
-	bruo.mutation.RemoveOrganizationIDs(ids...)
+// RemovePlaceIDs removes the "places" edge to Place entities by IDs.
+func (bruo *BedRecordUpdateOne) RemovePlaceIDs(ids ...int) *BedRecordUpdateOne {
+	bruo.mutation.RemovePlaceIDs(ids...)
 	return bruo
 }
 
-// RemoveOrganization removes "organization" edges to Organization entities.
-func (bruo *BedRecordUpdateOne) RemoveOrganization(o ...*Organization) *BedRecordUpdateOne {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// RemovePlaces removes "places" edges to Place entities.
+func (bruo *BedRecordUpdateOne) RemovePlaces(p ...*Place) *BedRecordUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return bruo.RemoveOrganizationIDs(ids...)
+	return bruo.RemovePlaceIDs(ids...)
 }
 
 // Save executes the query and returns the updated BedRecord entity.
@@ -404,61 +521,103 @@ func (bruo *BedRecordUpdateOne) sqlSave(ctx context.Context) (_node *BedRecord, 
 			}
 		}
 	}
-	if value, ok := bruo.mutation.BusyCovidBeds(); ok {
+	if value, ok := bruo.mutation.ReportedDate(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: bedrecord.FieldReportedDate,
+		})
+	}
+	if value, ok := bruo.mutation.CollectedDate(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: bedrecord.FieldCollectedDate,
+		})
+	}
+	if value, ok := bruo.mutation.BusyBeds(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldBusyCovidBeds,
+			Column: bedrecord.FieldBusyBeds,
 		})
 	}
-	if value, ok := bruo.mutation.AddedBusyCovidBeds(); ok {
+	if value, ok := bruo.mutation.AddedBusyBeds(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldBusyCovidBeds,
+			Column: bedrecord.FieldBusyBeds,
 		})
 	}
-	if value, ok := bruo.mutation.AvailableCovidBeds(); ok {
+	if value, ok := bruo.mutation.AvailableBeds(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldAvailableCovidBeds,
+			Column: bedrecord.FieldAvailableBeds,
 		})
 	}
-	if value, ok := bruo.mutation.AddedAvailableCovidBeds(); ok {
+	if value, ok := bruo.mutation.AddedAvailableBeds(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: bedrecord.FieldAvailableCovidBeds,
+			Column: bedrecord.FieldAvailableBeds,
 		})
 	}
-	if bruo.mutation.OrganizationCleared() {
+	if value, ok := bruo.mutation.TotalBeds(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: bedrecord.FieldTotalBeds,
+		})
+	}
+	if value, ok := bruo.mutation.AddedTotalBeds(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: bedrecord.FieldTotalBeds,
+		})
+	}
+	if value, ok := bruo.mutation.KindBed(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: bedrecord.FieldKindBed,
+		})
+	}
+	if value, ok := bruo.mutation.KindAge(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: bedrecord.FieldKindAge,
+		})
+	}
+	if bruo.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   bedrecord.OrganizationTable,
-			Columns: bedrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   bedrecord.PlacesTable,
+			Columns: bedrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := bruo.mutation.RemovedOrganizationIDs(); len(nodes) > 0 && !bruo.mutation.OrganizationCleared() {
+	if nodes := bruo.mutation.RemovedPlacesIDs(); len(nodes) > 0 && !bruo.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   bedrecord.OrganizationTable,
-			Columns: bedrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   bedrecord.PlacesTable,
+			Columns: bedrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
@@ -467,17 +626,17 @@ func (bruo *BedRecordUpdateOne) sqlSave(ctx context.Context) (_node *BedRecord, 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := bruo.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if nodes := bruo.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   bedrecord.OrganizationTable,
-			Columns: bedrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   bedrecord.PlacesTable,
+			Columns: bedrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}

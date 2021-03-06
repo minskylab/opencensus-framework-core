@@ -4,6 +4,7 @@ package bedrecord
 
 import (
 	"opencensus/core/ent/predicate"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -92,36 +93,71 @@ func IDLTE(id int) predicate.BedRecord {
 	})
 }
 
-// BusyCovidBeds applies equality check predicate on the "busyCovidBeds" field. It's identical to BusyCovidBedsEQ.
-func BusyCovidBeds(v int) predicate.BedRecord {
+// ReportedDate applies equality check predicate on the "reportedDate" field. It's identical to ReportedDateEQ.
+func ReportedDate(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldBusyCovidBeds), v))
+		s.Where(sql.EQ(s.C(FieldReportedDate), v))
 	})
 }
 
-// AvailableCovidBeds applies equality check predicate on the "availableCovidBeds" field. It's identical to AvailableCovidBedsEQ.
-func AvailableCovidBeds(v int) predicate.BedRecord {
+// CollectedDate applies equality check predicate on the "collectedDate" field. It's identical to CollectedDateEQ.
+func CollectedDate(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldAvailableCovidBeds), v))
+		s.Where(sql.EQ(s.C(FieldCollectedDate), v))
 	})
 }
 
-// BusyCovidBedsEQ applies the EQ predicate on the "busyCovidBeds" field.
-func BusyCovidBedsEQ(v int) predicate.BedRecord {
+// BusyBeds applies equality check predicate on the "busyBeds" field. It's identical to BusyBedsEQ.
+func BusyBeds(v int) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldBusyCovidBeds), v))
+		s.Where(sql.EQ(s.C(FieldBusyBeds), v))
 	})
 }
 
-// BusyCovidBedsNEQ applies the NEQ predicate on the "busyCovidBeds" field.
-func BusyCovidBedsNEQ(v int) predicate.BedRecord {
+// AvailableBeds applies equality check predicate on the "availableBeds" field. It's identical to AvailableBedsEQ.
+func AvailableBeds(v int) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldBusyCovidBeds), v))
+		s.Where(sql.EQ(s.C(FieldAvailableBeds), v))
 	})
 }
 
-// BusyCovidBedsIn applies the In predicate on the "busyCovidBeds" field.
-func BusyCovidBedsIn(vs ...int) predicate.BedRecord {
+// TotalBeds applies equality check predicate on the "totalBeds" field. It's identical to TotalBedsEQ.
+func TotalBeds(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTotalBeds), v))
+	})
+}
+
+// KindBed applies equality check predicate on the "kindBed" field. It's identical to KindBedEQ.
+func KindBed(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldKindBed), v))
+	})
+}
+
+// KindAge applies equality check predicate on the "kindAge" field. It's identical to KindAgeEQ.
+func KindAge(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldKindAge), v))
+	})
+}
+
+// ReportedDateEQ applies the EQ predicate on the "reportedDate" field.
+func ReportedDateEQ(v time.Time) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldReportedDate), v))
+	})
+}
+
+// ReportedDateNEQ applies the NEQ predicate on the "reportedDate" field.
+func ReportedDateNEQ(v time.Time) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldReportedDate), v))
+	})
+}
+
+// ReportedDateIn applies the In predicate on the "reportedDate" field.
+func ReportedDateIn(vs ...time.Time) predicate.BedRecord {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -133,12 +169,12 @@ func BusyCovidBedsIn(vs ...int) predicate.BedRecord {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldBusyCovidBeds), v...))
+		s.Where(sql.In(s.C(FieldReportedDate), v...))
 	})
 }
 
-// BusyCovidBedsNotIn applies the NotIn predicate on the "busyCovidBeds" field.
-func BusyCovidBedsNotIn(vs ...int) predicate.BedRecord {
+// ReportedDateNotIn applies the NotIn predicate on the "reportedDate" field.
+func ReportedDateNotIn(vs ...time.Time) predicate.BedRecord {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -150,54 +186,54 @@ func BusyCovidBedsNotIn(vs ...int) predicate.BedRecord {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldBusyCovidBeds), v...))
+		s.Where(sql.NotIn(s.C(FieldReportedDate), v...))
 	})
 }
 
-// BusyCovidBedsGT applies the GT predicate on the "busyCovidBeds" field.
-func BusyCovidBedsGT(v int) predicate.BedRecord {
+// ReportedDateGT applies the GT predicate on the "reportedDate" field.
+func ReportedDateGT(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldBusyCovidBeds), v))
+		s.Where(sql.GT(s.C(FieldReportedDate), v))
 	})
 }
 
-// BusyCovidBedsGTE applies the GTE predicate on the "busyCovidBeds" field.
-func BusyCovidBedsGTE(v int) predicate.BedRecord {
+// ReportedDateGTE applies the GTE predicate on the "reportedDate" field.
+func ReportedDateGTE(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldBusyCovidBeds), v))
+		s.Where(sql.GTE(s.C(FieldReportedDate), v))
 	})
 }
 
-// BusyCovidBedsLT applies the LT predicate on the "busyCovidBeds" field.
-func BusyCovidBedsLT(v int) predicate.BedRecord {
+// ReportedDateLT applies the LT predicate on the "reportedDate" field.
+func ReportedDateLT(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldBusyCovidBeds), v))
+		s.Where(sql.LT(s.C(FieldReportedDate), v))
 	})
 }
 
-// BusyCovidBedsLTE applies the LTE predicate on the "busyCovidBeds" field.
-func BusyCovidBedsLTE(v int) predicate.BedRecord {
+// ReportedDateLTE applies the LTE predicate on the "reportedDate" field.
+func ReportedDateLTE(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldBusyCovidBeds), v))
+		s.Where(sql.LTE(s.C(FieldReportedDate), v))
 	})
 }
 
-// AvailableCovidBedsEQ applies the EQ predicate on the "availableCovidBeds" field.
-func AvailableCovidBedsEQ(v int) predicate.BedRecord {
+// CollectedDateEQ applies the EQ predicate on the "collectedDate" field.
+func CollectedDateEQ(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldAvailableCovidBeds), v))
+		s.Where(sql.EQ(s.C(FieldCollectedDate), v))
 	})
 }
 
-// AvailableCovidBedsNEQ applies the NEQ predicate on the "availableCovidBeds" field.
-func AvailableCovidBedsNEQ(v int) predicate.BedRecord {
+// CollectedDateNEQ applies the NEQ predicate on the "collectedDate" field.
+func CollectedDateNEQ(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldAvailableCovidBeds), v))
+		s.Where(sql.NEQ(s.C(FieldCollectedDate), v))
 	})
 }
 
-// AvailableCovidBedsIn applies the In predicate on the "availableCovidBeds" field.
-func AvailableCovidBedsIn(vs ...int) predicate.BedRecord {
+// CollectedDateIn applies the In predicate on the "collectedDate" field.
+func CollectedDateIn(vs ...time.Time) predicate.BedRecord {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -209,12 +245,12 @@ func AvailableCovidBedsIn(vs ...int) predicate.BedRecord {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldAvailableCovidBeds), v...))
+		s.Where(sql.In(s.C(FieldCollectedDate), v...))
 	})
 }
 
-// AvailableCovidBedsNotIn applies the NotIn predicate on the "availableCovidBeds" field.
-func AvailableCovidBedsNotIn(vs ...int) predicate.BedRecord {
+// CollectedDateNotIn applies the NotIn predicate on the "collectedDate" field.
+func CollectedDateNotIn(vs ...time.Time) predicate.BedRecord {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -226,57 +262,507 @@ func AvailableCovidBedsNotIn(vs ...int) predicate.BedRecord {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldAvailableCovidBeds), v...))
+		s.Where(sql.NotIn(s.C(FieldCollectedDate), v...))
 	})
 }
 
-// AvailableCovidBedsGT applies the GT predicate on the "availableCovidBeds" field.
-func AvailableCovidBedsGT(v int) predicate.BedRecord {
+// CollectedDateGT applies the GT predicate on the "collectedDate" field.
+func CollectedDateGT(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldAvailableCovidBeds), v))
+		s.Where(sql.GT(s.C(FieldCollectedDate), v))
 	})
 }
 
-// AvailableCovidBedsGTE applies the GTE predicate on the "availableCovidBeds" field.
-func AvailableCovidBedsGTE(v int) predicate.BedRecord {
+// CollectedDateGTE applies the GTE predicate on the "collectedDate" field.
+func CollectedDateGTE(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldAvailableCovidBeds), v))
+		s.Where(sql.GTE(s.C(FieldCollectedDate), v))
 	})
 }
 
-// AvailableCovidBedsLT applies the LT predicate on the "availableCovidBeds" field.
-func AvailableCovidBedsLT(v int) predicate.BedRecord {
+// CollectedDateLT applies the LT predicate on the "collectedDate" field.
+func CollectedDateLT(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldAvailableCovidBeds), v))
+		s.Where(sql.LT(s.C(FieldCollectedDate), v))
 	})
 }
 
-// AvailableCovidBedsLTE applies the LTE predicate on the "availableCovidBeds" field.
-func AvailableCovidBedsLTE(v int) predicate.BedRecord {
+// CollectedDateLTE applies the LTE predicate on the "collectedDate" field.
+func CollectedDateLTE(v time.Time) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldAvailableCovidBeds), v))
+		s.Where(sql.LTE(s.C(FieldCollectedDate), v))
 	})
 }
 
-// HasOrganization applies the HasEdge predicate on the "organization" edge.
-func HasOrganization() predicate.BedRecord {
+// BusyBedsEQ applies the EQ predicate on the "busyBeds" field.
+func BusyBedsEQ(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldBusyBeds), v))
+	})
+}
+
+// BusyBedsNEQ applies the NEQ predicate on the "busyBeds" field.
+func BusyBedsNEQ(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldBusyBeds), v))
+	})
+}
+
+// BusyBedsIn applies the In predicate on the "busyBeds" field.
+func BusyBedsIn(vs ...int) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldBusyBeds), v...))
+	})
+}
+
+// BusyBedsNotIn applies the NotIn predicate on the "busyBeds" field.
+func BusyBedsNotIn(vs ...int) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldBusyBeds), v...))
+	})
+}
+
+// BusyBedsGT applies the GT predicate on the "busyBeds" field.
+func BusyBedsGT(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldBusyBeds), v))
+	})
+}
+
+// BusyBedsGTE applies the GTE predicate on the "busyBeds" field.
+func BusyBedsGTE(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldBusyBeds), v))
+	})
+}
+
+// BusyBedsLT applies the LT predicate on the "busyBeds" field.
+func BusyBedsLT(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldBusyBeds), v))
+	})
+}
+
+// BusyBedsLTE applies the LTE predicate on the "busyBeds" field.
+func BusyBedsLTE(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldBusyBeds), v))
+	})
+}
+
+// AvailableBedsEQ applies the EQ predicate on the "availableBeds" field.
+func AvailableBedsEQ(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldAvailableBeds), v))
+	})
+}
+
+// AvailableBedsNEQ applies the NEQ predicate on the "availableBeds" field.
+func AvailableBedsNEQ(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldAvailableBeds), v))
+	})
+}
+
+// AvailableBedsIn applies the In predicate on the "availableBeds" field.
+func AvailableBedsIn(vs ...int) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldAvailableBeds), v...))
+	})
+}
+
+// AvailableBedsNotIn applies the NotIn predicate on the "availableBeds" field.
+func AvailableBedsNotIn(vs ...int) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldAvailableBeds), v...))
+	})
+}
+
+// AvailableBedsGT applies the GT predicate on the "availableBeds" field.
+func AvailableBedsGT(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldAvailableBeds), v))
+	})
+}
+
+// AvailableBedsGTE applies the GTE predicate on the "availableBeds" field.
+func AvailableBedsGTE(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldAvailableBeds), v))
+	})
+}
+
+// AvailableBedsLT applies the LT predicate on the "availableBeds" field.
+func AvailableBedsLT(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldAvailableBeds), v))
+	})
+}
+
+// AvailableBedsLTE applies the LTE predicate on the "availableBeds" field.
+func AvailableBedsLTE(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldAvailableBeds), v))
+	})
+}
+
+// TotalBedsEQ applies the EQ predicate on the "totalBeds" field.
+func TotalBedsEQ(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTotalBeds), v))
+	})
+}
+
+// TotalBedsNEQ applies the NEQ predicate on the "totalBeds" field.
+func TotalBedsNEQ(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTotalBeds), v))
+	})
+}
+
+// TotalBedsIn applies the In predicate on the "totalBeds" field.
+func TotalBedsIn(vs ...int) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldTotalBeds), v...))
+	})
+}
+
+// TotalBedsNotIn applies the NotIn predicate on the "totalBeds" field.
+func TotalBedsNotIn(vs ...int) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldTotalBeds), v...))
+	})
+}
+
+// TotalBedsGT applies the GT predicate on the "totalBeds" field.
+func TotalBedsGT(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldTotalBeds), v))
+	})
+}
+
+// TotalBedsGTE applies the GTE predicate on the "totalBeds" field.
+func TotalBedsGTE(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldTotalBeds), v))
+	})
+}
+
+// TotalBedsLT applies the LT predicate on the "totalBeds" field.
+func TotalBedsLT(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldTotalBeds), v))
+	})
+}
+
+// TotalBedsLTE applies the LTE predicate on the "totalBeds" field.
+func TotalBedsLTE(v int) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldTotalBeds), v))
+	})
+}
+
+// KindBedEQ applies the EQ predicate on the "kindBed" field.
+func KindBedEQ(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedNEQ applies the NEQ predicate on the "kindBed" field.
+func KindBedNEQ(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedIn applies the In predicate on the "kindBed" field.
+func KindBedIn(vs ...string) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldKindBed), v...))
+	})
+}
+
+// KindBedNotIn applies the NotIn predicate on the "kindBed" field.
+func KindBedNotIn(vs ...string) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldKindBed), v...))
+	})
+}
+
+// KindBedGT applies the GT predicate on the "kindBed" field.
+func KindBedGT(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedGTE applies the GTE predicate on the "kindBed" field.
+func KindBedGTE(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedLT applies the LT predicate on the "kindBed" field.
+func KindBedLT(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedLTE applies the LTE predicate on the "kindBed" field.
+func KindBedLTE(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedContains applies the Contains predicate on the "kindBed" field.
+func KindBedContains(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedHasPrefix applies the HasPrefix predicate on the "kindBed" field.
+func KindBedHasPrefix(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedHasSuffix applies the HasSuffix predicate on the "kindBed" field.
+func KindBedHasSuffix(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedEqualFold applies the EqualFold predicate on the "kindBed" field.
+func KindBedEqualFold(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldKindBed), v))
+	})
+}
+
+// KindBedContainsFold applies the ContainsFold predicate on the "kindBed" field.
+func KindBedContainsFold(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldKindBed), v))
+	})
+}
+
+// KindAgeEQ applies the EQ predicate on the "kindAge" field.
+func KindAgeEQ(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeNEQ applies the NEQ predicate on the "kindAge" field.
+func KindAgeNEQ(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeIn applies the In predicate on the "kindAge" field.
+func KindAgeIn(vs ...string) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldKindAge), v...))
+	})
+}
+
+// KindAgeNotIn applies the NotIn predicate on the "kindAge" field.
+func KindAgeNotIn(vs ...string) predicate.BedRecord {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.BedRecord(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldKindAge), v...))
+	})
+}
+
+// KindAgeGT applies the GT predicate on the "kindAge" field.
+func KindAgeGT(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeGTE applies the GTE predicate on the "kindAge" field.
+func KindAgeGTE(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeLT applies the LT predicate on the "kindAge" field.
+func KindAgeLT(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeLTE applies the LTE predicate on the "kindAge" field.
+func KindAgeLTE(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeContains applies the Contains predicate on the "kindAge" field.
+func KindAgeContains(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeHasPrefix applies the HasPrefix predicate on the "kindAge" field.
+func KindAgeHasPrefix(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeHasSuffix applies the HasSuffix predicate on the "kindAge" field.
+func KindAgeHasSuffix(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeEqualFold applies the EqualFold predicate on the "kindAge" field.
+func KindAgeEqualFold(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldKindAge), v))
+	})
+}
+
+// KindAgeContainsFold applies the ContainsFold predicate on the "kindAge" field.
+func KindAgeContainsFold(v string) predicate.BedRecord {
+	return predicate.BedRecord(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldKindAge), v))
+	})
+}
+
+// HasPlaces applies the HasEdge predicate on the "places" edge.
+func HasPlaces() predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(OrganizationTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, OrganizationTable, OrganizationPrimaryKey...),
+			sqlgraph.To(PlacesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, PlacesTable, PlacesPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasOrganizationWith applies the HasEdge predicate on the "organization" edge with a given conditions (other predicates).
-func HasOrganizationWith(preds ...predicate.Organization) predicate.BedRecord {
+// HasPlacesWith applies the HasEdge predicate on the "places" edge with a given conditions (other predicates).
+func HasPlacesWith(preds ...predicate.Place) predicate.BedRecord {
 	return predicate.BedRecord(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(OrganizationInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, OrganizationTable, OrganizationPrimaryKey...),
+			sqlgraph.To(PlacesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, PlacesTable, PlacesPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

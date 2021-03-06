@@ -24,31 +24,31 @@ type Region struct {
 
 // RegionEdges holds the relations/edges for other nodes in the graph.
 type RegionEdges struct {
-	// Organization holds the value of the organization edge.
-	Organization []*Organization `json:"organization,omitempty"`
-	// Province holds the value of the province edge.
-	Province []*Province `json:"province,omitempty"`
+	// Places holds the value of the places edge.
+	Places []*Place `json:"places,omitempty"`
+	// Provinces holds the value of the provinces edge.
+	Provinces []*Province `json:"provinces,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
 }
 
-// OrganizationOrErr returns the Organization value or an error if the edge
+// PlacesOrErr returns the Places value or an error if the edge
 // was not loaded in eager-loading.
-func (e RegionEdges) OrganizationOrErr() ([]*Organization, error) {
+func (e RegionEdges) PlacesOrErr() ([]*Place, error) {
 	if e.loadedTypes[0] {
-		return e.Organization, nil
+		return e.Places, nil
 	}
-	return nil, &NotLoadedError{edge: "organization"}
+	return nil, &NotLoadedError{edge: "places"}
 }
 
-// ProvinceOrErr returns the Province value or an error if the edge
+// ProvincesOrErr returns the Provinces value or an error if the edge
 // was not loaded in eager-loading.
-func (e RegionEdges) ProvinceOrErr() ([]*Province, error) {
+func (e RegionEdges) ProvincesOrErr() ([]*Province, error) {
 	if e.loadedTypes[1] {
-		return e.Province, nil
+		return e.Provinces, nil
 	}
-	return nil, &NotLoadedError{edge: "province"}
+	return nil, &NotLoadedError{edge: "provinces"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -92,14 +92,14 @@ func (r *Region) assignValues(columns []string, values []interface{}) error {
 	return nil
 }
 
-// QueryOrganization queries the "organization" edge of the Region entity.
-func (r *Region) QueryOrganization() *OrganizationQuery {
-	return (&RegionClient{config: r.config}).QueryOrganization(r)
+// QueryPlaces queries the "places" edge of the Region entity.
+func (r *Region) QueryPlaces() *PlaceQuery {
+	return (&RegionClient{config: r.config}).QueryPlaces(r)
 }
 
-// QueryProvince queries the "province" edge of the Region entity.
-func (r *Region) QueryProvince() *ProvinceQuery {
-	return (&RegionClient{config: r.config}).QueryProvince(r)
+// QueryProvinces queries the "provinces" edge of the Region entity.
+func (r *Region) QueryProvinces() *ProvinceQuery {
+	return (&RegionClient{config: r.config}).QueryProvinces(r)
 }
 
 // Update returns a builder for updating this Region.

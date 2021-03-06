@@ -10,30 +10,30 @@ const (
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 
-	// EdgeOrganization holds the string denoting the organization edge name in mutations.
-	EdgeOrganization = "organization"
-	// EdgeRegion holds the string denoting the region edge name in mutations.
-	EdgeRegion = "region"
-	// EdgeDistrict holds the string denoting the district edge name in mutations.
-	EdgeDistrict = "district"
+	// EdgePlaces holds the string denoting the places edge name in mutations.
+	EdgePlaces = "places"
+	// EdgeRegions holds the string denoting the regions edge name in mutations.
+	EdgeRegions = "regions"
+	// EdgeDistricts holds the string denoting the districts edge name in mutations.
+	EdgeDistricts = "districts"
 
 	// Table holds the table name of the province in the database.
 	Table = "provinces"
-	// OrganizationTable is the table the holds the organization relation/edge. The primary key declared below.
-	OrganizationTable = "organization_province"
-	// OrganizationInverseTable is the table name for the Organization entity.
-	// It exists in this package in order to avoid circular dependency with the "organization" package.
-	OrganizationInverseTable = "organizations"
-	// RegionTable is the table the holds the region relation/edge. The primary key declared below.
-	RegionTable = "region_province"
-	// RegionInverseTable is the table name for the Region entity.
+	// PlacesTable is the table the holds the places relation/edge. The primary key declared below.
+	PlacesTable = "place_provinces"
+	// PlacesInverseTable is the table name for the Place entity.
+	// It exists in this package in order to avoid circular dependency with the "place" package.
+	PlacesInverseTable = "places"
+	// RegionsTable is the table the holds the regions relation/edge. The primary key declared below.
+	RegionsTable = "region_provinces"
+	// RegionsInverseTable is the table name for the Region entity.
 	// It exists in this package in order to avoid circular dependency with the "region" package.
-	RegionInverseTable = "regions"
-	// DistrictTable is the table the holds the district relation/edge. The primary key declared below.
-	DistrictTable = "province_district"
-	// DistrictInverseTable is the table name for the District entity.
+	RegionsInverseTable = "regions"
+	// DistrictsTable is the table the holds the districts relation/edge. The primary key declared below.
+	DistrictsTable = "province_districts"
+	// DistrictsInverseTable is the table name for the District entity.
 	// It exists in this package in order to avoid circular dependency with the "district" package.
-	DistrictInverseTable = "districts"
+	DistrictsInverseTable = "districts"
 )
 
 // Columns holds all SQL columns for province fields.
@@ -43,15 +43,15 @@ var Columns = []string{
 }
 
 var (
-	// OrganizationPrimaryKey and OrganizationColumn2 are the table columns denoting the
-	// primary key for the organization relation (M2M).
-	OrganizationPrimaryKey = []string{"organization_id", "province_id"}
-	// RegionPrimaryKey and RegionColumn2 are the table columns denoting the
-	// primary key for the region relation (M2M).
-	RegionPrimaryKey = []string{"region_id", "province_id"}
-	// DistrictPrimaryKey and DistrictColumn2 are the table columns denoting the
-	// primary key for the district relation (M2M).
-	DistrictPrimaryKey = []string{"province_id", "district_id"}
+	// PlacesPrimaryKey and PlacesColumn2 are the table columns denoting the
+	// primary key for the places relation (M2M).
+	PlacesPrimaryKey = []string{"place_id", "province_id"}
+	// RegionsPrimaryKey and RegionsColumn2 are the table columns denoting the
+	// primary key for the regions relation (M2M).
+	RegionsPrimaryKey = []string{"region_id", "province_id"}
+	// DistrictsPrimaryKey and DistrictsColumn2 are the table columns denoting the
+	// primary key for the districts relation (M2M).
+	DistrictsPrimaryKey = []string{"province_id", "district_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

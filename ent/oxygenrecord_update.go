@@ -5,9 +5,10 @@ package ent
 import (
 	"context"
 	"fmt"
-	"opencensus/core/ent/organization"
 	"opencensus/core/ent/oxygenrecord"
+	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -24,6 +25,18 @@ type OxygenRecordUpdate struct {
 // Where adds a new predicate for the OxygenRecordUpdate builder.
 func (oru *OxygenRecordUpdate) Where(ps ...predicate.OxygenRecord) *OxygenRecordUpdate {
 	oru.mutation.predicates = append(oru.mutation.predicates, ps...)
+	return oru
+}
+
+// SetReportedDate sets the "reportedDate" field.
+func (oru *OxygenRecordUpdate) SetReportedDate(t time.Time) *OxygenRecordUpdate {
+	oru.mutation.SetReportedDate(t)
+	return oru
+}
+
+// SetCollectedDate sets the "collectedDate" field.
+func (oru *OxygenRecordUpdate) SetCollectedDate(t time.Time) *OxygenRecordUpdate {
+	oru.mutation.SetCollectedDate(t)
 	return oru
 }
 
@@ -53,19 +66,64 @@ func (oru *OxygenRecordUpdate) AddTotalOwnCylinders(i int) *OxygenRecordUpdate {
 	return oru
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by IDs.
-func (oru *OxygenRecordUpdate) AddOrganizationIDs(ids ...int) *OxygenRecordUpdate {
-	oru.mutation.AddOrganizationIDs(ids...)
+// SetDailyProduction sets the "dailyProduction" field.
+func (oru *OxygenRecordUpdate) SetDailyProduction(i int) *OxygenRecordUpdate {
+	oru.mutation.ResetDailyProduction()
+	oru.mutation.SetDailyProduction(i)
 	return oru
 }
 
-// AddOrganization adds the "organization" edges to the Organization entity.
-func (oru *OxygenRecordUpdate) AddOrganization(o ...*Organization) *OxygenRecordUpdate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// AddDailyProduction adds i to the "dailyProduction" field.
+func (oru *OxygenRecordUpdate) AddDailyProduction(i int) *OxygenRecordUpdate {
+	oru.mutation.AddDailyProduction(i)
+	return oru
+}
+
+// SetMaxDailyProduction sets the "maxDailyProduction" field.
+func (oru *OxygenRecordUpdate) SetMaxDailyProduction(i int) *OxygenRecordUpdate {
+	oru.mutation.ResetMaxDailyProduction()
+	oru.mutation.SetMaxDailyProduction(i)
+	return oru
+}
+
+// AddMaxDailyProduction adds i to the "maxDailyProduction" field.
+func (oru *OxygenRecordUpdate) AddMaxDailyProduction(i int) *OxygenRecordUpdate {
+	oru.mutation.AddMaxDailyProduction(i)
+	return oru
+}
+
+// SetDailyConsumption sets the "dailyConsumption" field.
+func (oru *OxygenRecordUpdate) SetDailyConsumption(i int) *OxygenRecordUpdate {
+	oru.mutation.ResetDailyConsumption()
+	oru.mutation.SetDailyConsumption(i)
+	return oru
+}
+
+// AddDailyConsumption adds i to the "dailyConsumption" field.
+func (oru *OxygenRecordUpdate) AddDailyConsumption(i int) *OxygenRecordUpdate {
+	oru.mutation.AddDailyConsumption(i)
+	return oru
+}
+
+// SetMainSourceKind sets the "mainSourceKind" field.
+func (oru *OxygenRecordUpdate) SetMainSourceKind(s string) *OxygenRecordUpdate {
+	oru.mutation.SetMainSourceKind(s)
+	return oru
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by IDs.
+func (oru *OxygenRecordUpdate) AddPlaceIDs(ids ...int) *OxygenRecordUpdate {
+	oru.mutation.AddPlaceIDs(ids...)
+	return oru
+}
+
+// AddPlaces adds the "places" edges to the Place entity.
+func (oru *OxygenRecordUpdate) AddPlaces(p ...*Place) *OxygenRecordUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return oru.AddOrganizationIDs(ids...)
+	return oru.AddPlaceIDs(ids...)
 }
 
 // Mutation returns the OxygenRecordMutation object of the builder.
@@ -73,25 +131,25 @@ func (oru *OxygenRecordUpdate) Mutation() *OxygenRecordMutation {
 	return oru.mutation
 }
 
-// ClearOrganization clears all "organization" edges to the Organization entity.
-func (oru *OxygenRecordUpdate) ClearOrganization() *OxygenRecordUpdate {
-	oru.mutation.ClearOrganization()
+// ClearPlaces clears all "places" edges to the Place entity.
+func (oru *OxygenRecordUpdate) ClearPlaces() *OxygenRecordUpdate {
+	oru.mutation.ClearPlaces()
 	return oru
 }
 
-// RemoveOrganizationIDs removes the "organization" edge to Organization entities by IDs.
-func (oru *OxygenRecordUpdate) RemoveOrganizationIDs(ids ...int) *OxygenRecordUpdate {
-	oru.mutation.RemoveOrganizationIDs(ids...)
+// RemovePlaceIDs removes the "places" edge to Place entities by IDs.
+func (oru *OxygenRecordUpdate) RemovePlaceIDs(ids ...int) *OxygenRecordUpdate {
+	oru.mutation.RemovePlaceIDs(ids...)
 	return oru
 }
 
-// RemoveOrganization removes "organization" edges to Organization entities.
-func (oru *OxygenRecordUpdate) RemoveOrganization(o ...*Organization) *OxygenRecordUpdate {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// RemovePlaces removes "places" edges to Place entities.
+func (oru *OxygenRecordUpdate) RemovePlaces(p ...*Place) *OxygenRecordUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return oru.RemoveOrganizationIDs(ids...)
+	return oru.RemovePlaceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -163,6 +221,20 @@ func (oru *OxygenRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := oru.mutation.ReportedDate(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: oxygenrecord.FieldReportedDate,
+		})
+	}
+	if value, ok := oru.mutation.CollectedDate(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: oxygenrecord.FieldCollectedDate,
+		})
+	}
 	if value, ok := oru.mutation.TotalCylinders(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
@@ -191,33 +263,82 @@ func (oru *OxygenRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: oxygenrecord.FieldTotalOwnCylinders,
 		})
 	}
-	if oru.mutation.OrganizationCleared() {
+	if value, ok := oru.mutation.DailyProduction(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyProduction,
+		})
+	}
+	if value, ok := oru.mutation.AddedDailyProduction(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyProduction,
+		})
+	}
+	if value, ok := oru.mutation.MaxDailyProduction(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldMaxDailyProduction,
+		})
+	}
+	if value, ok := oru.mutation.AddedMaxDailyProduction(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldMaxDailyProduction,
+		})
+	}
+	if value, ok := oru.mutation.DailyConsumption(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyConsumption,
+		})
+	}
+	if value, ok := oru.mutation.AddedDailyConsumption(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyConsumption,
+		})
+	}
+	if value, ok := oru.mutation.MainSourceKind(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: oxygenrecord.FieldMainSourceKind,
+		})
+	}
+	if oru.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   oxygenrecord.OrganizationTable,
-			Columns: oxygenrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   oxygenrecord.PlacesTable,
+			Columns: oxygenrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := oru.mutation.RemovedOrganizationIDs(); len(nodes) > 0 && !oru.mutation.OrganizationCleared() {
+	if nodes := oru.mutation.RemovedPlacesIDs(); len(nodes) > 0 && !oru.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   oxygenrecord.OrganizationTable,
-			Columns: oxygenrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   oxygenrecord.PlacesTable,
+			Columns: oxygenrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
@@ -226,17 +347,17 @@ func (oru *OxygenRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := oru.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if nodes := oru.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   oxygenrecord.OrganizationTable,
-			Columns: oxygenrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   oxygenrecord.PlacesTable,
+			Columns: oxygenrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
@@ -261,6 +382,18 @@ type OxygenRecordUpdateOne struct {
 	config
 	hooks    []Hook
 	mutation *OxygenRecordMutation
+}
+
+// SetReportedDate sets the "reportedDate" field.
+func (oruo *OxygenRecordUpdateOne) SetReportedDate(t time.Time) *OxygenRecordUpdateOne {
+	oruo.mutation.SetReportedDate(t)
+	return oruo
+}
+
+// SetCollectedDate sets the "collectedDate" field.
+func (oruo *OxygenRecordUpdateOne) SetCollectedDate(t time.Time) *OxygenRecordUpdateOne {
+	oruo.mutation.SetCollectedDate(t)
+	return oruo
 }
 
 // SetTotalCylinders sets the "totalCylinders" field.
@@ -289,19 +422,64 @@ func (oruo *OxygenRecordUpdateOne) AddTotalOwnCylinders(i int) *OxygenRecordUpda
 	return oruo
 }
 
-// AddOrganizationIDs adds the "organization" edge to the Organization entity by IDs.
-func (oruo *OxygenRecordUpdateOne) AddOrganizationIDs(ids ...int) *OxygenRecordUpdateOne {
-	oruo.mutation.AddOrganizationIDs(ids...)
+// SetDailyProduction sets the "dailyProduction" field.
+func (oruo *OxygenRecordUpdateOne) SetDailyProduction(i int) *OxygenRecordUpdateOne {
+	oruo.mutation.ResetDailyProduction()
+	oruo.mutation.SetDailyProduction(i)
 	return oruo
 }
 
-// AddOrganization adds the "organization" edges to the Organization entity.
-func (oruo *OxygenRecordUpdateOne) AddOrganization(o ...*Organization) *OxygenRecordUpdateOne {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// AddDailyProduction adds i to the "dailyProduction" field.
+func (oruo *OxygenRecordUpdateOne) AddDailyProduction(i int) *OxygenRecordUpdateOne {
+	oruo.mutation.AddDailyProduction(i)
+	return oruo
+}
+
+// SetMaxDailyProduction sets the "maxDailyProduction" field.
+func (oruo *OxygenRecordUpdateOne) SetMaxDailyProduction(i int) *OxygenRecordUpdateOne {
+	oruo.mutation.ResetMaxDailyProduction()
+	oruo.mutation.SetMaxDailyProduction(i)
+	return oruo
+}
+
+// AddMaxDailyProduction adds i to the "maxDailyProduction" field.
+func (oruo *OxygenRecordUpdateOne) AddMaxDailyProduction(i int) *OxygenRecordUpdateOne {
+	oruo.mutation.AddMaxDailyProduction(i)
+	return oruo
+}
+
+// SetDailyConsumption sets the "dailyConsumption" field.
+func (oruo *OxygenRecordUpdateOne) SetDailyConsumption(i int) *OxygenRecordUpdateOne {
+	oruo.mutation.ResetDailyConsumption()
+	oruo.mutation.SetDailyConsumption(i)
+	return oruo
+}
+
+// AddDailyConsumption adds i to the "dailyConsumption" field.
+func (oruo *OxygenRecordUpdateOne) AddDailyConsumption(i int) *OxygenRecordUpdateOne {
+	oruo.mutation.AddDailyConsumption(i)
+	return oruo
+}
+
+// SetMainSourceKind sets the "mainSourceKind" field.
+func (oruo *OxygenRecordUpdateOne) SetMainSourceKind(s string) *OxygenRecordUpdateOne {
+	oruo.mutation.SetMainSourceKind(s)
+	return oruo
+}
+
+// AddPlaceIDs adds the "places" edge to the Place entity by IDs.
+func (oruo *OxygenRecordUpdateOne) AddPlaceIDs(ids ...int) *OxygenRecordUpdateOne {
+	oruo.mutation.AddPlaceIDs(ids...)
+	return oruo
+}
+
+// AddPlaces adds the "places" edges to the Place entity.
+func (oruo *OxygenRecordUpdateOne) AddPlaces(p ...*Place) *OxygenRecordUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return oruo.AddOrganizationIDs(ids...)
+	return oruo.AddPlaceIDs(ids...)
 }
 
 // Mutation returns the OxygenRecordMutation object of the builder.
@@ -309,25 +487,25 @@ func (oruo *OxygenRecordUpdateOne) Mutation() *OxygenRecordMutation {
 	return oruo.mutation
 }
 
-// ClearOrganization clears all "organization" edges to the Organization entity.
-func (oruo *OxygenRecordUpdateOne) ClearOrganization() *OxygenRecordUpdateOne {
-	oruo.mutation.ClearOrganization()
+// ClearPlaces clears all "places" edges to the Place entity.
+func (oruo *OxygenRecordUpdateOne) ClearPlaces() *OxygenRecordUpdateOne {
+	oruo.mutation.ClearPlaces()
 	return oruo
 }
 
-// RemoveOrganizationIDs removes the "organization" edge to Organization entities by IDs.
-func (oruo *OxygenRecordUpdateOne) RemoveOrganizationIDs(ids ...int) *OxygenRecordUpdateOne {
-	oruo.mutation.RemoveOrganizationIDs(ids...)
+// RemovePlaceIDs removes the "places" edge to Place entities by IDs.
+func (oruo *OxygenRecordUpdateOne) RemovePlaceIDs(ids ...int) *OxygenRecordUpdateOne {
+	oruo.mutation.RemovePlaceIDs(ids...)
 	return oruo
 }
 
-// RemoveOrganization removes "organization" edges to Organization entities.
-func (oruo *OxygenRecordUpdateOne) RemoveOrganization(o ...*Organization) *OxygenRecordUpdateOne {
-	ids := make([]int, len(o))
-	for i := range o {
-		ids[i] = o[i].ID
+// RemovePlaces removes "places" edges to Place entities.
+func (oruo *OxygenRecordUpdateOne) RemovePlaces(p ...*Place) *OxygenRecordUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return oruo.RemoveOrganizationIDs(ids...)
+	return oruo.RemovePlaceIDs(ids...)
 }
 
 // Save executes the query and returns the updated OxygenRecord entity.
@@ -404,6 +582,20 @@ func (oruo *OxygenRecordUpdateOne) sqlSave(ctx context.Context) (_node *OxygenRe
 			}
 		}
 	}
+	if value, ok := oruo.mutation.ReportedDate(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: oxygenrecord.FieldReportedDate,
+		})
+	}
+	if value, ok := oruo.mutation.CollectedDate(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: oxygenrecord.FieldCollectedDate,
+		})
+	}
 	if value, ok := oruo.mutation.TotalCylinders(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
@@ -432,33 +624,82 @@ func (oruo *OxygenRecordUpdateOne) sqlSave(ctx context.Context) (_node *OxygenRe
 			Column: oxygenrecord.FieldTotalOwnCylinders,
 		})
 	}
-	if oruo.mutation.OrganizationCleared() {
+	if value, ok := oruo.mutation.DailyProduction(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyProduction,
+		})
+	}
+	if value, ok := oruo.mutation.AddedDailyProduction(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyProduction,
+		})
+	}
+	if value, ok := oruo.mutation.MaxDailyProduction(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldMaxDailyProduction,
+		})
+	}
+	if value, ok := oruo.mutation.AddedMaxDailyProduction(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldMaxDailyProduction,
+		})
+	}
+	if value, ok := oruo.mutation.DailyConsumption(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyConsumption,
+		})
+	}
+	if value, ok := oruo.mutation.AddedDailyConsumption(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: oxygenrecord.FieldDailyConsumption,
+		})
+	}
+	if value, ok := oruo.mutation.MainSourceKind(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: oxygenrecord.FieldMainSourceKind,
+		})
+	}
+	if oruo.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   oxygenrecord.OrganizationTable,
-			Columns: oxygenrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   oxygenrecord.PlacesTable,
+			Columns: oxygenrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := oruo.mutation.RemovedOrganizationIDs(); len(nodes) > 0 && !oruo.mutation.OrganizationCleared() {
+	if nodes := oruo.mutation.RemovedPlacesIDs(); len(nodes) > 0 && !oruo.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   oxygenrecord.OrganizationTable,
-			Columns: oxygenrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   oxygenrecord.PlacesTable,
+			Columns: oxygenrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
@@ -467,17 +708,17 @@ func (oruo *OxygenRecordUpdateOne) sqlSave(ctx context.Context) (_node *OxygenRe
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := oruo.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if nodes := oruo.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   oxygenrecord.OrganizationTable,
-			Columns: oxygenrecord.OrganizationPrimaryKey,
+			Inverse: false,
+			Table:   oxygenrecord.PlacesTable,
+			Columns: oxygenrecord.PlacesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: organization.FieldID,
+					Column: place.FieldID,
 				},
 			},
 		}
