@@ -16,13 +16,28 @@ func (BedRecord) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("busyCovidBeds"),
 		field.Int("availableCovidBeds"),
-		// TODO: Add more fields here
+		field.Int("totalCovidBeds"),
+
+		field.Int("busyChildrenUCIBeds"),
+		field.Int("availableChildrenUCIBeds"),
+		field.Int("totalChildrenUCIBeds"),
+
+		field.Int("busyAdultUCIBeds"),
+		field.Int("availableAdultUCIBeds"),
+		field.Int("totalAdultUCIBeds"),
+
+		field.Int("busyVentilatorBeds"),
+		field.Int("availableVentilatorBeds"),
+		field.Int("totalVentilatorBeds"),
+
+		// TODO: Add more fields here.
 	}
 }
 
 // Edges of the BedRecord.
 func (BedRecord) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("organization", Organization.Type).Ref("bedRecords"),
+		edge.From("records", Record.Type).Ref("bedRecords"),
+		edge.To("places", Place.Type),
 	}
 }

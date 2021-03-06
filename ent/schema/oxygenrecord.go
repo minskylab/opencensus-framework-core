@@ -16,6 +16,13 @@ func (OxygenRecord) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("totalCylinders"),
 		field.Int("totalOwnCylinders"),
+
+		field.Int("dailyProduction"),
+		field.Int("maxDailyProduction"),
+		field.Int("dailyConsumption"),
+
+		field.String("mainSourceKind"), // Plant, Tank criog, isotank, generator, network
+
 		// TODO: Add more fields here
 	}
 }
@@ -23,6 +30,7 @@ func (OxygenRecord) Fields() []ent.Field {
 // Edges of the OxygenRecord.
 func (OxygenRecord) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("organization", Organization.Type).Ref("oxygenRecords"),
+		edge.From("records", Record.Type).Ref("oxygenRecords"),
+		edge.To("places", Place.Type),
 	}
 }
