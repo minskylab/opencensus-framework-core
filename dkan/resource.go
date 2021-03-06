@@ -31,6 +31,7 @@ func (dkan *Resource) First100() *Resource {
 
 func (dkan *Resource) NextN(n int64) *Resource {
 	dkan.offset = dkan.limit + dkan.offset + 1
+	dkan.limit = n
 
 	return dkan
 }

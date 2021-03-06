@@ -24,15 +24,19 @@ func NewAPI(endpoint string) (*API, error) {
 
 	return &API{
 		endpoint: url,
+		mu:       &sync.Mutex{},
 	}, nil
 }
 
 func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 	api.mu.Lock()
 
-	api.endpoint.Query().Add("resource_id", res.id)
-	api.endpoint.Query().Add("offset", strconv.Itoa(int(res.offset)))
-	api.endpoint.Query().Add("limit", strconv.Itoa(int(res.limit)))
+	values := api.endpoint.Query()
+	values.Add("resource_id", res.id)
+	values.Add("offset", strconv.Itoa(int(res.offset)))
+	values.Add("limit", strconv.Itoa(int(res.limit)))
+
+	api.endpoint.RawQuery = values.Encode()
 
 	r, err := http.Get(api.endpoint.String())
 	if err != nil {
@@ -56,5 +60,7 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 
 	api.mu.Unlock()
 
-	return m, nil
+	result := m["result"].(map[string]interface{})
+
+	return result, nil
 }
