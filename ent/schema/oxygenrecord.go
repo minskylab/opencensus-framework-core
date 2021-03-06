@@ -23,6 +23,6 @@ func (OxygenRecord) Fields() []ent.Field {
 // Edges of the OxygenRecord.
 func (OxygenRecord) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("organization", Organization.Type).Ref("oxygenRecord"),
+		edge.From("organization", Organization.Type).Ref("oxygenRecords"),
 	}
 }
