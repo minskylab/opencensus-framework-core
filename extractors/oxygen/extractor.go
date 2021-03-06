@@ -23,18 +23,20 @@ func Extract(lapses int) chan []Record {
 
 	go func(res *dkan.Resource, channel chan []Record) {
 		for lapse := 0; lapse < lapses; lapse++ {
-			data, err := api.ObtainResource(oxygenRes)
+			data, err := api.ObtainResource(res)
 			if err != nil {
 				panic(err) // really?
 			}
 
-			records := data["records"].([]map[string]interface{})
+			records := data["records"].([]interface{})
 
 			recordsArray := []Record{}
 
 			for _, r := range records {
-				name, _ := r["NOMBRE"].(string)
-				totalCylinders, _ := r["TOT_CILINDROS"].(string)
+				rec := r.(map[string]interface{})
+				name, _ := rec["NOMBRE"].(string)
+
+				totalCylinders, _ := rec["TOT_CILINDROS"].(string)
 
 				totalCylindersNumber, _ := strconv.Atoi(totalCylinders)
 
@@ -45,8 +47,10 @@ func Extract(lapses int) chan []Record {
 			}
 
 			channel <- recordsArray
+			res.NextN(100)
 		}
-		oxygenRes.NextN(100)
+
+		close(channel)
 	}(oxygenRes, channelRecords)
 
 	return channelRecords

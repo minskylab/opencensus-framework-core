@@ -60,5 +60,7 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 
 	api.mu.Unlock()
 
-	return m, nil
+	result := m["result"].(map[string]interface{})
+
+	return result, nil
 }
