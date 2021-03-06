@@ -22,5 +22,6 @@ func (District) Fields() []ent.Field {
 func (District) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("organization", Organization.Type).Ref("district"),
+		edge.From("province", Province.Type).Ref("district"),
 	}
 }
