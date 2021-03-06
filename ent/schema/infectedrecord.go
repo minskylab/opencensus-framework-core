@@ -14,6 +14,9 @@ type InfectedRecord struct {
 // Fields of the InfectedRecord.
 func (InfectedRecord) Fields() []ent.Field {
 	return []ent.Field{
+		field.Time("reportedDate"),
+		field.Time("collectedDate"),
+
 		field.Int("pcrTotalTests"),
 		field.Int("prTotalTests"),
 		field.Int("agTotalTests"),
@@ -21,7 +24,6 @@ func (InfectedRecord) Fields() []ent.Field {
 		field.Int("pcrPositiveTests"),
 		field.Int("prPositiveTests"),
 		field.Int("agPositiveTests"),
-
 		// TODO: Add more fields here
 	}
 }
@@ -29,7 +31,6 @@ func (InfectedRecord) Fields() []ent.Field {
 // Edges of the InfectedRecord.
 func (InfectedRecord) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("records", Record.Type).Ref("infectedRecords"),
 		edge.To("places", Place.Type),
 	}
 }

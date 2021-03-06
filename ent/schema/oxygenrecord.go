@@ -14,6 +14,9 @@ type OxygenRecord struct {
 // Fields of the OxygenRecord.
 func (OxygenRecord) Fields() []ent.Field {
 	return []ent.Field{
+		field.Time("reportedDate"),
+		field.Time("collectedDate"),
+
 		field.Int("totalCylinders"),
 		field.Int("totalOwnCylinders"),
 
@@ -30,7 +33,6 @@ func (OxygenRecord) Fields() []ent.Field {
 // Edges of the OxygenRecord.
 func (OxygenRecord) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("records", Record.Type).Ref("oxygenRecords"),
 		edge.To("places", Place.Type),
 	}
 }

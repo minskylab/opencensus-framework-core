@@ -14,6 +14,9 @@ type DeathRecord struct {
 // Fields of the DeathRecord.
 func (DeathRecord) Fields() []ent.Field {
 	return []ent.Field{
+		field.Time("reportedDate"),
+		field.Time("collectedDate"),
+
 		field.Int("sinadefRegisters"),
 		field.Int("minsaRegisters"),
 		// TODO: Add more fields here
@@ -23,7 +26,6 @@ func (DeathRecord) Fields() []ent.Field {
 // Edges of the DeathRecord.
 func (DeathRecord) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("records", Record.Type).Ref("deathRecords"),
 		edge.To("places", Place.Type),
 	}
 }

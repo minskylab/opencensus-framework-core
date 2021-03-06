@@ -14,21 +14,15 @@ type BedRecord struct {
 // Fields of the BedRecord.
 func (BedRecord) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("busyCovidBeds"),
-		field.Int("availableCovidBeds"),
-		field.Int("totalCovidBeds"),
+		field.Time("reportedDate"),
+		field.Time("collectedDate"),
 
-		field.Int("busyChildrenUCIBeds"),
-		field.Int("availableChildrenUCIBeds"),
-		field.Int("totalChildrenUCIBeds"),
+		field.Int("busyBeds"),
+		field.Int("availableBeds"),
+		field.Int("totalBeds"),
 
-		field.Int("busyAdultUCIBeds"),
-		field.Int("availableAdultUCIBeds"),
-		field.Int("totalAdultUCIBeds"),
-
-		field.Int("busyVentilatorBeds"),
-		field.Int("availableVentilatorBeds"),
-		field.Int("totalVentilatorBeds"),
+		field.String("kindBed"), // UCI, CovidBed, NoCovidBed, Ventilator
+		field.String("kindAge"),
 
 		// TODO: Add more fields here.
 	}
@@ -37,7 +31,6 @@ func (BedRecord) Fields() []ent.Field {
 // Edges of the BedRecord.
 func (BedRecord) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("records", Record.Type).Ref("bedRecords"),
 		edge.To("places", Place.Type),
 	}
 }
