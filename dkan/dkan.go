@@ -43,7 +43,7 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 			dir = "asc"
 		}
 
-		values.Add("sort"+"["+res.sort+"]", dir)
+		values.Add("sort", res.sort+" "+dir)
 	}
 
 	api.endpoint.RawQuery = values.Encode()
@@ -67,7 +67,7 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 	api.endpoint.Query().Del("resource_id")
 	api.endpoint.Query().Del("offset")
 	api.endpoint.Query().Del("limit")
-	api.endpoint.Query().Del("sort" + "[" + res.sort + "]")
+	api.endpoint.Query().Del("sort")
 
 	api.mu.Unlock()
 
