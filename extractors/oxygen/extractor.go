@@ -12,8 +12,8 @@ type Record struct {
 	Institution string
 	Code        string
 
-	CutDate      int
-	RegisterDate int
+	CutDate      string
+	RegisterDate string
 
 	Region   string
 	Province string
@@ -36,12 +36,23 @@ func Extract(lapses int) chan []Record {
 		panic(err)
 	}
 
-	oxygenRes := dkan.ResourceWithID("0badb458-b44f-49ad-bd32-51acaaee7a05")
+	oxygenRes := dkan.ResourceWithID("b1791142-8fcb-4766-9b8c-b0ee0ffc6dff")
 	oxygenRes.First100()
 
 	go extractor(api, oxygenRes, lapses, channelRecords)
 
 	return channelRecords
+}
+func subExtractorMax(record map[string]interface{}, nameSlice [5]string) (maxProducer string, production int) {
+	maxProduction := 0
+	for _, producer := range nameSlice {
+		data, _ := strconv.Atoi(record[producer].(string))
+		production = production + data
+		if data > maxProduction {
+			maxProducer = producer
+		}
+	}
+	return maxProducer, production
 }
 
 func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Record) {
@@ -59,36 +70,40 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 			rec := r.(map[string]interface{})
 
 			name, _ := rec["NOMBRE"].(string)
-			// totalCylinders, _ := rec["TOT_CILINDROS"].(string)
 
 			institution, _ := rec["INSTITUCION"].(string)
 			code, _ := rec["CODIGO"].(string)
 
-			cutDate, _ := rec["FECHACORTE"].(int)
-			registerDate, _ := rec["FECHAREGISTRO"].(int)
+			cutDate, _ := rec["FECHACORTE"].(string)
+			registerDate, _ := rec["FECHAREGISTRO"].(string)
 
 			region, _ := rec["REGION"].(string)
 			province, _ := rec["PROVINCIA"].(string)
-			district, _ := rec["DISTRITO"].(string)
 
 			totalCylinders, _ := rec["TOT_CILINDROS"].(string)
 			totalOwnCylinders, _ := rec["TOT_PROPIOS"].(string)
 
-			dailyProduction, _ := rec["PRODUCCION_DIAPLA"].(string)
-			maxDailyProduction, _ := rec["PRODUCCION_MAX_PLA"].(string)
+			productionPlantNames := [5]string{"PRODUCCION_DIAPLA", "PRODUCCION_DIA_CRIO", "PRODUCCION_DIA_GEN", "PRODUCCION_DIA_ISO",
+				"PRODUCCION_DIA_OTR"}
+			_, dailyProductionNumber := subExtractorMax(rec, productionPlantNames)
 
-			dailyConsumption, _ := rec["CONSUMO_DIA_PLA"].(string)
+			productionMaxPlantNames := [5]string{"PRODUCCION_MAX_PLA", "PRODUCCION_MAX_CRIO", "PRODUCCION_MAX_GEN", "PRODUCCION_MAX_ISO", "PRODUCCION_MAX_OTR"}
+			mainSourceKind, maxDailyProductionNumber := subExtractorMax(rec, productionMaxPlantNames)
 
-			// mainSourceKind  , _:= rec[""].(string)
-			mainSourceKind := "idk"
+			consumptionPlantNames := [5]string{"CONSUMO_DIA_CRIO", "CONSUMO_DIA_GEN", "CONSUMO_DIA_ISO", "CONSUMO_DIA_OTR", "CONSUMO_DIA_PLA"}
+			_, dailyConsumptionNumber := subExtractorMax(rec, consumptionPlantNames)
 
-			// rec[""].(string)
+			//dailyProduction, _ := rec["PRODUCCION_DIAPLA"].(string)
+			//maxDailyProduction, _ := rec["PRODUCCION_MAX_PLA"].(string)
+			//dailyConsumption, _ := rec["CONSUMO_DIA_PLA"].(string)
+
+			//mainSourceKind := "idk"
 
 			totalCylindersNumber, _ := strconv.Atoi(totalCylinders)
 			totalOwnCylindersNumber, _ := strconv.Atoi(totalOwnCylinders)
-			dailyProductionNumber, _ := strconv.Atoi(dailyProduction)
-			maxDailyProductionNumber, _ := strconv.Atoi(maxDailyProduction)
-			dailyConsumptionNumber, _ := strconv.Atoi(dailyConsumption)
+			//dailyProductionNumber, _ := strconv.Atoi(dailyProduction)
+			//maxDailyProductionNumber, _ := strconv.Atoi(maxDailyProduction)
+			///dailyConsumptionNumber, _ := strconv.Atoi(dailyConsumption)
 
 			recordsArray = append(recordsArray, Record{
 				Name:               name,
@@ -98,7 +113,6 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 				RegisterDate:       registerDate,
 				Region:             region,
 				Province:           province,
-				District:           district,
 				TotalCylinders:     totalCylindersNumber,
 				TotalOwnCylinders:  totalOwnCylindersNumber,
 				DailyProduction:    dailyProductionNumber,
