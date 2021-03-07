@@ -269,3 +269,7 @@ func insertBed(ctx context.Context, client *ent.Client, record *Record, placeID 
 
 	return bedRecord, err
 }
+
+func Processor(ctx context.Context, client *ent.Client, records []Record) error {
+	return processor(ctx, client, records)
+}

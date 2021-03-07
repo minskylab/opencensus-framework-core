@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	if err := tasks.SyncOxygenRecords(); err != nil {
+	if err := tasks.SyncBedRecords(); err != nil {
 		panic(fmt.Sprintf("%+v\n", err))
 	}
 }
