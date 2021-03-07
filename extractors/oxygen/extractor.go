@@ -12,8 +12,8 @@ type Record struct {
 	Institution string
 	Code        string
 
-	CutDate      int
-	RegisterDate int
+	CutDate      string
+	RegisterDate string
 
 	Region   string
 	Province string
