@@ -6,7 +6,8 @@ import (
 )
 
 func TestExtractOxygenData(t *testing.T) {
-	records := oxygen.Extract(2)
+	lapses := 5
+	records := oxygen.Extract(lapses)
 
 	totalRecords := 0
 
@@ -18,8 +19,7 @@ func TestExtractOxygenData(t *testing.T) {
 	}
 	t.Logf("totalRecords: %d", totalRecords)
 
-	if totalRecords != 200 {
-
+	if totalRecords != lapses*100 {
 		t.Fail()
 	}
 

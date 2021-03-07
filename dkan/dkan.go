@@ -64,10 +64,12 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	api.endpoint.Query().Del("resource_id")
-	api.endpoint.Query().Del("offset")
-	api.endpoint.Query().Del("limit")
-	api.endpoint.Query().Del("sort")
+	values.Del("resource_id")
+	values.Del("offset")
+	values.Del("limit")
+	values.Del("sort")
+
+	api.endpoint.RawQuery = values.Encode()
 
 	api.mu.Unlock()
 
