@@ -43,7 +43,7 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 			dir = "asc"
 		}
 
-		values.Add("sort", res.sort+"["+dir+"]")
+		values.Add("sort"+"["+res.sort+"]", dir)
 	}
 
 	api.endpoint.RawQuery = values.Encode()
