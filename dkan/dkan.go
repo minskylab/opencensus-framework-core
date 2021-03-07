@@ -67,6 +67,7 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 	api.endpoint.Query().Del("resource_id")
 	api.endpoint.Query().Del("offset")
 	api.endpoint.Query().Del("limit")
+	api.endpoint.Query().Del("sort" + "[" + res.sort + "]")
 
 	api.mu.Unlock()
 
