@@ -258,8 +258,8 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 func insertBed(ctx context.Context, client *ent.Client, record *Record, placeID int, kind string, ageKind string, busyBeds int, availableBeds int, totalBeds int) (*ent.BedRecord, error) {
 
 	bedRecordOnCreate := client.BedRecord.Create().
-		SetCollectedDate(record.CutDate).
-		SetReportedDate(record.RegisterDate).
+		SetCollectedDate(stringDateToTime(record.CutDate)).
+		SetReportedDate(stringDateToTime(record.RegisterDate)).
 		SetKindBed(kind).
 		SetBusyBeds(busyBeds).
 		SetAvailableBeds(availableBeds).

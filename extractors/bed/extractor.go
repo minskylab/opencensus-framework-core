@@ -4,7 +4,6 @@ import (
 	"opencensus/core/common"
 	"opencensus/core/dkan"
 	"strconv"
-	"time"
 )
 
 const (
@@ -44,8 +43,8 @@ type Record struct {
 	Category    string
 	Correlative string
 
-	CutDate      time.Time
-	RegisterDate time.Time
+	CutDate      string
+	RegisterDate string
 
 	Region   string
 	Province string
@@ -128,12 +127,8 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 
 			code, _ := rec["CODIGO"].(string)
 
-			cutDate, _ := rec["FECHA_CORTE"].(int)
-			registerDate, _ := rec["FECHA_REGISTRO"].(int)
-
-			cutDateTime, _ := time.Parse(dateLayout, string(cutDate))
-			registerDateTime, _ := time.Parse(dateLayout, string(registerDate))
-			// cutDate
+			cutDate, _ := rec["FECHA_CORTE"].(string)
+			registerDate, _ := rec["FECHA_REGISTRO"].(string)
 
 			region, _ := rec["REGION"].(string)
 			province, _ := rec["PROVINCIA"].(string)
@@ -219,8 +214,8 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 				Code:         code,
 				Category:     category,
 				Correlative:  correlative,
-				CutDate:      cutDateTime,
-				RegisterDate: registerDateTime,
+				CutDate:      cutDate,
+				RegisterDate: registerDate,
 				Region:       region,
 				Province:     province,
 				// District:           district,
