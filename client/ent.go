@@ -9,6 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 )
 
 type pgConfig struct {
@@ -51,17 +52,20 @@ func NewClient() (*ent.Client, error) {
 
 	fmt.Println(key)
 
-	client, _ := ent.Open("postgres", key)
-	defer client.Close()
+	client, err := ent.Open("postgres", key)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	ctx := context.Background()
 
-	err := client.Schema.Create(
+	if err = client.Schema.Create(
 		ctx,
 		migrate.WithDropIndex(true),
 		migrate.WithDropColumn(true),
-	)
+	); err != nil {
+		return nil, errors.WithStack(err)
+	}
 
-	// TODO: Implement entgo auto migration and return ready client
-	return client, err
+	return client, nil
 }

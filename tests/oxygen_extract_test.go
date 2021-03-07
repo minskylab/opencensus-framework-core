@@ -16,10 +16,10 @@ func TestExtractOxygenData(t *testing.T) {
 
 		totalRecords += len(batch)
 	}
-
 	t.Logf("totalRecords: %d", totalRecords)
 
 	if totalRecords != 200 {
+
 		t.Fail()
 	}
 

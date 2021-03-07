@@ -1,9 +1,11 @@
 package dkan
 
 type Resource struct {
-	id     string
-	limit  int64
-	offset int64
+	id        string
+	sort      string
+	ascendent bool
+	limit     int64
+	offset    int64
 }
 
 func ResourceWithID(id string) *Resource {
@@ -20,6 +22,11 @@ func (dkan *Resource) Limit(val int64) *Resource {
 func (dkan *Resource) Offset(val int64) *Resource {
 	dkan.offset = val
 	return dkan
+}
+
+func (dkan *Resource) Sort(field string, ascendent bool) {
+	dkan.sort = field
+	dkan.ascendent = ascendent
 }
 
 func (dkan *Resource) First100() *Resource {
