@@ -28,6 +28,7 @@ type hooks struct {
 	DeathRecord    []ent.Hook
 	District       []ent.Hook
 	InfectedRecord []ent.Hook
+	Occurency      []ent.Hook
 	OxygenRecord   []ent.Hook
 	Place          []ent.Hook
 	Province       []ent.Hook

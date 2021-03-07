@@ -20,6 +20,8 @@ type Tx struct {
 	District *DistrictClient
 	// InfectedRecord is the client for interacting with the InfectedRecord builders.
 	InfectedRecord *InfectedRecordClient
+	// Occurency is the client for interacting with the Occurency builders.
+	Occurency *OccurencyClient
 	// OxygenRecord is the client for interacting with the OxygenRecord builders.
 	OxygenRecord *OxygenRecordClient
 	// Place is the client for interacting with the Place builders.
@@ -167,6 +169,7 @@ func (tx *Tx) init() {
 	tx.DeathRecord = NewDeathRecordClient(tx.config)
 	tx.District = NewDistrictClient(tx.config)
 	tx.InfectedRecord = NewInfectedRecordClient(tx.config)
+	tx.Occurency = NewOccurencyClient(tx.config)
 	tx.OxygenRecord = NewOxygenRecordClient(tx.config)
 	tx.Place = NewPlaceClient(tx.config)
 	tx.Province = NewProvinceClient(tx.config)

@@ -933,25 +933,25 @@ func HasInfectedRecordsWith(preds ...predicate.InfectedRecord) predicate.Place {
 	})
 }
 
-// HasRegions applies the HasEdge predicate on the "regions" edge.
-func HasRegions() predicate.Place {
+// HasRegion applies the HasEdge predicate on the "region" edge.
+func HasRegion() predicate.Place {
 	return predicate.Place(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(RegionsTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, RegionsTable, RegionsPrimaryKey...),
+			sqlgraph.To(RegionTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, RegionTable, RegionColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasRegionsWith applies the HasEdge predicate on the "regions" edge with a given conditions (other predicates).
-func HasRegionsWith(preds ...predicate.Region) predicate.Place {
+// HasRegionWith applies the HasEdge predicate on the "region" edge with a given conditions (other predicates).
+func HasRegionWith(preds ...predicate.Region) predicate.Place {
 	return predicate.Place(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(RegionsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, RegionsTable, RegionsPrimaryKey...),
+			sqlgraph.To(RegionInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, RegionTable, RegionColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -961,25 +961,25 @@ func HasRegionsWith(preds ...predicate.Region) predicate.Place {
 	})
 }
 
-// HasProvinces applies the HasEdge predicate on the "provinces" edge.
-func HasProvinces() predicate.Place {
+// HasProvince applies the HasEdge predicate on the "province" edge.
+func HasProvince() predicate.Place {
 	return predicate.Place(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ProvincesTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, ProvincesTable, ProvincesPrimaryKey...),
+			sqlgraph.To(ProvinceTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, ProvinceTable, ProvinceColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasProvincesWith applies the HasEdge predicate on the "provinces" edge with a given conditions (other predicates).
-func HasProvincesWith(preds ...predicate.Province) predicate.Place {
+// HasProvinceWith applies the HasEdge predicate on the "province" edge with a given conditions (other predicates).
+func HasProvinceWith(preds ...predicate.Province) predicate.Place {
 	return predicate.Place(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ProvincesInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, ProvincesTable, ProvincesPrimaryKey...),
+			sqlgraph.To(ProvinceInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, ProvinceTable, ProvinceColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -989,25 +989,25 @@ func HasProvincesWith(preds ...predicate.Province) predicate.Place {
 	})
 }
 
-// HasDistricts applies the HasEdge predicate on the "districts" edge.
-func HasDistricts() predicate.Place {
+// HasDistrict applies the HasEdge predicate on the "district" edge.
+func HasDistrict() predicate.Place {
 	return predicate.Place(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(DistrictsTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, DistrictsTable, DistrictsPrimaryKey...),
+			sqlgraph.To(DistrictTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, DistrictTable, DistrictColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasDistrictsWith applies the HasEdge predicate on the "districts" edge with a given conditions (other predicates).
-func HasDistrictsWith(preds ...predicate.District) predicate.Place {
+// HasDistrictWith applies the HasEdge predicate on the "district" edge with a given conditions (other predicates).
+func HasDistrictWith(preds ...predicate.District) predicate.Place {
 	return predicate.Place(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(DistrictsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, DistrictsTable, DistrictsPrimaryKey...),
+			sqlgraph.To(DistrictInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, DistrictTable, DistrictColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

@@ -8,7 +8,6 @@ import (
 	"opencensus/core/ent/district"
 	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
-	"opencensus/core/ent/province"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -49,21 +48,6 @@ func (du *DistrictUpdate) AddPlaces(p ...*Place) *DistrictUpdate {
 	return du.AddPlaceIDs(ids...)
 }
 
-// AddProvinceIDs adds the "provinces" edge to the Province entity by IDs.
-func (du *DistrictUpdate) AddProvinceIDs(ids ...int) *DistrictUpdate {
-	du.mutation.AddProvinceIDs(ids...)
-	return du
-}
-
-// AddProvinces adds the "provinces" edges to the Province entity.
-func (du *DistrictUpdate) AddProvinces(p ...*Province) *DistrictUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return du.AddProvinceIDs(ids...)
-}
-
 // Mutation returns the DistrictMutation object of the builder.
 func (du *DistrictUpdate) Mutation() *DistrictMutation {
 	return du.mutation
@@ -88,27 +72,6 @@ func (du *DistrictUpdate) RemovePlaces(p ...*Place) *DistrictUpdate {
 		ids[i] = p[i].ID
 	}
 	return du.RemovePlaceIDs(ids...)
-}
-
-// ClearProvinces clears all "provinces" edges to the Province entity.
-func (du *DistrictUpdate) ClearProvinces() *DistrictUpdate {
-	du.mutation.ClearProvinces()
-	return du
-}
-
-// RemoveProvinceIDs removes the "provinces" edge to Province entities by IDs.
-func (du *DistrictUpdate) RemoveProvinceIDs(ids ...int) *DistrictUpdate {
-	du.mutation.RemoveProvinceIDs(ids...)
-	return du
-}
-
-// RemoveProvinces removes "provinces" edges to Province entities.
-func (du *DistrictUpdate) RemoveProvinces(p ...*Province) *DistrictUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return du.RemoveProvinceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -189,10 +152,10 @@ func (du *DistrictUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if du.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   district.PlacesTable,
-			Columns: district.PlacesPrimaryKey,
+			Columns: []string{district.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -205,10 +168,10 @@ func (du *DistrictUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := du.mutation.RemovedPlacesIDs(); len(nodes) > 0 && !du.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   district.PlacesTable,
-			Columns: district.PlacesPrimaryKey,
+			Columns: []string{district.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -224,69 +187,15 @@ func (du *DistrictUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := du.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   district.PlacesTable,
-			Columns: district.PlacesPrimaryKey,
+			Columns: []string{district.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: place.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if du.mutation.ProvincesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   district.ProvincesTable,
-			Columns: district.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := du.mutation.RemovedProvincesIDs(); len(nodes) > 0 && !du.mutation.ProvincesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   district.ProvincesTable,
-			Columns: district.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := du.mutation.ProvincesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   district.ProvincesTable,
-			Columns: district.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
 				},
 			},
 		}
@@ -334,21 +243,6 @@ func (duo *DistrictUpdateOne) AddPlaces(p ...*Place) *DistrictUpdateOne {
 	return duo.AddPlaceIDs(ids...)
 }
 
-// AddProvinceIDs adds the "provinces" edge to the Province entity by IDs.
-func (duo *DistrictUpdateOne) AddProvinceIDs(ids ...int) *DistrictUpdateOne {
-	duo.mutation.AddProvinceIDs(ids...)
-	return duo
-}
-
-// AddProvinces adds the "provinces" edges to the Province entity.
-func (duo *DistrictUpdateOne) AddProvinces(p ...*Province) *DistrictUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return duo.AddProvinceIDs(ids...)
-}
-
 // Mutation returns the DistrictMutation object of the builder.
 func (duo *DistrictUpdateOne) Mutation() *DistrictMutation {
 	return duo.mutation
@@ -373,27 +267,6 @@ func (duo *DistrictUpdateOne) RemovePlaces(p ...*Place) *DistrictUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return duo.RemovePlaceIDs(ids...)
-}
-
-// ClearProvinces clears all "provinces" edges to the Province entity.
-func (duo *DistrictUpdateOne) ClearProvinces() *DistrictUpdateOne {
-	duo.mutation.ClearProvinces()
-	return duo
-}
-
-// RemoveProvinceIDs removes the "provinces" edge to Province entities by IDs.
-func (duo *DistrictUpdateOne) RemoveProvinceIDs(ids ...int) *DistrictUpdateOne {
-	duo.mutation.RemoveProvinceIDs(ids...)
-	return duo
-}
-
-// RemoveProvinces removes "provinces" edges to Province entities.
-func (duo *DistrictUpdateOne) RemoveProvinces(p ...*Province) *DistrictUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return duo.RemoveProvinceIDs(ids...)
 }
 
 // Save executes the query and returns the updated District entity.
@@ -479,10 +352,10 @@ func (duo *DistrictUpdateOne) sqlSave(ctx context.Context) (_node *District, err
 	}
 	if duo.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   district.PlacesTable,
-			Columns: district.PlacesPrimaryKey,
+			Columns: []string{district.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -495,10 +368,10 @@ func (duo *DistrictUpdateOne) sqlSave(ctx context.Context) (_node *District, err
 	}
 	if nodes := duo.mutation.RemovedPlacesIDs(); len(nodes) > 0 && !duo.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   district.PlacesTable,
-			Columns: district.PlacesPrimaryKey,
+			Columns: []string{district.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -514,69 +387,15 @@ func (duo *DistrictUpdateOne) sqlSave(ctx context.Context) (_node *District, err
 	}
 	if nodes := duo.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   district.PlacesTable,
-			Columns: district.PlacesPrimaryKey,
+			Columns: []string{district.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: place.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if duo.mutation.ProvincesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   district.ProvincesTable,
-			Columns: district.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := duo.mutation.RemovedProvincesIDs(); len(nodes) > 0 && !duo.mutation.ProvincesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   district.ProvincesTable,
-			Columns: district.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := duo.mutation.ProvincesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   district.ProvincesTable,
-			Columns: district.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
 				},
 			},
 		}

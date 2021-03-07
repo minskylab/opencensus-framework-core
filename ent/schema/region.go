@@ -21,7 +21,7 @@ func (Region) Fields() []ent.Field {
 // Edges of the Region.
 func (Region) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("places", Place.Type).Ref("regions"),
-		edge.To("provinces", Province.Type),
+		edge.From("places", Place.Type).Ref("region"),
+		// edge.To("provinces", Province.Type),
 	}
 }

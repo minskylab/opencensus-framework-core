@@ -26,13 +26,9 @@ type Province struct {
 type ProvinceEdges struct {
 	// Places holds the value of the places edge.
 	Places []*Place `json:"places,omitempty"`
-	// Regions holds the value of the regions edge.
-	Regions []*Region `json:"regions,omitempty"`
-	// Districts holds the value of the districts edge.
-	Districts []*District `json:"districts,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [1]bool
 }
 
 // PlacesOrErr returns the Places value or an error if the edge
@@ -42,24 +38,6 @@ func (e ProvinceEdges) PlacesOrErr() ([]*Place, error) {
 		return e.Places, nil
 	}
 	return nil, &NotLoadedError{edge: "places"}
-}
-
-// RegionsOrErr returns the Regions value or an error if the edge
-// was not loaded in eager-loading.
-func (e ProvinceEdges) RegionsOrErr() ([]*Region, error) {
-	if e.loadedTypes[1] {
-		return e.Regions, nil
-	}
-	return nil, &NotLoadedError{edge: "regions"}
-}
-
-// DistrictsOrErr returns the Districts value or an error if the edge
-// was not loaded in eager-loading.
-func (e ProvinceEdges) DistrictsOrErr() ([]*District, error) {
-	if e.loadedTypes[2] {
-		return e.Districts, nil
-	}
-	return nil, &NotLoadedError{edge: "districts"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -106,16 +84,6 @@ func (pr *Province) assignValues(columns []string, values []interface{}) error {
 // QueryPlaces queries the "places" edge of the Province entity.
 func (pr *Province) QueryPlaces() *PlaceQuery {
 	return (&ProvinceClient{config: pr.config}).QueryPlaces(pr)
-}
-
-// QueryRegions queries the "regions" edge of the Province entity.
-func (pr *Province) QueryRegions() *RegionQuery {
-	return (&ProvinceClient{config: pr.config}).QueryRegions(pr)
-}
-
-// QueryDistricts queries the "districts" edge of the Province entity.
-func (pr *Province) QueryDistricts() *DistrictQuery {
-	return (&ProvinceClient{config: pr.config}).QueryDistricts(pr)
 }
 
 // Update returns a builder for updating this Province.

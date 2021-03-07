@@ -32,8 +32,8 @@ func (Place) Edges() []ent.Edge {
 		edge.From("deathRecords", DeathRecord.Type).Ref("places"),
 		edge.From("infectedRecords", InfectedRecord.Type).Ref("places"),
 
-		edge.To("regions", Region.Type),
-		edge.To("provinces", Province.Type),
-		edge.To("districts", District.Type),
+		edge.To("region", Region.Type).Unique(),
+		edge.To("province", Province.Type).Unique(),
+		edge.To("district", District.Type).Unique(),
 	}
 }

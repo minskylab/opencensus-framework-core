@@ -168,49 +168,61 @@ func (pc *PlaceCreate) AddInfectedRecords(i ...*InfectedRecord) *PlaceCreate {
 	return pc.AddInfectedRecordIDs(ids...)
 }
 
-// AddRegionIDs adds the "regions" edge to the Region entity by IDs.
-func (pc *PlaceCreate) AddRegionIDs(ids ...int) *PlaceCreate {
-	pc.mutation.AddRegionIDs(ids...)
+// SetRegionID sets the "region" edge to the Region entity by ID.
+func (pc *PlaceCreate) SetRegionID(id int) *PlaceCreate {
+	pc.mutation.SetRegionID(id)
 	return pc
 }
 
-// AddRegions adds the "regions" edges to the Region entity.
-func (pc *PlaceCreate) AddRegions(r ...*Region) *PlaceCreate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// SetNillableRegionID sets the "region" edge to the Region entity by ID if the given value is not nil.
+func (pc *PlaceCreate) SetNillableRegionID(id *int) *PlaceCreate {
+	if id != nil {
+		pc = pc.SetRegionID(*id)
 	}
-	return pc.AddRegionIDs(ids...)
-}
-
-// AddProvinceIDs adds the "provinces" edge to the Province entity by IDs.
-func (pc *PlaceCreate) AddProvinceIDs(ids ...int) *PlaceCreate {
-	pc.mutation.AddProvinceIDs(ids...)
 	return pc
 }
 
-// AddProvinces adds the "provinces" edges to the Province entity.
-func (pc *PlaceCreate) AddProvinces(p ...*Province) *PlaceCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return pc.AddProvinceIDs(ids...)
+// SetRegion sets the "region" edge to the Region entity.
+func (pc *PlaceCreate) SetRegion(r *Region) *PlaceCreate {
+	return pc.SetRegionID(r.ID)
 }
 
-// AddDistrictIDs adds the "districts" edge to the District entity by IDs.
-func (pc *PlaceCreate) AddDistrictIDs(ids ...int) *PlaceCreate {
-	pc.mutation.AddDistrictIDs(ids...)
+// SetProvinceID sets the "province" edge to the Province entity by ID.
+func (pc *PlaceCreate) SetProvinceID(id int) *PlaceCreate {
+	pc.mutation.SetProvinceID(id)
 	return pc
 }
 
-// AddDistricts adds the "districts" edges to the District entity.
-func (pc *PlaceCreate) AddDistricts(d ...*District) *PlaceCreate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+// SetNillableProvinceID sets the "province" edge to the Province entity by ID if the given value is not nil.
+func (pc *PlaceCreate) SetNillableProvinceID(id *int) *PlaceCreate {
+	if id != nil {
+		pc = pc.SetProvinceID(*id)
 	}
-	return pc.AddDistrictIDs(ids...)
+	return pc
+}
+
+// SetProvince sets the "province" edge to the Province entity.
+func (pc *PlaceCreate) SetProvince(p *Province) *PlaceCreate {
+	return pc.SetProvinceID(p.ID)
+}
+
+// SetDistrictID sets the "district" edge to the District entity by ID.
+func (pc *PlaceCreate) SetDistrictID(id int) *PlaceCreate {
+	pc.mutation.SetDistrictID(id)
+	return pc
+}
+
+// SetNillableDistrictID sets the "district" edge to the District entity by ID if the given value is not nil.
+func (pc *PlaceCreate) SetNillableDistrictID(id *int) *PlaceCreate {
+	if id != nil {
+		pc = pc.SetDistrictID(*id)
+	}
+	return pc
+}
+
+// SetDistrict sets the "district" edge to the District entity.
+func (pc *PlaceCreate) SetDistrict(d *District) *PlaceCreate {
+	return pc.SetDistrictID(d.ID)
 }
 
 // Mutation returns the PlaceMutation object of the builder.
@@ -429,12 +441,12 @@ func (pc *PlaceCreate) createSpec() (*Place, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pc.mutation.RegionsIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.RegionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.RegionsTable,
-			Columns: place.RegionsPrimaryKey,
+			Table:   place.RegionTable,
+			Columns: []string{place.RegionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -448,12 +460,12 @@ func (pc *PlaceCreate) createSpec() (*Place, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pc.mutation.ProvincesIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.ProvinceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.ProvincesTable,
-			Columns: place.ProvincesPrimaryKey,
+			Table:   place.ProvinceTable,
+			Columns: []string{place.ProvinceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -467,12 +479,12 @@ func (pc *PlaceCreate) createSpec() (*Place, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pc.mutation.DistrictsIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.DistrictIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.DistrictsTable,
-			Columns: place.DistrictsPrimaryKey,
+			Table:   place.DistrictTable,
+			Columns: []string{place.DistrictColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

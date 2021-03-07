@@ -72,6 +72,47 @@ var (
 		PrimaryKey:  []*schema.Column{InfectedRecordsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
+	// OccurenciesColumns holds the columns for the "occurencies" table.
+	OccurenciesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "uuid", Type: field.TypeString, Unique: true},
+		{Name: "reported_record", Type: field.TypeTime},
+		{Name: "result_date", Type: field.TypeTime},
+		{Name: "biological_sex", Type: field.TypeString},
+		{Name: "age", Type: field.TypeInt},
+		{Name: "occurency_region", Type: field.TypeInt, Nullable: true},
+		{Name: "occurency_province", Type: field.TypeInt, Nullable: true},
+		{Name: "occurency_district", Type: field.TypeInt, Nullable: true},
+	}
+	// OccurenciesTable holds the schema information for the "occurencies" table.
+	OccurenciesTable = &schema.Table{
+		Name:       "occurencies",
+		Columns:    OccurenciesColumns,
+		PrimaryKey: []*schema.Column{OccurenciesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:  "occurencies_regions_region",
+				Columns: []*schema.Column{OccurenciesColumns[6]},
+
+				RefColumns: []*schema.Column{RegionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:  "occurencies_provinces_province",
+				Columns: []*schema.Column{OccurenciesColumns[7]},
+
+				RefColumns: []*schema.Column{ProvincesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:  "occurencies_districts_district",
+				Columns: []*schema.Column{OccurenciesColumns[8]},
+
+				RefColumns: []*schema.Column{DistrictsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// OxygenRecordsColumns holds the columns for the "oxygen_records" table.
 	OxygenRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -101,13 +142,38 @@ var (
 		{Name: "covid_zone", Type: field.TypeBool, Nullable: true},
 		{Name: "lat", Type: field.TypeFloat64, Nullable: true},
 		{Name: "lon", Type: field.TypeFloat64, Nullable: true},
+		{Name: "place_region", Type: field.TypeInt, Nullable: true},
+		{Name: "place_province", Type: field.TypeInt, Nullable: true},
+		{Name: "place_district", Type: field.TypeInt, Nullable: true},
 	}
 	// PlacesTable holds the schema information for the "places" table.
 	PlacesTable = &schema.Table{
-		Name:        "places",
-		Columns:     PlacesColumns,
-		PrimaryKey:  []*schema.Column{PlacesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "places",
+		Columns:    PlacesColumns,
+		PrimaryKey: []*schema.Column{PlacesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:  "places_regions_region",
+				Columns: []*schema.Column{PlacesColumns[8]},
+
+				RefColumns: []*schema.Column{RegionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:  "places_provinces_province",
+				Columns: []*schema.Column{PlacesColumns[9]},
+
+				RefColumns: []*schema.Column{ProvincesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:  "places_districts_district",
+				Columns: []*schema.Column{PlacesColumns[10]},
+
+				RefColumns: []*schema.Column{DistrictsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// ProvincesColumns holds the columns for the "provinces" table.
 	ProvincesColumns = []*schema.Column{
@@ -241,147 +307,13 @@ var (
 			},
 		},
 	}
-	// PlaceRegionsColumns holds the columns for the "place_regions" table.
-	PlaceRegionsColumns = []*schema.Column{
-		{Name: "place_id", Type: field.TypeInt},
-		{Name: "region_id", Type: field.TypeInt},
-	}
-	// PlaceRegionsTable holds the schema information for the "place_regions" table.
-	PlaceRegionsTable = &schema.Table{
-		Name:       "place_regions",
-		Columns:    PlaceRegionsColumns,
-		PrimaryKey: []*schema.Column{PlaceRegionsColumns[0], PlaceRegionsColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:  "place_regions_place_id",
-				Columns: []*schema.Column{PlaceRegionsColumns[0]},
-
-				RefColumns: []*schema.Column{PlacesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:  "place_regions_region_id",
-				Columns: []*schema.Column{PlaceRegionsColumns[1]},
-
-				RefColumns: []*schema.Column{RegionsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// PlaceProvincesColumns holds the columns for the "place_provinces" table.
-	PlaceProvincesColumns = []*schema.Column{
-		{Name: "place_id", Type: field.TypeInt},
-		{Name: "province_id", Type: field.TypeInt},
-	}
-	// PlaceProvincesTable holds the schema information for the "place_provinces" table.
-	PlaceProvincesTable = &schema.Table{
-		Name:       "place_provinces",
-		Columns:    PlaceProvincesColumns,
-		PrimaryKey: []*schema.Column{PlaceProvincesColumns[0], PlaceProvincesColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:  "place_provinces_place_id",
-				Columns: []*schema.Column{PlaceProvincesColumns[0]},
-
-				RefColumns: []*schema.Column{PlacesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:  "place_provinces_province_id",
-				Columns: []*schema.Column{PlaceProvincesColumns[1]},
-
-				RefColumns: []*schema.Column{ProvincesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// PlaceDistrictsColumns holds the columns for the "place_districts" table.
-	PlaceDistrictsColumns = []*schema.Column{
-		{Name: "place_id", Type: field.TypeInt},
-		{Name: "district_id", Type: field.TypeInt},
-	}
-	// PlaceDistrictsTable holds the schema information for the "place_districts" table.
-	PlaceDistrictsTable = &schema.Table{
-		Name:       "place_districts",
-		Columns:    PlaceDistrictsColumns,
-		PrimaryKey: []*schema.Column{PlaceDistrictsColumns[0], PlaceDistrictsColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:  "place_districts_place_id",
-				Columns: []*schema.Column{PlaceDistrictsColumns[0]},
-
-				RefColumns: []*schema.Column{PlacesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:  "place_districts_district_id",
-				Columns: []*schema.Column{PlaceDistrictsColumns[1]},
-
-				RefColumns: []*schema.Column{DistrictsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// ProvinceDistrictsColumns holds the columns for the "province_districts" table.
-	ProvinceDistrictsColumns = []*schema.Column{
-		{Name: "province_id", Type: field.TypeInt},
-		{Name: "district_id", Type: field.TypeInt},
-	}
-	// ProvinceDistrictsTable holds the schema information for the "province_districts" table.
-	ProvinceDistrictsTable = &schema.Table{
-		Name:       "province_districts",
-		Columns:    ProvinceDistrictsColumns,
-		PrimaryKey: []*schema.Column{ProvinceDistrictsColumns[0], ProvinceDistrictsColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:  "province_districts_province_id",
-				Columns: []*schema.Column{ProvinceDistrictsColumns[0]},
-
-				RefColumns: []*schema.Column{ProvincesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:  "province_districts_district_id",
-				Columns: []*schema.Column{ProvinceDistrictsColumns[1]},
-
-				RefColumns: []*schema.Column{DistrictsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// RegionProvincesColumns holds the columns for the "region_provinces" table.
-	RegionProvincesColumns = []*schema.Column{
-		{Name: "region_id", Type: field.TypeInt},
-		{Name: "province_id", Type: field.TypeInt},
-	}
-	// RegionProvincesTable holds the schema information for the "region_provinces" table.
-	RegionProvincesTable = &schema.Table{
-		Name:       "region_provinces",
-		Columns:    RegionProvincesColumns,
-		PrimaryKey: []*schema.Column{RegionProvincesColumns[0], RegionProvincesColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:  "region_provinces_region_id",
-				Columns: []*schema.Column{RegionProvincesColumns[0]},
-
-				RefColumns: []*schema.Column{RegionsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:  "region_provinces_province_id",
-				Columns: []*schema.Column{RegionProvincesColumns[1]},
-
-				RefColumns: []*schema.Column{ProvincesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		BedRecordsTable,
 		DeathRecordsTable,
 		DistrictsTable,
 		InfectedRecordsTable,
+		OccurenciesTable,
 		OxygenRecordsTable,
 		PlacesTable,
 		ProvincesTable,
@@ -390,15 +322,16 @@ var (
 		DeathRecordPlacesTable,
 		InfectedRecordPlacesTable,
 		OxygenRecordPlacesTable,
-		PlaceRegionsTable,
-		PlaceProvincesTable,
-		PlaceDistrictsTable,
-		ProvinceDistrictsTable,
-		RegionProvincesTable,
 	}
 )
 
 func init() {
+	OccurenciesTable.ForeignKeys[0].RefTable = RegionsTable
+	OccurenciesTable.ForeignKeys[1].RefTable = ProvincesTable
+	OccurenciesTable.ForeignKeys[2].RefTable = DistrictsTable
+	PlacesTable.ForeignKeys[0].RefTable = RegionsTable
+	PlacesTable.ForeignKeys[1].RefTable = ProvincesTable
+	PlacesTable.ForeignKeys[2].RefTable = DistrictsTable
 	BedRecordPlacesTable.ForeignKeys[0].RefTable = BedRecordsTable
 	BedRecordPlacesTable.ForeignKeys[1].RefTable = PlacesTable
 	DeathRecordPlacesTable.ForeignKeys[0].RefTable = DeathRecordsTable
@@ -407,14 +340,4 @@ func init() {
 	InfectedRecordPlacesTable.ForeignKeys[1].RefTable = PlacesTable
 	OxygenRecordPlacesTable.ForeignKeys[0].RefTable = OxygenRecordsTable
 	OxygenRecordPlacesTable.ForeignKeys[1].RefTable = PlacesTable
-	PlaceRegionsTable.ForeignKeys[0].RefTable = PlacesTable
-	PlaceRegionsTable.ForeignKeys[1].RefTable = RegionsTable
-	PlaceProvincesTable.ForeignKeys[0].RefTable = PlacesTable
-	PlaceProvincesTable.ForeignKeys[1].RefTable = ProvincesTable
-	PlaceDistrictsTable.ForeignKeys[0].RefTable = PlacesTable
-	PlaceDistrictsTable.ForeignKeys[1].RefTable = DistrictsTable
-	ProvinceDistrictsTable.ForeignKeys[0].RefTable = ProvincesTable
-	ProvinceDistrictsTable.ForeignKeys[1].RefTable = DistrictsTable
-	RegionProvincesTable.ForeignKeys[0].RefTable = RegionsTable
-	RegionProvincesTable.ForeignKeys[1].RefTable = ProvincesTable
 }

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"opencensus/core/ent/place"
-	"opencensus/core/ent/province"
 	"opencensus/core/ent/region"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -40,21 +39,6 @@ func (rc *RegionCreate) AddPlaces(p ...*Place) *RegionCreate {
 		ids[i] = p[i].ID
 	}
 	return rc.AddPlaceIDs(ids...)
-}
-
-// AddProvinceIDs adds the "provinces" edge to the Province entity by IDs.
-func (rc *RegionCreate) AddProvinceIDs(ids ...int) *RegionCreate {
-	rc.mutation.AddProvinceIDs(ids...)
-	return rc
-}
-
-// AddProvinces adds the "provinces" edges to the Province entity.
-func (rc *RegionCreate) AddProvinces(p ...*Province) *RegionCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return rc.AddProvinceIDs(ids...)
 }
 
 // Mutation returns the RegionMutation object of the builder.
@@ -148,34 +132,15 @@ func (rc *RegionCreate) createSpec() (*Region, *sqlgraph.CreateSpec) {
 	}
 	if nodes := rc.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   region.PlacesTable,
-			Columns: region.PlacesPrimaryKey,
+			Columns: []string{region.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: place.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := rc.mutation.ProvincesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   region.ProvincesTable,
-			Columns: region.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
 				},
 			},
 		}

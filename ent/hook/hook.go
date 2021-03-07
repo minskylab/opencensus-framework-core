@@ -60,6 +60,19 @@ func (f InfectedRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return f(ctx, mv)
 }
 
+// The OccurencyFunc type is an adapter to allow the use of ordinary
+// function as Occurency mutator.
+type OccurencyFunc func(context.Context, *ent.OccurencyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OccurencyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.OccurencyMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OccurencyMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The OxygenRecordFunc type is an adapter to allow the use of ordinary
 // function as OxygenRecord mutator.
 type OxygenRecordFunc func(context.Context, *ent.OxygenRecordMutation) (ent.Value, error)

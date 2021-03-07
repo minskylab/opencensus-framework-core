@@ -30,12 +30,12 @@ const (
 	EdgeDeathRecords = "deathRecords"
 	// EdgeInfectedRecords holds the string denoting the infectedrecords edge name in mutations.
 	EdgeInfectedRecords = "infectedRecords"
-	// EdgeRegions holds the string denoting the regions edge name in mutations.
-	EdgeRegions = "regions"
-	// EdgeProvinces holds the string denoting the provinces edge name in mutations.
-	EdgeProvinces = "provinces"
-	// EdgeDistricts holds the string denoting the districts edge name in mutations.
-	EdgeDistricts = "districts"
+	// EdgeRegion holds the string denoting the region edge name in mutations.
+	EdgeRegion = "region"
+	// EdgeProvince holds the string denoting the province edge name in mutations.
+	EdgeProvince = "province"
+	// EdgeDistrict holds the string denoting the district edge name in mutations.
+	EdgeDistrict = "district"
 
 	// Table holds the table name of the place in the database.
 	Table = "places"
@@ -59,21 +59,27 @@ const (
 	// InfectedRecordsInverseTable is the table name for the InfectedRecord entity.
 	// It exists in this package in order to avoid circular dependency with the "infectedrecord" package.
 	InfectedRecordsInverseTable = "infected_records"
-	// RegionsTable is the table the holds the regions relation/edge. The primary key declared below.
-	RegionsTable = "place_regions"
-	// RegionsInverseTable is the table name for the Region entity.
+	// RegionTable is the table the holds the region relation/edge.
+	RegionTable = "places"
+	// RegionInverseTable is the table name for the Region entity.
 	// It exists in this package in order to avoid circular dependency with the "region" package.
-	RegionsInverseTable = "regions"
-	// ProvincesTable is the table the holds the provinces relation/edge. The primary key declared below.
-	ProvincesTable = "place_provinces"
-	// ProvincesInverseTable is the table name for the Province entity.
+	RegionInverseTable = "regions"
+	// RegionColumn is the table column denoting the region relation/edge.
+	RegionColumn = "place_region"
+	// ProvinceTable is the table the holds the province relation/edge.
+	ProvinceTable = "places"
+	// ProvinceInverseTable is the table name for the Province entity.
 	// It exists in this package in order to avoid circular dependency with the "province" package.
-	ProvincesInverseTable = "provinces"
-	// DistrictsTable is the table the holds the districts relation/edge. The primary key declared below.
-	DistrictsTable = "place_districts"
-	// DistrictsInverseTable is the table name for the District entity.
+	ProvinceInverseTable = "provinces"
+	// ProvinceColumn is the table column denoting the province relation/edge.
+	ProvinceColumn = "place_province"
+	// DistrictTable is the table the holds the district relation/edge.
+	DistrictTable = "places"
+	// DistrictInverseTable is the table name for the District entity.
 	// It exists in this package in order to avoid circular dependency with the "district" package.
-	DistrictsInverseTable = "districts"
+	DistrictInverseTable = "districts"
+	// DistrictColumn is the table column denoting the district relation/edge.
+	DistrictColumn = "place_district"
 )
 
 // Columns holds all SQL columns for place fields.
@@ -86,6 +92,13 @@ var Columns = []string{
 	FieldCovidZone,
 	FieldLat,
 	FieldLon,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the Place type.
+var ForeignKeys = []string{
+	"place_region",
+	"place_province",
+	"place_district",
 }
 
 var (
@@ -101,21 +114,17 @@ var (
 	// InfectedRecordsPrimaryKey and InfectedRecordsColumn2 are the table columns denoting the
 	// primary key for the infectedRecords relation (M2M).
 	InfectedRecordsPrimaryKey = []string{"infected_record_id", "place_id"}
-	// RegionsPrimaryKey and RegionsColumn2 are the table columns denoting the
-	// primary key for the regions relation (M2M).
-	RegionsPrimaryKey = []string{"place_id", "region_id"}
-	// ProvincesPrimaryKey and ProvincesColumn2 are the table columns denoting the
-	// primary key for the provinces relation (M2M).
-	ProvincesPrimaryKey = []string{"place_id", "province_id"}
-	// DistrictsPrimaryKey and DistrictsColumn2 are the table columns denoting the
-	// primary key for the districts relation (M2M).
-	DistrictsPrimaryKey = []string{"place_id", "district_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
