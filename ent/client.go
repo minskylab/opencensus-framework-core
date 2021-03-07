@@ -13,6 +13,7 @@ import (
 	"opencensus/core/ent/deathrecord"
 	"opencensus/core/ent/district"
 	"opencensus/core/ent/infectedrecord"
+	"opencensus/core/ent/occurency"
 	"opencensus/core/ent/oxygenrecord"
 	"opencensus/core/ent/place"
 	"opencensus/core/ent/province"
@@ -36,6 +37,8 @@ type Client struct {
 	District *DistrictClient
 	// InfectedRecord is the client for interacting with the InfectedRecord builders.
 	InfectedRecord *InfectedRecordClient
+	// Occurency is the client for interacting with the Occurency builders.
+	Occurency *OccurencyClient
 	// OxygenRecord is the client for interacting with the OxygenRecord builders.
 	OxygenRecord *OxygenRecordClient
 	// Place is the client for interacting with the Place builders.
@@ -61,6 +64,7 @@ func (c *Client) init() {
 	c.DeathRecord = NewDeathRecordClient(c.config)
 	c.District = NewDistrictClient(c.config)
 	c.InfectedRecord = NewInfectedRecordClient(c.config)
+	c.Occurency = NewOccurencyClient(c.config)
 	c.OxygenRecord = NewOxygenRecordClient(c.config)
 	c.Place = NewPlaceClient(c.config)
 	c.Province = NewProvinceClient(c.config)
@@ -102,6 +106,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		DeathRecord:    NewDeathRecordClient(cfg),
 		District:       NewDistrictClient(cfg),
 		InfectedRecord: NewInfectedRecordClient(cfg),
+		Occurency:      NewOccurencyClient(cfg),
 		OxygenRecord:   NewOxygenRecordClient(cfg),
 		Place:          NewPlaceClient(cfg),
 		Province:       NewProvinceClient(cfg),
@@ -128,6 +133,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		DeathRecord:    NewDeathRecordClient(cfg),
 		District:       NewDistrictClient(cfg),
 		InfectedRecord: NewInfectedRecordClient(cfg),
+		Occurency:      NewOccurencyClient(cfg),
 		OxygenRecord:   NewOxygenRecordClient(cfg),
 		Place:          NewPlaceClient(cfg),
 		Province:       NewProvinceClient(cfg),
@@ -165,6 +171,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.DeathRecord.Use(hooks...)
 	c.District.Use(hooks...)
 	c.InfectedRecord.Use(hooks...)
+	c.Occurency.Use(hooks...)
 	c.OxygenRecord.Use(hooks...)
 	c.Place.Use(hooks...)
 	c.Province.Use(hooks...)
@@ -470,23 +477,7 @@ func (c *DistrictClient) QueryPlaces(d *District) *PlaceQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(district.Table, district.FieldID, id),
 			sqlgraph.To(place.Table, place.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, district.PlacesTable, district.PlacesPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryProvinces queries the provinces edge of a District.
-func (c *DistrictClient) QueryProvinces(d *District) *ProvinceQuery {
-	query := &ProvinceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := d.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(district.Table, district.FieldID, id),
-			sqlgraph.To(province.Table, province.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, district.ProvincesTable, district.ProvincesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, district.PlacesTable, district.PlacesColumn),
 		)
 		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
 		return fromV, nil
@@ -601,6 +592,142 @@ func (c *InfectedRecordClient) QueryPlaces(ir *InfectedRecord) *PlaceQuery {
 // Hooks returns the client hooks.
 func (c *InfectedRecordClient) Hooks() []Hook {
 	return c.hooks.InfectedRecord
+}
+
+// OccurencyClient is a client for the Occurency schema.
+type OccurencyClient struct {
+	config
+}
+
+// NewOccurencyClient returns a client for the Occurency from the given config.
+func NewOccurencyClient(c config) *OccurencyClient {
+	return &OccurencyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `occurency.Hooks(f(g(h())))`.
+func (c *OccurencyClient) Use(hooks ...Hook) {
+	c.hooks.Occurency = append(c.hooks.Occurency, hooks...)
+}
+
+// Create returns a create builder for Occurency.
+func (c *OccurencyClient) Create() *OccurencyCreate {
+	mutation := newOccurencyMutation(c.config, OpCreate)
+	return &OccurencyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Occurency entities.
+func (c *OccurencyClient) CreateBulk(builders ...*OccurencyCreate) *OccurencyCreateBulk {
+	return &OccurencyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Occurency.
+func (c *OccurencyClient) Update() *OccurencyUpdate {
+	mutation := newOccurencyMutation(c.config, OpUpdate)
+	return &OccurencyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OccurencyClient) UpdateOne(o *Occurency) *OccurencyUpdateOne {
+	mutation := newOccurencyMutation(c.config, OpUpdateOne, withOccurency(o))
+	return &OccurencyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OccurencyClient) UpdateOneID(id int) *OccurencyUpdateOne {
+	mutation := newOccurencyMutation(c.config, OpUpdateOne, withOccurencyID(id))
+	return &OccurencyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Occurency.
+func (c *OccurencyClient) Delete() *OccurencyDelete {
+	mutation := newOccurencyMutation(c.config, OpDelete)
+	return &OccurencyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *OccurencyClient) DeleteOne(o *Occurency) *OccurencyDeleteOne {
+	return c.DeleteOneID(o.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *OccurencyClient) DeleteOneID(id int) *OccurencyDeleteOne {
+	builder := c.Delete().Where(occurency.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OccurencyDeleteOne{builder}
+}
+
+// Query returns a query builder for Occurency.
+func (c *OccurencyClient) Query() *OccurencyQuery {
+	return &OccurencyQuery{config: c.config}
+}
+
+// Get returns a Occurency entity by its id.
+func (c *OccurencyClient) Get(ctx context.Context, id int) (*Occurency, error) {
+	return c.Query().Where(occurency.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OccurencyClient) GetX(ctx context.Context, id int) *Occurency {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRegion queries the region edge of a Occurency.
+func (c *OccurencyClient) QueryRegion(o *Occurency) *RegionQuery {
+	query := &RegionQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(occurency.Table, occurency.FieldID, id),
+			sqlgraph.To(region.Table, region.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, occurency.RegionTable, occurency.RegionColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryProvince queries the province edge of a Occurency.
+func (c *OccurencyClient) QueryProvince(o *Occurency) *ProvinceQuery {
+	query := &ProvinceQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(occurency.Table, occurency.FieldID, id),
+			sqlgraph.To(province.Table, province.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, occurency.ProvinceTable, occurency.ProvinceColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDistrict queries the district edge of a Occurency.
+func (c *OccurencyClient) QueryDistrict(o *Occurency) *DistrictQuery {
+	query := &DistrictQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(occurency.Table, occurency.FieldID, id),
+			sqlgraph.To(district.Table, district.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, occurency.DistrictTable, occurency.DistrictColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OccurencyClient) Hooks() []Hook {
+	return c.hooks.Occurency
 }
 
 // OxygenRecordClient is a client for the OxygenRecord schema.
@@ -854,15 +981,15 @@ func (c *PlaceClient) QueryInfectedRecords(pl *Place) *InfectedRecordQuery {
 	return query
 }
 
-// QueryRegions queries the regions edge of a Place.
-func (c *PlaceClient) QueryRegions(pl *Place) *RegionQuery {
+// QueryRegion queries the region edge of a Place.
+func (c *PlaceClient) QueryRegion(pl *Place) *RegionQuery {
 	query := &RegionQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := pl.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(place.Table, place.FieldID, id),
 			sqlgraph.To(region.Table, region.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, place.RegionsTable, place.RegionsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, place.RegionTable, place.RegionColumn),
 		)
 		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
 		return fromV, nil
@@ -870,15 +997,15 @@ func (c *PlaceClient) QueryRegions(pl *Place) *RegionQuery {
 	return query
 }
 
-// QueryProvinces queries the provinces edge of a Place.
-func (c *PlaceClient) QueryProvinces(pl *Place) *ProvinceQuery {
+// QueryProvince queries the province edge of a Place.
+func (c *PlaceClient) QueryProvince(pl *Place) *ProvinceQuery {
 	query := &ProvinceQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := pl.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(place.Table, place.FieldID, id),
 			sqlgraph.To(province.Table, province.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, place.ProvincesTable, place.ProvincesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, place.ProvinceTable, place.ProvinceColumn),
 		)
 		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
 		return fromV, nil
@@ -886,15 +1013,15 @@ func (c *PlaceClient) QueryProvinces(pl *Place) *ProvinceQuery {
 	return query
 }
 
-// QueryDistricts queries the districts edge of a Place.
-func (c *PlaceClient) QueryDistricts(pl *Place) *DistrictQuery {
+// QueryDistrict queries the district edge of a Place.
+func (c *PlaceClient) QueryDistrict(pl *Place) *DistrictQuery {
 	query := &DistrictQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := pl.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(place.Table, place.FieldID, id),
 			sqlgraph.To(district.Table, district.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, place.DistrictsTable, place.DistrictsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, place.DistrictTable, place.DistrictColumn),
 		)
 		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
 		return fromV, nil
@@ -998,39 +1125,7 @@ func (c *ProvinceClient) QueryPlaces(pr *Province) *PlaceQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(province.Table, province.FieldID, id),
 			sqlgraph.To(place.Table, place.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, province.PlacesTable, province.PlacesPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRegions queries the regions edge of a Province.
-func (c *ProvinceClient) QueryRegions(pr *Province) *RegionQuery {
-	query := &RegionQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := pr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(province.Table, province.FieldID, id),
-			sqlgraph.To(region.Table, region.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, province.RegionsTable, province.RegionsPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryDistricts queries the districts edge of a Province.
-func (c *ProvinceClient) QueryDistricts(pr *Province) *DistrictQuery {
-	query := &DistrictQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := pr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(province.Table, province.FieldID, id),
-			sqlgraph.To(district.Table, district.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, province.DistrictsTable, province.DistrictsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, province.PlacesTable, province.PlacesColumn),
 		)
 		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
 		return fromV, nil
@@ -1134,23 +1229,7 @@ func (c *RegionClient) QueryPlaces(r *Region) *PlaceQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(region.Table, region.FieldID, id),
 			sqlgraph.To(place.Table, place.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, region.PlacesTable, region.PlacesPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryProvinces queries the provinces edge of a Region.
-func (c *RegionClient) QueryProvinces(r *Region) *ProvinceQuery {
-	query := &ProvinceQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := r.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(region.Table, region.FieldID, id),
-			sqlgraph.To(province.Table, province.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, region.ProvincesTable, region.ProvincesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, region.PlacesTable, region.PlacesColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil

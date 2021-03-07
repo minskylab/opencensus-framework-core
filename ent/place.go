@@ -4,7 +4,10 @@ package ent
 
 import (
 	"fmt"
+	"opencensus/core/ent/district"
 	"opencensus/core/ent/place"
+	"opencensus/core/ent/province"
+	"opencensus/core/ent/region"
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
@@ -31,7 +34,10 @@ type Place struct {
 	Lon float64 `json:"lon,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PlaceQuery when eager-loading is set.
-	Edges PlaceEdges `json:"edges"`
+	Edges          PlaceEdges `json:"edges"`
+	place_region   *int
+	place_province *int
+	place_district *int
 }
 
 // PlaceEdges holds the relations/edges for other nodes in the graph.
@@ -44,12 +50,12 @@ type PlaceEdges struct {
 	DeathRecords []*DeathRecord `json:"deathRecords,omitempty"`
 	// InfectedRecords holds the value of the infectedRecords edge.
 	InfectedRecords []*InfectedRecord `json:"infectedRecords,omitempty"`
-	// Regions holds the value of the regions edge.
-	Regions []*Region `json:"regions,omitempty"`
-	// Provinces holds the value of the provinces edge.
-	Provinces []*Province `json:"provinces,omitempty"`
-	// Districts holds the value of the districts edge.
-	Districts []*District `json:"districts,omitempty"`
+	// Region holds the value of the region edge.
+	Region *Region `json:"region,omitempty"`
+	// Province holds the value of the province edge.
+	Province *Province `json:"province,omitempty"`
+	// District holds the value of the district edge.
+	District *District `json:"district,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [7]bool
@@ -91,31 +97,46 @@ func (e PlaceEdges) InfectedRecordsOrErr() ([]*InfectedRecord, error) {
 	return nil, &NotLoadedError{edge: "infectedRecords"}
 }
 
-// RegionsOrErr returns the Regions value or an error if the edge
-// was not loaded in eager-loading.
-func (e PlaceEdges) RegionsOrErr() ([]*Region, error) {
+// RegionOrErr returns the Region value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PlaceEdges) RegionOrErr() (*Region, error) {
 	if e.loadedTypes[4] {
-		return e.Regions, nil
+		if e.Region == nil {
+			// The edge region was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: region.Label}
+		}
+		return e.Region, nil
 	}
-	return nil, &NotLoadedError{edge: "regions"}
+	return nil, &NotLoadedError{edge: "region"}
 }
 
-// ProvincesOrErr returns the Provinces value or an error if the edge
-// was not loaded in eager-loading.
-func (e PlaceEdges) ProvincesOrErr() ([]*Province, error) {
+// ProvinceOrErr returns the Province value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PlaceEdges) ProvinceOrErr() (*Province, error) {
 	if e.loadedTypes[5] {
-		return e.Provinces, nil
+		if e.Province == nil {
+			// The edge province was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: province.Label}
+		}
+		return e.Province, nil
 	}
-	return nil, &NotLoadedError{edge: "provinces"}
+	return nil, &NotLoadedError{edge: "province"}
 }
 
-// DistrictsOrErr returns the Districts value or an error if the edge
-// was not loaded in eager-loading.
-func (e PlaceEdges) DistrictsOrErr() ([]*District, error) {
+// DistrictOrErr returns the District value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PlaceEdges) DistrictOrErr() (*District, error) {
 	if e.loadedTypes[6] {
-		return e.Districts, nil
+		if e.District == nil {
+			// The edge district was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: district.Label}
+		}
+		return e.District, nil
 	}
-	return nil, &NotLoadedError{edge: "districts"}
+	return nil, &NotLoadedError{edge: "district"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -131,6 +152,12 @@ func (*Place) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = &sql.NullInt64{}
 		case place.FieldKind, place.FieldName, place.FieldPolitic, place.FieldUbigeo:
 			values[i] = &sql.NullString{}
+		case place.ForeignKeys[0]: // place_region
+			values[i] = &sql.NullInt64{}
+		case place.ForeignKeys[1]: // place_province
+			values[i] = &sql.NullInt64{}
+		case place.ForeignKeys[2]: // place_district
+			values[i] = &sql.NullInt64{}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Place", columns[i])
 		}
@@ -194,6 +221,27 @@ func (pl *Place) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				pl.Lon = value.Float64
 			}
+		case place.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field place_region", value)
+			} else if value.Valid {
+				pl.place_region = new(int)
+				*pl.place_region = int(value.Int64)
+			}
+		case place.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field place_province", value)
+			} else if value.Valid {
+				pl.place_province = new(int)
+				*pl.place_province = int(value.Int64)
+			}
+		case place.ForeignKeys[2]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field place_district", value)
+			} else if value.Valid {
+				pl.place_district = new(int)
+				*pl.place_district = int(value.Int64)
+			}
 		}
 	}
 	return nil
@@ -219,19 +267,19 @@ func (pl *Place) QueryInfectedRecords() *InfectedRecordQuery {
 	return (&PlaceClient{config: pl.config}).QueryInfectedRecords(pl)
 }
 
-// QueryRegions queries the "regions" edge of the Place entity.
-func (pl *Place) QueryRegions() *RegionQuery {
-	return (&PlaceClient{config: pl.config}).QueryRegions(pl)
+// QueryRegion queries the "region" edge of the Place entity.
+func (pl *Place) QueryRegion() *RegionQuery {
+	return (&PlaceClient{config: pl.config}).QueryRegion(pl)
 }
 
-// QueryProvinces queries the "provinces" edge of the Place entity.
-func (pl *Place) QueryProvinces() *ProvinceQuery {
-	return (&PlaceClient{config: pl.config}).QueryProvinces(pl)
+// QueryProvince queries the "province" edge of the Place entity.
+func (pl *Place) QueryProvince() *ProvinceQuery {
+	return (&PlaceClient{config: pl.config}).QueryProvince(pl)
 }
 
-// QueryDistricts queries the "districts" edge of the Place entity.
-func (pl *Place) QueryDistricts() *DistrictQuery {
-	return (&PlaceClient{config: pl.config}).QueryDistricts(pl)
+// QueryDistrict queries the "district" edge of the Place entity.
+func (pl *Place) QueryDistrict() *DistrictQuery {
+	return (&PlaceClient{config: pl.config}).QueryDistrict(pl)
 }
 
 // Update returns a builder for updating this Place.

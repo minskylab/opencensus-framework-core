@@ -12,21 +12,16 @@ const (
 
 	// EdgePlaces holds the string denoting the places edge name in mutations.
 	EdgePlaces = "places"
-	// EdgeProvinces holds the string denoting the provinces edge name in mutations.
-	EdgeProvinces = "provinces"
 
 	// Table holds the table name of the district in the database.
 	Table = "districts"
-	// PlacesTable is the table the holds the places relation/edge. The primary key declared below.
-	PlacesTable = "place_districts"
+	// PlacesTable is the table the holds the places relation/edge.
+	PlacesTable = "places"
 	// PlacesInverseTable is the table name for the Place entity.
 	// It exists in this package in order to avoid circular dependency with the "place" package.
 	PlacesInverseTable = "places"
-	// ProvincesTable is the table the holds the provinces relation/edge. The primary key declared below.
-	ProvincesTable = "province_districts"
-	// ProvincesInverseTable is the table name for the Province entity.
-	// It exists in this package in order to avoid circular dependency with the "province" package.
-	ProvincesInverseTable = "provinces"
+	// PlacesColumn is the table column denoting the places relation/edge.
+	PlacesColumn = "place_district"
 )
 
 // Columns holds all SQL columns for district fields.
@@ -34,15 +29,6 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 }
-
-var (
-	// PlacesPrimaryKey and PlacesColumn2 are the table columns denoting the
-	// primary key for the places relation (M2M).
-	PlacesPrimaryKey = []string{"place_id", "district_id"}
-	// ProvincesPrimaryKey and ProvincesColumn2 are the table columns denoting the
-	// primary key for the provinces relation (M2M).
-	ProvincesPrimaryKey = []string{"province_id", "district_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

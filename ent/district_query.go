@@ -11,7 +11,6 @@ import (
 	"opencensus/core/ent/district"
 	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
-	"opencensus/core/ent/province"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -27,8 +26,7 @@ type DistrictQuery struct {
 	fields     []string
 	predicates []predicate.District
 	// eager-loading edges.
-	withPlaces    *PlaceQuery
-	withProvinces *ProvinceQuery
+	withPlaces *PlaceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -72,29 +70,7 @@ func (dq *DistrictQuery) QueryPlaces() *PlaceQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(district.Table, district.FieldID, selector),
 			sqlgraph.To(place.Table, place.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, district.PlacesTable, district.PlacesPrimaryKey...),
-		)
-		fromU = sqlgraph.SetNeighbors(dq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryProvinces chains the current query on the "provinces" edge.
-func (dq *DistrictQuery) QueryProvinces() *ProvinceQuery {
-	query := &ProvinceQuery{config: dq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := dq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := dq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(district.Table, district.FieldID, selector),
-			sqlgraph.To(province.Table, province.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, district.ProvincesTable, district.ProvincesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, district.PlacesTable, district.PlacesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(dq.driver.Dialect(), step)
 		return fromU, nil
@@ -278,13 +254,12 @@ func (dq *DistrictQuery) Clone() *DistrictQuery {
 		return nil
 	}
 	return &DistrictQuery{
-		config:        dq.config,
-		limit:         dq.limit,
-		offset:        dq.offset,
-		order:         append([]OrderFunc{}, dq.order...),
-		predicates:    append([]predicate.District{}, dq.predicates...),
-		withPlaces:    dq.withPlaces.Clone(),
-		withProvinces: dq.withProvinces.Clone(),
+		config:     dq.config,
+		limit:      dq.limit,
+		offset:     dq.offset,
+		order:      append([]OrderFunc{}, dq.order...),
+		predicates: append([]predicate.District{}, dq.predicates...),
+		withPlaces: dq.withPlaces.Clone(),
 		// clone intermediate query.
 		sql:  dq.sql.Clone(),
 		path: dq.path,
@@ -299,17 +274,6 @@ func (dq *DistrictQuery) WithPlaces(opts ...func(*PlaceQuery)) *DistrictQuery {
 		opt(query)
 	}
 	dq.withPlaces = query
-	return dq
-}
-
-// WithProvinces tells the query-builder to eager-load the nodes that are connected to
-// the "provinces" edge. The optional arguments are used to configure the query builder of the edge.
-func (dq *DistrictQuery) WithProvinces(opts ...func(*ProvinceQuery)) *DistrictQuery {
-	query := &ProvinceQuery{config: dq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	dq.withProvinces = query
 	return dq
 }
 
@@ -378,9 +342,8 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 	var (
 		nodes       = []*District{}
 		_spec       = dq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [1]bool{
 			dq.withPlaces != nil,
-			dq.withProvinces != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -405,129 +368,30 @@ func (dq *DistrictQuery) sqlAll(ctx context.Context) ([]*District, error) {
 
 	if query := dq.withPlaces; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
-		ids := make(map[int]*District, len(nodes))
-		for _, node := range nodes {
-			ids[node.ID] = node
-			fks = append(fks, node.ID)
-			node.Edges.Places = []*Place{}
+		nodeids := make(map[int]*District)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Places = []*Place{}
 		}
-		var (
-			edgeids []int
-			edges   = make(map[int][]*District)
-		)
-		_spec := &sqlgraph.EdgeQuerySpec{
-			Edge: &sqlgraph.EdgeSpec{
-				Inverse: true,
-				Table:   district.PlacesTable,
-				Columns: district.PlacesPrimaryKey,
-			},
-			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(district.PlacesPrimaryKey[1], fks...))
-			},
-
-			ScanValues: func() [2]interface{} {
-				return [2]interface{}{&sql.NullInt64{}, &sql.NullInt64{}}
-			},
-			Assign: func(out, in interface{}) error {
-				eout, ok := out.(*sql.NullInt64)
-				if !ok || eout == nil {
-					return fmt.Errorf("unexpected id value for edge-out")
-				}
-				ein, ok := in.(*sql.NullInt64)
-				if !ok || ein == nil {
-					return fmt.Errorf("unexpected id value for edge-in")
-				}
-				outValue := int(eout.Int64)
-				inValue := int(ein.Int64)
-				node, ok := ids[outValue]
-				if !ok {
-					return fmt.Errorf("unexpected node id in edges: %v", outValue)
-				}
-				edgeids = append(edgeids, inValue)
-				edges[inValue] = append(edges[inValue], node)
-				return nil
-			},
-		}
-		if err := sqlgraph.QueryEdges(ctx, dq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "places": %v`, err)
-		}
-		query.Where(place.IDIn(edgeids...))
+		query.withFKs = true
+		query.Where(predicate.Place(func(s *sql.Selector) {
+			s.Where(sql.InValues(district.PlacesColumn, fks...))
+		}))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := edges[n.ID]
+			fk := n.place_district
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "place_district" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "places" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "place_district" returned %v for node %v`, *fk, n.ID)
 			}
-			for i := range nodes {
-				nodes[i].Edges.Places = append(nodes[i].Edges.Places, n)
-			}
-		}
-	}
-
-	if query := dq.withProvinces; query != nil {
-		fks := make([]driver.Value, 0, len(nodes))
-		ids := make(map[int]*District, len(nodes))
-		for _, node := range nodes {
-			ids[node.ID] = node
-			fks = append(fks, node.ID)
-			node.Edges.Provinces = []*Province{}
-		}
-		var (
-			edgeids []int
-			edges   = make(map[int][]*District)
-		)
-		_spec := &sqlgraph.EdgeQuerySpec{
-			Edge: &sqlgraph.EdgeSpec{
-				Inverse: true,
-				Table:   district.ProvincesTable,
-				Columns: district.ProvincesPrimaryKey,
-			},
-			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(district.ProvincesPrimaryKey[1], fks...))
-			},
-
-			ScanValues: func() [2]interface{} {
-				return [2]interface{}{&sql.NullInt64{}, &sql.NullInt64{}}
-			},
-			Assign: func(out, in interface{}) error {
-				eout, ok := out.(*sql.NullInt64)
-				if !ok || eout == nil {
-					return fmt.Errorf("unexpected id value for edge-out")
-				}
-				ein, ok := in.(*sql.NullInt64)
-				if !ok || ein == nil {
-					return fmt.Errorf("unexpected id value for edge-in")
-				}
-				outValue := int(eout.Int64)
-				inValue := int(ein.Int64)
-				node, ok := ids[outValue]
-				if !ok {
-					return fmt.Errorf("unexpected node id in edges: %v", outValue)
-				}
-				edgeids = append(edgeids, inValue)
-				edges[inValue] = append(edges[inValue], node)
-				return nil
-			},
-		}
-		if err := sqlgraph.QueryEdges(ctx, dq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "provinces": %v`, err)
-		}
-		query.Where(province.IDIn(edgeids...))
-		neighbors, err := query.All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, n := range neighbors {
-			nodes, ok := edges[n.ID]
-			if !ok {
-				return nil, fmt.Errorf(`unexpected "provinces" node returned %v`, n.ID)
-			}
-			for i := range nodes {
-				nodes[i].Edges.Provinces = append(nodes[i].Edges.Provinces, n)
-			}
+			node.Edges.Places = append(node.Edges.Places, n)
 		}
 	}
 

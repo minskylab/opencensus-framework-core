@@ -18,6 +18,9 @@ type District func(*sql.Selector)
 // InfectedRecord is the predicate function for infectedrecord builders.
 type InfectedRecord func(*sql.Selector)
 
+// Occurency is the predicate function for occurency builders.
+type Occurency func(*sql.Selector)
+
 // OxygenRecord is the predicate function for oxygenrecord builders.
 type OxygenRecord func(*sql.Selector)
 

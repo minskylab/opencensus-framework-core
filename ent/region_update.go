@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"opencensus/core/ent/place"
 	"opencensus/core/ent/predicate"
-	"opencensus/core/ent/province"
 	"opencensus/core/ent/region"
 
 	"entgo.io/ent/dialect/sql"
@@ -49,21 +48,6 @@ func (ru *RegionUpdate) AddPlaces(p ...*Place) *RegionUpdate {
 	return ru.AddPlaceIDs(ids...)
 }
 
-// AddProvinceIDs adds the "provinces" edge to the Province entity by IDs.
-func (ru *RegionUpdate) AddProvinceIDs(ids ...int) *RegionUpdate {
-	ru.mutation.AddProvinceIDs(ids...)
-	return ru
-}
-
-// AddProvinces adds the "provinces" edges to the Province entity.
-func (ru *RegionUpdate) AddProvinces(p ...*Province) *RegionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return ru.AddProvinceIDs(ids...)
-}
-
 // Mutation returns the RegionMutation object of the builder.
 func (ru *RegionUpdate) Mutation() *RegionMutation {
 	return ru.mutation
@@ -88,27 +72,6 @@ func (ru *RegionUpdate) RemovePlaces(p ...*Place) *RegionUpdate {
 		ids[i] = p[i].ID
 	}
 	return ru.RemovePlaceIDs(ids...)
-}
-
-// ClearProvinces clears all "provinces" edges to the Province entity.
-func (ru *RegionUpdate) ClearProvinces() *RegionUpdate {
-	ru.mutation.ClearProvinces()
-	return ru
-}
-
-// RemoveProvinceIDs removes the "provinces" edge to Province entities by IDs.
-func (ru *RegionUpdate) RemoveProvinceIDs(ids ...int) *RegionUpdate {
-	ru.mutation.RemoveProvinceIDs(ids...)
-	return ru
-}
-
-// RemoveProvinces removes "provinces" edges to Province entities.
-func (ru *RegionUpdate) RemoveProvinces(p ...*Province) *RegionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return ru.RemoveProvinceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -189,10 +152,10 @@ func (ru *RegionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ru.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   region.PlacesTable,
-			Columns: region.PlacesPrimaryKey,
+			Columns: []string{region.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -205,10 +168,10 @@ func (ru *RegionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := ru.mutation.RemovedPlacesIDs(); len(nodes) > 0 && !ru.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   region.PlacesTable,
-			Columns: region.PlacesPrimaryKey,
+			Columns: []string{region.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -224,69 +187,15 @@ func (ru *RegionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := ru.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   region.PlacesTable,
-			Columns: region.PlacesPrimaryKey,
+			Columns: []string{region.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: place.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ru.mutation.ProvincesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   region.ProvincesTable,
-			Columns: region.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.RemovedProvincesIDs(); len(nodes) > 0 && !ru.mutation.ProvincesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   region.ProvincesTable,
-			Columns: region.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.ProvincesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   region.ProvincesTable,
-			Columns: region.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
 				},
 			},
 		}
@@ -334,21 +243,6 @@ func (ruo *RegionUpdateOne) AddPlaces(p ...*Place) *RegionUpdateOne {
 	return ruo.AddPlaceIDs(ids...)
 }
 
-// AddProvinceIDs adds the "provinces" edge to the Province entity by IDs.
-func (ruo *RegionUpdateOne) AddProvinceIDs(ids ...int) *RegionUpdateOne {
-	ruo.mutation.AddProvinceIDs(ids...)
-	return ruo
-}
-
-// AddProvinces adds the "provinces" edges to the Province entity.
-func (ruo *RegionUpdateOne) AddProvinces(p ...*Province) *RegionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return ruo.AddProvinceIDs(ids...)
-}
-
 // Mutation returns the RegionMutation object of the builder.
 func (ruo *RegionUpdateOne) Mutation() *RegionMutation {
 	return ruo.mutation
@@ -373,27 +267,6 @@ func (ruo *RegionUpdateOne) RemovePlaces(p ...*Place) *RegionUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return ruo.RemovePlaceIDs(ids...)
-}
-
-// ClearProvinces clears all "provinces" edges to the Province entity.
-func (ruo *RegionUpdateOne) ClearProvinces() *RegionUpdateOne {
-	ruo.mutation.ClearProvinces()
-	return ruo
-}
-
-// RemoveProvinceIDs removes the "provinces" edge to Province entities by IDs.
-func (ruo *RegionUpdateOne) RemoveProvinceIDs(ids ...int) *RegionUpdateOne {
-	ruo.mutation.RemoveProvinceIDs(ids...)
-	return ruo
-}
-
-// RemoveProvinces removes "provinces" edges to Province entities.
-func (ruo *RegionUpdateOne) RemoveProvinces(p ...*Province) *RegionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return ruo.RemoveProvinceIDs(ids...)
 }
 
 // Save executes the query and returns the updated Region entity.
@@ -479,10 +352,10 @@ func (ruo *RegionUpdateOne) sqlSave(ctx context.Context) (_node *Region, err err
 	}
 	if ruo.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   region.PlacesTable,
-			Columns: region.PlacesPrimaryKey,
+			Columns: []string{region.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -495,10 +368,10 @@ func (ruo *RegionUpdateOne) sqlSave(ctx context.Context) (_node *Region, err err
 	}
 	if nodes := ruo.mutation.RemovedPlacesIDs(); len(nodes) > 0 && !ruo.mutation.PlacesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   region.PlacesTable,
-			Columns: region.PlacesPrimaryKey,
+			Columns: []string{region.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -514,69 +387,15 @@ func (ruo *RegionUpdateOne) sqlSave(ctx context.Context) (_node *Region, err err
 	}
 	if nodes := ruo.mutation.PlacesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   region.PlacesTable,
-			Columns: region.PlacesPrimaryKey,
+			Columns: []string{region.PlacesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: place.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ruo.mutation.ProvincesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   region.ProvincesTable,
-			Columns: region.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.RemovedProvincesIDs(); len(nodes) > 0 && !ruo.mutation.ProvincesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   region.ProvincesTable,
-			Columns: region.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.ProvincesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   region.ProvincesTable,
-			Columns: region.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
 				},
 			},
 		}

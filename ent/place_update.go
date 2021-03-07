@@ -219,49 +219,61 @@ func (pu *PlaceUpdate) AddInfectedRecords(i ...*InfectedRecord) *PlaceUpdate {
 	return pu.AddInfectedRecordIDs(ids...)
 }
 
-// AddRegionIDs adds the "regions" edge to the Region entity by IDs.
-func (pu *PlaceUpdate) AddRegionIDs(ids ...int) *PlaceUpdate {
-	pu.mutation.AddRegionIDs(ids...)
+// SetRegionID sets the "region" edge to the Region entity by ID.
+func (pu *PlaceUpdate) SetRegionID(id int) *PlaceUpdate {
+	pu.mutation.SetRegionID(id)
 	return pu
 }
 
-// AddRegions adds the "regions" edges to the Region entity.
-func (pu *PlaceUpdate) AddRegions(r ...*Region) *PlaceUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// SetNillableRegionID sets the "region" edge to the Region entity by ID if the given value is not nil.
+func (pu *PlaceUpdate) SetNillableRegionID(id *int) *PlaceUpdate {
+	if id != nil {
+		pu = pu.SetRegionID(*id)
 	}
-	return pu.AddRegionIDs(ids...)
-}
-
-// AddProvinceIDs adds the "provinces" edge to the Province entity by IDs.
-func (pu *PlaceUpdate) AddProvinceIDs(ids ...int) *PlaceUpdate {
-	pu.mutation.AddProvinceIDs(ids...)
 	return pu
 }
 
-// AddProvinces adds the "provinces" edges to the Province entity.
-func (pu *PlaceUpdate) AddProvinces(p ...*Province) *PlaceUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return pu.AddProvinceIDs(ids...)
+// SetRegion sets the "region" edge to the Region entity.
+func (pu *PlaceUpdate) SetRegion(r *Region) *PlaceUpdate {
+	return pu.SetRegionID(r.ID)
 }
 
-// AddDistrictIDs adds the "districts" edge to the District entity by IDs.
-func (pu *PlaceUpdate) AddDistrictIDs(ids ...int) *PlaceUpdate {
-	pu.mutation.AddDistrictIDs(ids...)
+// SetProvinceID sets the "province" edge to the Province entity by ID.
+func (pu *PlaceUpdate) SetProvinceID(id int) *PlaceUpdate {
+	pu.mutation.SetProvinceID(id)
 	return pu
 }
 
-// AddDistricts adds the "districts" edges to the District entity.
-func (pu *PlaceUpdate) AddDistricts(d ...*District) *PlaceUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+// SetNillableProvinceID sets the "province" edge to the Province entity by ID if the given value is not nil.
+func (pu *PlaceUpdate) SetNillableProvinceID(id *int) *PlaceUpdate {
+	if id != nil {
+		pu = pu.SetProvinceID(*id)
 	}
-	return pu.AddDistrictIDs(ids...)
+	return pu
+}
+
+// SetProvince sets the "province" edge to the Province entity.
+func (pu *PlaceUpdate) SetProvince(p *Province) *PlaceUpdate {
+	return pu.SetProvinceID(p.ID)
+}
+
+// SetDistrictID sets the "district" edge to the District entity by ID.
+func (pu *PlaceUpdate) SetDistrictID(id int) *PlaceUpdate {
+	pu.mutation.SetDistrictID(id)
+	return pu
+}
+
+// SetNillableDistrictID sets the "district" edge to the District entity by ID if the given value is not nil.
+func (pu *PlaceUpdate) SetNillableDistrictID(id *int) *PlaceUpdate {
+	if id != nil {
+		pu = pu.SetDistrictID(*id)
+	}
+	return pu
+}
+
+// SetDistrict sets the "district" edge to the District entity.
+func (pu *PlaceUpdate) SetDistrict(d *District) *PlaceUpdate {
+	return pu.SetDistrictID(d.ID)
 }
 
 // Mutation returns the PlaceMutation object of the builder.
@@ -353,67 +365,22 @@ func (pu *PlaceUpdate) RemoveInfectedRecords(i ...*InfectedRecord) *PlaceUpdate 
 	return pu.RemoveInfectedRecordIDs(ids...)
 }
 
-// ClearRegions clears all "regions" edges to the Region entity.
-func (pu *PlaceUpdate) ClearRegions() *PlaceUpdate {
-	pu.mutation.ClearRegions()
+// ClearRegion clears the "region" edge to the Region entity.
+func (pu *PlaceUpdate) ClearRegion() *PlaceUpdate {
+	pu.mutation.ClearRegion()
 	return pu
 }
 
-// RemoveRegionIDs removes the "regions" edge to Region entities by IDs.
-func (pu *PlaceUpdate) RemoveRegionIDs(ids ...int) *PlaceUpdate {
-	pu.mutation.RemoveRegionIDs(ids...)
+// ClearProvince clears the "province" edge to the Province entity.
+func (pu *PlaceUpdate) ClearProvince() *PlaceUpdate {
+	pu.mutation.ClearProvince()
 	return pu
 }
 
-// RemoveRegions removes "regions" edges to Region entities.
-func (pu *PlaceUpdate) RemoveRegions(r ...*Region) *PlaceUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return pu.RemoveRegionIDs(ids...)
-}
-
-// ClearProvinces clears all "provinces" edges to the Province entity.
-func (pu *PlaceUpdate) ClearProvinces() *PlaceUpdate {
-	pu.mutation.ClearProvinces()
+// ClearDistrict clears the "district" edge to the District entity.
+func (pu *PlaceUpdate) ClearDistrict() *PlaceUpdate {
+	pu.mutation.ClearDistrict()
 	return pu
-}
-
-// RemoveProvinceIDs removes the "provinces" edge to Province entities by IDs.
-func (pu *PlaceUpdate) RemoveProvinceIDs(ids ...int) *PlaceUpdate {
-	pu.mutation.RemoveProvinceIDs(ids...)
-	return pu
-}
-
-// RemoveProvinces removes "provinces" edges to Province entities.
-func (pu *PlaceUpdate) RemoveProvinces(p ...*Province) *PlaceUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return pu.RemoveProvinceIDs(ids...)
-}
-
-// ClearDistricts clears all "districts" edges to the District entity.
-func (pu *PlaceUpdate) ClearDistricts() *PlaceUpdate {
-	pu.mutation.ClearDistricts()
-	return pu
-}
-
-// RemoveDistrictIDs removes the "districts" edge to District entities by IDs.
-func (pu *PlaceUpdate) RemoveDistrictIDs(ids ...int) *PlaceUpdate {
-	pu.mutation.RemoveDistrictIDs(ids...)
-	return pu
-}
-
-// RemoveDistricts removes "districts" edges to District entities.
-func (pu *PlaceUpdate) RemoveDistricts(d ...*District) *PlaceUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
-	}
-	return pu.RemoveDistrictIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -794,12 +761,12 @@ func (pu *PlaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pu.mutation.RegionsCleared() {
+	if pu.mutation.RegionCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.RegionsTable,
-			Columns: place.RegionsPrimaryKey,
+			Table:   place.RegionTable,
+			Columns: []string{place.RegionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -810,31 +777,12 @@ func (pu *PlaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.RemovedRegionsIDs(); len(nodes) > 0 && !pu.mutation.RegionsCleared() {
+	if nodes := pu.mutation.RegionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.RegionsTable,
-			Columns: place.RegionsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: region.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.RegionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   place.RegionsTable,
-			Columns: place.RegionsPrimaryKey,
+			Table:   place.RegionTable,
+			Columns: []string{place.RegionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -848,12 +796,12 @@ func (pu *PlaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pu.mutation.ProvincesCleared() {
+	if pu.mutation.ProvinceCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.ProvincesTable,
-			Columns: place.ProvincesPrimaryKey,
+			Table:   place.ProvinceTable,
+			Columns: []string{place.ProvinceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -864,31 +812,12 @@ func (pu *PlaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.RemovedProvincesIDs(); len(nodes) > 0 && !pu.mutation.ProvincesCleared() {
+	if nodes := pu.mutation.ProvinceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.ProvincesTable,
-			Columns: place.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.ProvincesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   place.ProvincesTable,
-			Columns: place.ProvincesPrimaryKey,
+			Table:   place.ProvinceTable,
+			Columns: []string{place.ProvinceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -902,12 +831,12 @@ func (pu *PlaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pu.mutation.DistrictsCleared() {
+	if pu.mutation.DistrictCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.DistrictsTable,
-			Columns: place.DistrictsPrimaryKey,
+			Table:   place.DistrictTable,
+			Columns: []string{place.DistrictColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -918,31 +847,12 @@ func (pu *PlaceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.RemovedDistrictsIDs(); len(nodes) > 0 && !pu.mutation.DistrictsCleared() {
+	if nodes := pu.mutation.DistrictIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.DistrictsTable,
-			Columns: place.DistrictsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: district.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.DistrictsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   place.DistrictsTable,
-			Columns: place.DistrictsPrimaryKey,
+			Table:   place.DistrictTable,
+			Columns: []string{place.DistrictColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -1160,49 +1070,61 @@ func (puo *PlaceUpdateOne) AddInfectedRecords(i ...*InfectedRecord) *PlaceUpdate
 	return puo.AddInfectedRecordIDs(ids...)
 }
 
-// AddRegionIDs adds the "regions" edge to the Region entity by IDs.
-func (puo *PlaceUpdateOne) AddRegionIDs(ids ...int) *PlaceUpdateOne {
-	puo.mutation.AddRegionIDs(ids...)
+// SetRegionID sets the "region" edge to the Region entity by ID.
+func (puo *PlaceUpdateOne) SetRegionID(id int) *PlaceUpdateOne {
+	puo.mutation.SetRegionID(id)
 	return puo
 }
 
-// AddRegions adds the "regions" edges to the Region entity.
-func (puo *PlaceUpdateOne) AddRegions(r ...*Region) *PlaceUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// SetNillableRegionID sets the "region" edge to the Region entity by ID if the given value is not nil.
+func (puo *PlaceUpdateOne) SetNillableRegionID(id *int) *PlaceUpdateOne {
+	if id != nil {
+		puo = puo.SetRegionID(*id)
 	}
-	return puo.AddRegionIDs(ids...)
-}
-
-// AddProvinceIDs adds the "provinces" edge to the Province entity by IDs.
-func (puo *PlaceUpdateOne) AddProvinceIDs(ids ...int) *PlaceUpdateOne {
-	puo.mutation.AddProvinceIDs(ids...)
 	return puo
 }
 
-// AddProvinces adds the "provinces" edges to the Province entity.
-func (puo *PlaceUpdateOne) AddProvinces(p ...*Province) *PlaceUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return puo.AddProvinceIDs(ids...)
+// SetRegion sets the "region" edge to the Region entity.
+func (puo *PlaceUpdateOne) SetRegion(r *Region) *PlaceUpdateOne {
+	return puo.SetRegionID(r.ID)
 }
 
-// AddDistrictIDs adds the "districts" edge to the District entity by IDs.
-func (puo *PlaceUpdateOne) AddDistrictIDs(ids ...int) *PlaceUpdateOne {
-	puo.mutation.AddDistrictIDs(ids...)
+// SetProvinceID sets the "province" edge to the Province entity by ID.
+func (puo *PlaceUpdateOne) SetProvinceID(id int) *PlaceUpdateOne {
+	puo.mutation.SetProvinceID(id)
 	return puo
 }
 
-// AddDistricts adds the "districts" edges to the District entity.
-func (puo *PlaceUpdateOne) AddDistricts(d ...*District) *PlaceUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+// SetNillableProvinceID sets the "province" edge to the Province entity by ID if the given value is not nil.
+func (puo *PlaceUpdateOne) SetNillableProvinceID(id *int) *PlaceUpdateOne {
+	if id != nil {
+		puo = puo.SetProvinceID(*id)
 	}
-	return puo.AddDistrictIDs(ids...)
+	return puo
+}
+
+// SetProvince sets the "province" edge to the Province entity.
+func (puo *PlaceUpdateOne) SetProvince(p *Province) *PlaceUpdateOne {
+	return puo.SetProvinceID(p.ID)
+}
+
+// SetDistrictID sets the "district" edge to the District entity by ID.
+func (puo *PlaceUpdateOne) SetDistrictID(id int) *PlaceUpdateOne {
+	puo.mutation.SetDistrictID(id)
+	return puo
+}
+
+// SetNillableDistrictID sets the "district" edge to the District entity by ID if the given value is not nil.
+func (puo *PlaceUpdateOne) SetNillableDistrictID(id *int) *PlaceUpdateOne {
+	if id != nil {
+		puo = puo.SetDistrictID(*id)
+	}
+	return puo
+}
+
+// SetDistrict sets the "district" edge to the District entity.
+func (puo *PlaceUpdateOne) SetDistrict(d *District) *PlaceUpdateOne {
+	return puo.SetDistrictID(d.ID)
 }
 
 // Mutation returns the PlaceMutation object of the builder.
@@ -1294,67 +1216,22 @@ func (puo *PlaceUpdateOne) RemoveInfectedRecords(i ...*InfectedRecord) *PlaceUpd
 	return puo.RemoveInfectedRecordIDs(ids...)
 }
 
-// ClearRegions clears all "regions" edges to the Region entity.
-func (puo *PlaceUpdateOne) ClearRegions() *PlaceUpdateOne {
-	puo.mutation.ClearRegions()
+// ClearRegion clears the "region" edge to the Region entity.
+func (puo *PlaceUpdateOne) ClearRegion() *PlaceUpdateOne {
+	puo.mutation.ClearRegion()
 	return puo
 }
 
-// RemoveRegionIDs removes the "regions" edge to Region entities by IDs.
-func (puo *PlaceUpdateOne) RemoveRegionIDs(ids ...int) *PlaceUpdateOne {
-	puo.mutation.RemoveRegionIDs(ids...)
+// ClearProvince clears the "province" edge to the Province entity.
+func (puo *PlaceUpdateOne) ClearProvince() *PlaceUpdateOne {
+	puo.mutation.ClearProvince()
 	return puo
 }
 
-// RemoveRegions removes "regions" edges to Region entities.
-func (puo *PlaceUpdateOne) RemoveRegions(r ...*Region) *PlaceUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return puo.RemoveRegionIDs(ids...)
-}
-
-// ClearProvinces clears all "provinces" edges to the Province entity.
-func (puo *PlaceUpdateOne) ClearProvinces() *PlaceUpdateOne {
-	puo.mutation.ClearProvinces()
+// ClearDistrict clears the "district" edge to the District entity.
+func (puo *PlaceUpdateOne) ClearDistrict() *PlaceUpdateOne {
+	puo.mutation.ClearDistrict()
 	return puo
-}
-
-// RemoveProvinceIDs removes the "provinces" edge to Province entities by IDs.
-func (puo *PlaceUpdateOne) RemoveProvinceIDs(ids ...int) *PlaceUpdateOne {
-	puo.mutation.RemoveProvinceIDs(ids...)
-	return puo
-}
-
-// RemoveProvinces removes "provinces" edges to Province entities.
-func (puo *PlaceUpdateOne) RemoveProvinces(p ...*Province) *PlaceUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return puo.RemoveProvinceIDs(ids...)
-}
-
-// ClearDistricts clears all "districts" edges to the District entity.
-func (puo *PlaceUpdateOne) ClearDistricts() *PlaceUpdateOne {
-	puo.mutation.ClearDistricts()
-	return puo
-}
-
-// RemoveDistrictIDs removes the "districts" edge to District entities by IDs.
-func (puo *PlaceUpdateOne) RemoveDistrictIDs(ids ...int) *PlaceUpdateOne {
-	puo.mutation.RemoveDistrictIDs(ids...)
-	return puo
-}
-
-// RemoveDistricts removes "districts" edges to District entities.
-func (puo *PlaceUpdateOne) RemoveDistricts(d ...*District) *PlaceUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
-	}
-	return puo.RemoveDistrictIDs(ids...)
 }
 
 // Save executes the query and returns the updated Place entity.
@@ -1740,12 +1617,12 @@ func (puo *PlaceUpdateOne) sqlSave(ctx context.Context) (_node *Place, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if puo.mutation.RegionsCleared() {
+	if puo.mutation.RegionCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.RegionsTable,
-			Columns: place.RegionsPrimaryKey,
+			Table:   place.RegionTable,
+			Columns: []string{place.RegionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -1756,31 +1633,12 @@ func (puo *PlaceUpdateOne) sqlSave(ctx context.Context) (_node *Place, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.RemovedRegionsIDs(); len(nodes) > 0 && !puo.mutation.RegionsCleared() {
+	if nodes := puo.mutation.RegionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.RegionsTable,
-			Columns: place.RegionsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: region.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.RegionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   place.RegionsTable,
-			Columns: place.RegionsPrimaryKey,
+			Table:   place.RegionTable,
+			Columns: []string{place.RegionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -1794,12 +1652,12 @@ func (puo *PlaceUpdateOne) sqlSave(ctx context.Context) (_node *Place, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if puo.mutation.ProvincesCleared() {
+	if puo.mutation.ProvinceCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.ProvincesTable,
-			Columns: place.ProvincesPrimaryKey,
+			Table:   place.ProvinceTable,
+			Columns: []string{place.ProvinceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -1810,31 +1668,12 @@ func (puo *PlaceUpdateOne) sqlSave(ctx context.Context) (_node *Place, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.RemovedProvincesIDs(); len(nodes) > 0 && !puo.mutation.ProvincesCleared() {
+	if nodes := puo.mutation.ProvinceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.ProvincesTable,
-			Columns: place.ProvincesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: province.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.ProvincesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   place.ProvincesTable,
-			Columns: place.ProvincesPrimaryKey,
+			Table:   place.ProvinceTable,
+			Columns: []string{place.ProvinceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -1848,12 +1687,12 @@ func (puo *PlaceUpdateOne) sqlSave(ctx context.Context) (_node *Place, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if puo.mutation.DistrictsCleared() {
+	if puo.mutation.DistrictCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.DistrictsTable,
-			Columns: place.DistrictsPrimaryKey,
+			Table:   place.DistrictTable,
+			Columns: []string{place.DistrictColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -1864,31 +1703,12 @@ func (puo *PlaceUpdateOne) sqlSave(ctx context.Context) (_node *Place, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.RemovedDistrictsIDs(); len(nodes) > 0 && !puo.mutation.DistrictsCleared() {
+	if nodes := puo.mutation.DistrictIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   place.DistrictsTable,
-			Columns: place.DistrictsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: district.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.DistrictsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   place.DistrictsTable,
-			Columns: place.DistrictsPrimaryKey,
+			Table:   place.DistrictTable,
+			Columns: []string{place.DistrictColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

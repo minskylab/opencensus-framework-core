@@ -26,11 +26,9 @@ type Region struct {
 type RegionEdges struct {
 	// Places holds the value of the places edge.
 	Places []*Place `json:"places,omitempty"`
-	// Provinces holds the value of the provinces edge.
-	Provinces []*Province `json:"provinces,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [1]bool
 }
 
 // PlacesOrErr returns the Places value or an error if the edge
@@ -40,15 +38,6 @@ func (e RegionEdges) PlacesOrErr() ([]*Place, error) {
 		return e.Places, nil
 	}
 	return nil, &NotLoadedError{edge: "places"}
-}
-
-// ProvincesOrErr returns the Provinces value or an error if the edge
-// was not loaded in eager-loading.
-func (e RegionEdges) ProvincesOrErr() ([]*Province, error) {
-	if e.loadedTypes[1] {
-		return e.Provinces, nil
-	}
-	return nil, &NotLoadedError{edge: "provinces"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -95,11 +84,6 @@ func (r *Region) assignValues(columns []string, values []interface{}) error {
 // QueryPlaces queries the "places" edge of the Region entity.
 func (r *Region) QueryPlaces() *PlaceQuery {
 	return (&RegionClient{config: r.config}).QueryPlaces(r)
-}
-
-// QueryProvinces queries the "provinces" edge of the Region entity.
-func (r *Region) QueryProvinces() *ProvinceQuery {
-	return (&RegionClient{config: r.config}).QueryProvinces(r)
 }
 
 // Update returns a builder for updating this Region.
