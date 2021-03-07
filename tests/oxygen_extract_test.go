@@ -6,7 +6,8 @@ import (
 )
 
 func TestExtractOxygenData(t *testing.T) {
-	records := oxygen.Extract(2)
+	lapses := 5
+	records := oxygen.Extract(lapses)
 
 	totalRecords := 0
 	for batch := range records {
@@ -14,7 +15,7 @@ func TestExtractOxygenData(t *testing.T) {
 		totalRecords += len(records)
 	}
 
-	if totalRecords != 200 {
+	if totalRecords != lapses*100 {
 		t.Fail()
 	}
 }
