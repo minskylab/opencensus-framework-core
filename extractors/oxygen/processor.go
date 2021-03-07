@@ -175,7 +175,7 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 				SetProvinceID(provinceID).
 				SetDistrictID(districtID).
 				SetName(record.Name).
-				SetKind("institution").
+				SetKind(record.Institution).
 				Save(ctx)
 			if err != nil {
 				return errors.WithStack(err)
@@ -203,4 +203,8 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 	}
 
 	return nil
+}
+
+func Processor(ctx context.Context, client *ent.Client, records []Record) error {
+	return processor(ctx, client, records)
 }
