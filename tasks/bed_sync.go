@@ -16,7 +16,7 @@ func SyncBedRecords() error {
 
 	ctx := context.Background()
 
-	records := bed.Extract(1)
+	records := bed.Extract(1000)
 
 	for recordBatch := range records {
 		if err = bed.Processor(ctx, entClient, recordBatch); err != nil {

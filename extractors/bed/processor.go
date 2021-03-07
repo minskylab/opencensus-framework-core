@@ -132,6 +132,7 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 				return errors.WithStack(err)
 			}
 
+			currentRegions[reg.Name] = reg.ID
 			regionID = reg.ID
 		}
 
@@ -145,6 +146,7 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 				return errors.WithStack(err)
 			}
 
+			currentProvinces[prov.Name] = prov.ID
 			provinceID = prov.ID
 		}
 
@@ -158,12 +160,13 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 				SetDistrictID(districtID).
 				SetUbigeo(record.Ubigeo).
 				SetName(record.Name).
-				SetKind("institution").
+				SetKind(record.Institution).
 				Save(ctx)
 			if err != nil {
 				return errors.WithStack(err)
 			}
 
+			totalPlaces[place.Name] = place.ID
 			placeID = place.ID
 		}
 
