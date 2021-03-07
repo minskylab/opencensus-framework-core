@@ -7,8 +7,26 @@ import (
 )
 
 type Record struct {
-	Name           string
-	TotalCylinders int64
+	Name string
+
+	Institution string
+	Code        string
+
+	CutDate      int
+	RegisterDate int
+
+	Region   string
+	Province string
+	District string
+
+	TotalCylinders    int
+	TotalOwnCylinders int
+
+	DailyProduction    int
+	MaxDailyProduction int
+
+	DailyConsumption int
+	MainSourceKind   string
 }
 
 func Extract(lapses int) chan []Record {
@@ -41,16 +59,52 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 			rec := r.(map[string]interface{})
 
 			name, _ := rec["NOMBRE"].(string)
+			// totalCylinders, _ := rec["TOT_CILINDROS"].(string)
+
+			institution, _ := rec["INSTITUCION"].(string)
+			code, _ := rec["CODIGO"].(string)
+
+			cutDate, _ := rec["FECHACORTE"].(int)
+			registerDate, _ := rec["FECHAREGISTRO"].(int)
+
+			region, _ := rec["REGION"].(string)
+			province, _ := rec["PROVINCIA"].(string)
+			district, _ := rec["DISTRITO"].(string)
+
 			totalCylinders, _ := rec["TOT_CILINDROS"].(string)
+			totalOwnCylinders, _ := rec["TOT_PROPIOS"].(string)
+
+			dailyProduction, _ := rec["PRODUCCION_DIAPLA"].(string)
+			maxDailyProduction, _ := rec["PRODUCCION_MAX_PLA"].(string)
+
+			dailyConsumption, _ := rec["CONSUMO_DIA_PLA"].(string)
+
+			// mainSourceKind  , _:= rec[""].(string)
+			mainSourceKind := "idk"
+
 			// rec[""].(string)
 
-			// total
-
 			totalCylindersNumber, _ := strconv.Atoi(totalCylinders)
+			totalOwnCylindersNumber, _ := strconv.Atoi(totalOwnCylinders)
+			dailyProductionNumber, _ := strconv.Atoi(dailyProduction)
+			maxDailyProductionNumber, _ := strconv.Atoi(maxDailyProduction)
+			dailyConsumptionNumber, _ := strconv.Atoi(dailyConsumption)
 
 			recordsArray = append(recordsArray, Record{
-				Name:           name,
-				TotalCylinders: int64(totalCylindersNumber),
+				Name:               name,
+				Institution:        institution,
+				Code:               code,
+				CutDate:            cutDate,
+				RegisterDate:       registerDate,
+				Region:             region,
+				Province:           province,
+				District:           district,
+				TotalCylinders:     totalCylindersNumber,
+				TotalOwnCylinders:  totalOwnCylindersNumber,
+				DailyProduction:    dailyProductionNumber,
+				MaxDailyProduction: maxDailyProductionNumber,
+				DailyConsumption:   dailyConsumptionNumber,
+				MainSourceKind:     mainSourceKind,
 			})
 		}
 
