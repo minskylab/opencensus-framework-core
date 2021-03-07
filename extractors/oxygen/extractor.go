@@ -39,9 +39,12 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 
 		for _, r := range records {
 			rec := r.(map[string]interface{})
-			name, _ := rec["NOMBRE"].(string)
 
+			name, _ := rec["NOMBRE"].(string)
 			totalCylinders, _ := rec["TOT_CILINDROS"].(string)
+			// rec[""].(string)
+
+			// total
 
 			totalCylindersNumber, _ := strconv.Atoi(totalCylinders)
 
