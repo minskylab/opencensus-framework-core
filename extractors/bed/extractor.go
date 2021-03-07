@@ -36,7 +36,8 @@ var KinDistinctBeds = []string{
 }
 
 type Record struct {
-	Name string
+	Name      string
+	CovidZone bool
 
 	Institution string
 	Code        string
@@ -119,6 +120,7 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 			rec := r.(map[string]interface{})
 
 			name, _ := rec["NOMBRE"].(string)
+			covidZone, _ := rec["ZONA_COVID"].(string)
 
 			institution, _ := rec["INSTITUCION"].(string)
 			category, _ := rec["CATEGORIA"].(string)
@@ -172,6 +174,12 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 
 			mainSourceKind := "idk"
 
+			var covidZoneBool bool
+			if covidZone == "Si" {
+				covidZoneBool = true
+			} else {
+				covidZoneBool = false
+			}
 			hospAvailableNumber, _ := strconv.Atoi(hospAvailable)
 			hospBusyNumber, _ := strconv.Atoi(hospBusy)
 			hospTotalNumber, _ := strconv.Atoi(hospTotal)
@@ -206,6 +214,7 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 
 			recordsArray = append(recordsArray, Record{
 				Name:         name,
+				CovidZone:    covidZoneBool,
 				Institution:  institution,
 				Code:         code,
 				Category:     category,

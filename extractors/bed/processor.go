@@ -122,6 +122,7 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 
 	for _, record := range records {
 		var regionID, provinceID, districtID, placeID int
+		districtID = 1032
 		if stringInMap(record.Region, currentRegions) {
 			regionID = currentRegions[record.Region]
 		} else {
@@ -154,7 +155,7 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 			placeID = totalPlaces[record.Name]
 		} else {
 			place, err := client.Place.Create().
-				SetCovidZone(true). //  covid zone
+				SetCovidZone(record.CovidZone). //  covid zone
 				SetRegionID(regionID).
 				SetProvinceID(provinceID).
 				SetDistrictID(districtID).
