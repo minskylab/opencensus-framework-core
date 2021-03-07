@@ -37,6 +37,7 @@ func Extract(lapses int) chan []Record {
 	}
 
 	oxygenRes := dkan.ResourceWithID("b1791142-8fcb-4766-9b8c-b0ee0ffc6dff")
+	oxygenRes.Sort("FECHACORTE", false)
 	oxygenRes.First100()
 
 	go extractor(api, oxygenRes, lapses, channelRecords)
