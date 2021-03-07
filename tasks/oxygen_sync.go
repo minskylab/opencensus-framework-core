@@ -16,7 +16,7 @@ func SyncOxygenRecords() error {
 
 	ctx := context.Background()
 
-	records := oxygen.Extract(1)
+	records := oxygen.Extract(1000)
 
 	for recordBatch := range records {
 		if err = oxygen.Processor(ctx, entClient, recordBatch); err != nil {
