@@ -7,6 +7,34 @@ import (
 	"time"
 )
 
+const (
+	KindAgeAdult        = "Adult"
+	KindAgePediatrician = "Pediatrician"
+)
+
+var KindAges = []string{
+	KindAgeAdult,
+	KindAgePediatrician,
+}
+
+const (
+	KindBedZNC  = "ZNC"
+	KindBedZC   = "ZC"
+	KindBedUCIN = "UCIN"
+
+	KindBedUCI        = "UCI"
+	KindBedVentilator = "Ventilator"
+)
+
+var KindCrossedBeds = []string{
+	KindBedUCI,
+	KindBedVentilator,
+}
+var KinDistinctBeds = []string{
+	KindBedZNC, KindBedZC,
+	KindBedUCIN,
+}
+
 type Record struct {
 	Name string
 
@@ -46,6 +74,14 @@ type Record struct {
 	UCIAdultBusy      int
 	UCIAdultAvailable int
 	UCIAdultTotal     int
+
+	VentilatorAdultBusy      int
+	VentilatorAdultAvailable int
+	VentilatorAdultTotal     int
+
+	VentilatorPediatraBusy      int
+	VentilatorPediatraAvailable int
+	VentilatorPediatraTotal     int
 
 	MainSourceKind string
 }
@@ -117,6 +153,14 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 			uciPediatraBusy, _ := rec["UCI_PEDIATRIA_CAMAS_OCUPADAS"].(string)
 			uciPediatraTotal, _ := rec["UCI_PEDIATRIA_CAMAS_TOTAL"].(string)
 
+			ventilatorAdultAvailable, _ := rec["VENTILADORES_UCI_ADULTO_DISPONIBLE"].(string)
+			ventilatorAdultBusy, _ := rec["VENTILADORES_UCI_ADULTO_OCUPADOS"].(string)
+			ventilatorAdultTotal, _ := rec["VENTILADORES_UCI_ADULTO_TOTAL"].(string)
+
+			ventilatorPediatraAvailable, _ := rec["VENTILADORES_UCI_PEDIATRIA_DISPONIBLE"].(string)
+			ventilatorPediatraBusy, _ := rec["VENTILADORES_UCI_PEDIATRIA_OCUPADOS"].(string)
+			ventilatorPediatraTotal, _ := rec["VENTILADORES_UCI_PEDIATRIA_TOTAL"].(string)
+
 			zcAvailable, _ := rec["CAMAS_ZC_DISPONIBLES"].(string)
 			zcBusy, _ := rec["CAMAS_ZC_OCUPADOS"].(string)
 			zcTotal, _ := rec["CAMAS_ZC_TOTAL"].(string)
@@ -150,6 +194,14 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 			zncAvailableNumber, _ := strconv.Atoi(zncAvailable)
 			zncBusyNumber, _ := strconv.Atoi(zncBusy)
 			zncTotalNumber, _ := strconv.Atoi(zncTotal)
+
+			ventilatorAdultAvailableNumber, _ := strconv.Atoi(ventilatorAdultAvailable)
+			ventilatorAdultBusyNumber, _ := strconv.Atoi(ventilatorAdultBusy)
+			ventilatorAdultTotalNumber, _ := strconv.Atoi(ventilatorAdultTotal)
+
+			ventilatorPediatraAvailableNumber, _ := strconv.Atoi(ventilatorPediatraAvailable)
+			ventilatorPediatraBusyNumber, _ := strconv.Atoi(ventilatorPediatraBusy)
+			ventilatorPediatraTotalNumber, _ := strconv.Atoi(ventilatorPediatraTotal)
 
 			recordsArray = append(recordsArray, Record{
 				Name:         name,
@@ -187,6 +239,14 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 				UCIPediatraBusy:      uciPediatraBusyNumber,
 				UCIPediatraAvailable: uciPediatraAvailableNumber,
 				UCIPediatraTotal:     uciPediatraTotalNumber,
+
+				VentilatorAdultBusy:      ventilatorAdultBusyNumber,
+				VentilatorAdultAvailable: ventilatorAdultAvailableNumber,
+				VentilatorAdultTotal:     ventilatorAdultTotalNumber,
+
+				VentilatorPediatraBusy:      ventilatorPediatraBusyNumber,
+				VentilatorPediatraAvailable: ventilatorPediatraAvailableNumber,
+				VentilatorPediatraTotal:     ventilatorPediatraTotalNumber,
 
 				MainSourceKind: mainSourceKind,
 			})
