@@ -13,14 +13,14 @@ import (
 
 type pgConfig struct {
 	hostname string
-	port     int
+	port     string
 	dbName   string
 	user     string
 	password string
 }
 
 func getPGConfig() pgConfig {
-	_ = godotenv.Load() // load envs from .env file (create your own).
+	_ = godotenv.Load("../.env") // load envs from .env file (create your own).
 
 	hostname := os.Getenv("PG_HOSTNAME")
 	port := os.Getenv("PG_PORT")
@@ -40,7 +40,7 @@ func getPGConfig() pgConfig {
 func NewClient() (*ent.Client, error) {
 	pgConfig := getPGConfig()
 
-	key := fmt.Sprintf("host=%s port=%d user=%d dbname=%s password=%s",
+	key := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		pgConfig.hostname,
 		pgConfig.port,
 		pgConfig.user,
