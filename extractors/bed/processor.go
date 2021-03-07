@@ -180,7 +180,7 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 				case KindBedUCI:
 					switch kindAge {
 					case KindAgeAdult:
-						bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedUCI, &kindAge, record.UCIAdultBusy, record.UCIAdultAvailable, record.UCIAdultTotal)
+						bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedUCI, kindAge, record.UCIAdultBusy, record.UCIAdultAvailable, record.UCIAdultTotal)
 						if err != nil {
 							return errors.WithStack(err)
 						}
@@ -188,7 +188,7 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 
 						break
 					case KindAgePediatrician:
-						bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedUCI, &kindAge, record.UCIPediatraBusy, record.UCIPediatraAvailable, record.UCIPediatraTotal)
+						bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedUCI, kindAge, record.UCIPediatraBusy, record.UCIPediatraAvailable, record.UCIPediatraTotal)
 						if err != nil {
 							return errors.WithStack(err)
 						}
@@ -199,14 +199,14 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 				case KindBedVentilator:
 					switch kindAge {
 					case KindAgeAdult:
-						bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedVentilator, &kindAge, record.VentilatorAdultBusy, record.VentilatorAdultAvailable, record.VentilatorAdultTotal)
+						bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedVentilator, kindAge, record.VentilatorAdultBusy, record.VentilatorAdultAvailable, record.VentilatorAdultTotal)
 						if err != nil {
 							return errors.WithStack(err)
 						}
 						log.Printf("new bed record: %d | %s\n", bedRecord.ID, record.Name)
 						break
 					case KindAgePediatrician:
-						bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedVentilator, &kindAge, record.VentilatorPediatraBusy, record.VentilatorPediatraAvailable, record.VentilatorPediatraTotal)
+						bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedVentilator, kindAge, record.VentilatorPediatraBusy, record.VentilatorPediatraAvailable, record.VentilatorPediatraTotal)
 						if err != nil {
 							return errors.WithStack(err)
 						}
@@ -224,21 +224,21 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 
 			switch kindBed {
 			case KindBedZC:
-				bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedZC, nil, record.ZCBusy, record.ZCAvailable, record.ZCTotal)
+				bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedZC, "", record.ZCBusy, record.ZCAvailable, record.ZCTotal)
 				if err != nil {
 					return errors.WithStack(err)
 				}
 				log.Printf("new bed record: %d | %s\n", bedRecord.ID, record.Name)
 				break
 			case KindBedZNC:
-				bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedZNC, nil, record.ZNCBusy, record.ZNCAvailable, record.ZNCTotal)
+				bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedZNC, "", record.ZNCBusy, record.ZNCAvailable, record.ZNCTotal)
 				if err != nil {
 					return errors.WithStack(err)
 				}
 				log.Printf("new bed record: %d | %s\n", bedRecord.ID, record.Name)
 				break
 			case KindBedUCIN:
-				bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedUCIN, nil, record.UCINBusy, record.UCINAvailable, record.UCINTotal)
+				bedRecord, err = insertBed(ctx, client, &record, placeID, KindBedUCIN, "", record.UCINBusy, record.UCINAvailable, record.UCINTotal)
 				if err != nil {
 					return errors.WithStack(err)
 				}
@@ -251,7 +251,7 @@ func processor(ctx context.Context, client *ent.Client, records []Record) error 
 	return nil
 }
 
-func insertBed(ctx context.Context, client *ent.Client, record *Record, placeID int, kind string, ageKind *string, busyBeds int, availableBeds int, totalBeds int) (*ent.BedRecord, error) {
+func insertBed(ctx context.Context, client *ent.Client, record *Record, placeID int, kind string, ageKind string, busyBeds int, availableBeds int, totalBeds int) (*ent.BedRecord, error) {
 
 	bedRecordOnCreate := client.BedRecord.Create().
 		SetCollectedDate(record.CutDate).
@@ -259,12 +259,10 @@ func insertBed(ctx context.Context, client *ent.Client, record *Record, placeID 
 		SetKindBed(kind).
 		SetBusyBeds(busyBeds).
 		SetAvailableBeds(availableBeds).
+		SetKindAge(ageKind).
 		SetTotalBeds(totalBeds).
 		AddPlaceIDs(placeID)
 
-	if ageKind != nil {
-		bedRecordOnCreate.SetKindAge(*ageKind)
-	}
 	bedRecord, err := bedRecordOnCreate.Save(ctx)
 
 	return bedRecord, err

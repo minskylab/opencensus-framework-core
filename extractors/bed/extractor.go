@@ -95,10 +95,11 @@ func Extract(lapses int) chan []Record {
 		panic(err)
 	}
 
-	oxygenRes := dkan.ResourceWithID("0badb458-b44f-49ad-bd32-51acaaee7a05")
-	oxygenRes.First100()
+	bedRes := dkan.ResourceWithID("0badb458-b44f-49ad-bd32-51acaaee7a05")
+	bedRes.Sort("FECHA_CORTE", false)
+	bedRes.First100()
 
-	go extractor(api, oxygenRes, lapses, channelRecords)
+	go extractor(api, bedRes, lapses, channelRecords)
 
 	return channelRecords
 }
@@ -125,8 +126,8 @@ func extractor(api *dkan.API, res *dkan.Resource, lapses int, channel chan []Rec
 
 			code, _ := rec["CODIGO"].(string)
 
-			cutDate, _ := rec["FECHACORTE"].(int)
-			registerDate, _ := rec["FECHAREGISTRO"].(int)
+			cutDate, _ := rec["FECHA_CORTE"].(int)
+			registerDate, _ := rec["FECHA_REGISTRO"].(int)
 
 			cutDateTime, _ := time.Parse(dateLayout, string(cutDate))
 			registerDateTime, _ := time.Parse(dateLayout, string(registerDate))
