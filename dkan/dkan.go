@@ -36,6 +36,16 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 	values.Add("offset", strconv.Itoa(int(res.offset)))
 	values.Add("limit", strconv.Itoa(int(res.limit)))
 
+	if res.sort != "" {
+		dir := "desc"
+
+		if res.ascendent {
+			dir = "asc"
+		}
+
+		values.Add("sort", res.sort+"["+dir+"]")
+	}
+
 	api.endpoint.RawQuery = values.Encode()
 
 	r, err := http.Get(api.endpoint.String())
