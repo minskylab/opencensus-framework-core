@@ -9,6 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 )
 
 type pgConfig struct {
@@ -20,7 +21,7 @@ type pgConfig struct {
 }
 
 func getPGConfig() pgConfig {
-	_ = godotenv.Load("../.env") // load envs from .env file (create your own).
+	_ = godotenv.Load() // load envs from .env file (create your own).
 
 	hostname := os.Getenv("PG_HOSTNAME")
 	port := os.Getenv("PG_PORT")
@@ -37,6 +38,7 @@ func getPGConfig() pgConfig {
 	}
 }
 
+// NewClient returns a new ent client.
 func NewClient() (*ent.Client, error) {
 	pgConfig := getPGConfig()
 
@@ -45,18 +47,25 @@ func NewClient() (*ent.Client, error) {
 		pgConfig.port,
 		pgConfig.user,
 		pgConfig.dbName,
-		pgConfig.password)
+		pgConfig.password,
+	)
 
-	client, _ := ent.Open("postgres", key)
-	defer client.Close()
+	fmt.Println(key)
+
+	client, err := ent.Open("postgres", key)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	ctx := context.Background()
 
-	err := client.Schema.Create(
+	if err = client.Schema.Create(
 		ctx,
 		migrate.WithDropIndex(true),
-		migrate.WithDropColumn(true))
+		migrate.WithDropColumn(true),
+	); err != nil {
+		return nil, errors.WithStack(err)
+	}
 
-	// TODO: Implement entgo auto migration and return ready client
-	return client, err
+	return client, nil
 }
