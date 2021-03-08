@@ -9,8 +9,13 @@
 ### Features
 
 - Visualización personalizada
+
 - Fácil escalamiento para más datos
-- Analítica
+
+- Base de datos grafal. Facilita queries.
+
+  ![graph](https://raw.githubusercontent.com/EmanuelSamir/assets_opencensus/main/graph_model.png)
+
 - 
 
 ## Demo
