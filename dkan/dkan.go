@@ -2,7 +2,6 @@ package dkan
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -48,8 +47,6 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 	}
 
 	api.endpoint.RawQuery = values.Encode()
-
-	fmt.Println(api.endpoint.String())
 
 	r, err := http.Get(api.endpoint.String())
 	if err != nil {
