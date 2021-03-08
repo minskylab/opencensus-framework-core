@@ -2,6 +2,7 @@ package dkan
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -36,7 +37,19 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 	values.Add("offset", strconv.Itoa(int(res.offset)))
 	values.Add("limit", strconv.Itoa(int(res.limit)))
 
+	if res.sort != "" {
+		dir := "desc"
+
+		if res.ascendent {
+			dir = "asc"
+		}
+
+		values.Add("sort", res.sort+" "+dir)
+	}
+
 	api.endpoint.RawQuery = values.Encode()
+
+	fmt.Println(api.endpoint.String())
 
 	r, err := http.Get(api.endpoint.String())
 	if err != nil {
@@ -54,9 +67,12 @@ func (api *API) ObtainResource(res *Resource) (map[string]interface{}, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	api.endpoint.Query().Del("resource_id")
-	api.endpoint.Query().Del("offset")
-	api.endpoint.Query().Del("limit")
+	values.Del("resource_id")
+	values.Del("offset")
+	values.Del("limit")
+	values.Del("sort")
+
+	api.endpoint.RawQuery = values.Encode()
 
 	api.mu.Unlock()
 
